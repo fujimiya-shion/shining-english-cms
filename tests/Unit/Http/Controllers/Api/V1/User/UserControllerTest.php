@@ -20,7 +20,7 @@ it('updates the authenticated user', function (): void {
     $updated->id = 6;
 
     $service = \Mockery::mock(IUserService::class);
-    $service->shouldReceive('update')->once()->with(6, ['name' => 'Updated'])->andReturn($updated);
+    $service->shouldReceive('updateProfile')->once()->with($user, ['name' => 'Updated'])->andReturn($updated);
     app()->instance(IUserService::class, $service);
 
     $controller = app()->make(UserController::class);
@@ -49,7 +49,7 @@ it('returns not found when updating a missing user', function (): void {
     $user->id = 6;
 
     $service = \Mockery::mock(IUserService::class);
-    $service->shouldReceive('update')->once()->andThrow(new ModelNotFoundException);
+    $service->shouldReceive('updateProfile')->once()->andThrow(new ModelNotFoundException);
     app()->instance(IUserService::class, $service);
 
     $controller = app()->make(UserController::class);
@@ -74,7 +74,7 @@ it('returns an error response when updating a user fails unexpectedly', function
     $user->id = 6;
 
     $service = \Mockery::mock(IUserService::class);
-    $service->shouldReceive('update')->once()->andThrow(new RuntimeException('boom'));
+    $service->shouldReceive('updateProfile')->once()->andThrow(new RuntimeException('boom'));
     app()->instance(IUserService::class, $service);
 
     $controller = app()->make(UserController::class);

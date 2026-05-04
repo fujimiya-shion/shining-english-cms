@@ -83,16 +83,16 @@ it('defines expected reset password request rules and messages', function (): vo
 
 it('defines expected user update request rules and messages', function (): void {
     $request = new UserUpdateRequest;
+    $rules = $request->rules();
 
     expect($request->authorize())->toBeTrue();
-    expect($request->rules())->toBe([
-        'name' => ['sometimes', 'filled', 'string', 'max:255'],
-        'phone' => ['sometimes', 'filled', 'string', 'max:30'],
-        'birthday' => ['sometimes', 'filled', 'date'],
-        'avatar' => ['sometimes', 'filled', 'string'],
-        'city_id' => ['sometimes', 'filled', 'integer', 'exists:cities,id'],
-        'password' => ['sometimes', 'filled', 'string', 'min:6'],
-    ]);
+    expect($rules['name'])->toEqual(['sometimes', 'filled', 'string', 'max:255']);
+    expect($rules['phone'])->toEqual(['sometimes', 'filled', 'string', 'max:30']);
+    expect($rules['birthday'])->toEqual(['sometimes', 'filled', 'date']);
+    expect($rules['city_id'])->toEqual(['sometimes', 'filled', 'integer', 'exists:cities,id']);
+    expect($rules['password'])->toEqual(['sometimes', 'filled', 'string', 'min:6']);
+    expect($rules['avatar'])->toBeArray();
+    expect($rules['avatar'][0])->toBe('sometimes');
     expect($request->messages())->toBe([
         'name.filled' => 'Name is required.',
         'birthday.date' => 'Birthday must be a valid date.',

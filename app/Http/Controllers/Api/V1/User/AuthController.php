@@ -68,7 +68,10 @@ class AuthController extends ApiController {
 
     public function me(Request $request): JsonResponse
     {
-        return $this->success(data: $request->user());
+        $user = $request->user();
+        $user?->loadMissing('city:id,name');
+
+        return $this->success(data: $user);
     }
 
     public function logout(Request $request): JsonResponse

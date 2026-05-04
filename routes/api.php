@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Cart\CartController;
+use App\Http\Controllers\Api\V1\City\CityController;
 use App\Http\Controllers\Api\V1\Course\CourseController;
+use App\Http\Controllers\Api\V1\Dashboard\DashboardController;
 use App\Http\Controllers\Api\V1\Developer\DeveloperController;
 use App\Http\Controllers\Api\V1\Lesson\LessonController;
 use App\Http\Controllers\Api\V1\Lesson\LessonNoteController;
@@ -33,6 +35,12 @@ Route::prefix('/v1')->group(function () {
                 Route::get('/', 'index');
                 Route::get('/slug/{slug}', 'showBySlug');
                 Route::get('/{id}', 'show');
+            });
+
+        Route::controller(CityController::class)
+            ->prefix('/cities')
+            ->group(function () {
+                Route::get('/', 'index');
             });
 
         Route::controller(LessonController::class)
@@ -68,6 +76,13 @@ Route::prefix('/v1')->group(function () {
             ->prefix('/user')
             ->group(function () {
                 Route::post('/update', 'update');
+            });
+
+        Route::middleware(VerifyUserToken::class)
+            ->controller(DashboardController::class)
+            ->prefix('/dashboard')
+            ->group(function () {
+                Route::get('/overview', 'overview');
             });
 
         Route::middleware(VerifyUserToken::class)

@@ -11,10 +11,12 @@ use App\Jobs\SendEmailVerificationJob;
 use App\Models\User;
 use App\Repositories\User\IUserDeviceRepository;
 use App\Repositories\User\IUserRepository;
+use App\Services\OptimizedImageService;
 use App\Services\Service;
 use App\ValueObjects\DeviceInfo;
 use Exception;
 use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
@@ -123,6 +125,29 @@ class UserService extends Service implements IUserService, IThirdPartyAuthServic
         $accessToken->delete();
 
         return true;
+    }
+
+    public function updateProfile(User $user, array $data): User
+    {
+        if (($data['avatar'] ?? null) instanceof UploadedFile) {
+            $oldAvatar = (string) ($user->getRawOriginal('avatar') ?? '');
+
+            $data['avatar'] = app(OptimizedImageService::class)->storeUploadedImage(
+                $data['avatar'],
+                disk: 'public',
+                directory: 'users',
+            );
+
+            if ($oldAvatar !== '' && $oldAvatar !== $data['avatar']) {
+                app(OptimizedImageService::class)->deleteStoredImage($oldAvatar, 'public');
+            }
+        }
+
+        /** @var User $updated */
+        $updated = $this->update((int) $user->id, $data);
+        $updated->loadMissing('city:id,name');
+
+        return $updated;
     }
 
     public function sendPasswordResetLink(string $email): void

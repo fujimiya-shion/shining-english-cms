@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Courses\Schemas;
 
-use Filament\Forms\Components\FileUpload;
+use App\Filament\Forms\Components\OptimizeFileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -63,7 +63,7 @@ class CourseForm
                             ->minValue(0)
                             ->step(1)
                             ->columnSpan(3),
-                        FileUpload::make('thumbnail')
+                        OptimizeFileUpload::make('thumbnail')
                             ->image()
                             ->disk('public')
                             ->directory('courses')

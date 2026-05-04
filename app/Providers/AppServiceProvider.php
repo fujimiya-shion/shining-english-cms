@@ -43,6 +43,8 @@ use App\Services\Course\CourseService;
 use App\Services\Course\ICourseService;
 use App\Services\Developer\DeveloperService;
 use App\Services\Developer\IDeveloperService;
+use App\Services\Dashboard\DashboardService;
+use App\Services\Dashboard\IDashboardService;
 use App\Services\Enrollment\EnrollmentService;
 use App\Services\Enrollment\IEnrollmentService;
 use App\Services\Lesson\ILessonService;
@@ -105,6 +107,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IUserService::class, UserService::class);
         $this->app->bind(IUserDeviceService::class, UserDeviceService::class);
         $this->app->bind(IDeveloperService::class, DeveloperService::class);
+        $this->app->bind(IDashboardService::class, DashboardService::class);
 
         $this->app->instance(GoogleAuthStrategy::class, new GoogleAuthStrategy);
     }

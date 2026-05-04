@@ -6,12 +6,15 @@ use App\Enums\AuthenticatedBy;
 use App\Notifications\Auth\ResetPasswordNotification;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmailContract
@@ -45,6 +48,13 @@ class User extends Authenticatable implements MustVerifyEmailContract
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    /**
+     * @var list<string>
+     */
+    protected $appends = [
+        'city_name',
     ];
 
     /**
@@ -118,5 +128,29 @@ class User extends Authenticatable implements MustVerifyEmailContract
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new ResetPasswordNotification($token));
+    }
+
+    protected function avatar(): Attribute
+    {
+        return Attribute::make(
+            get: static function (?string $value): ?string {
+                if (! filled($value)) {
+                    return $value;
+                }
+
+                if (Str::startsWith($value, ['http://', 'https://'])) {
+                    return $value;
+                }
+
+                return Storage::disk('public')->url(ltrim($value, '/'));
+            }
+        );
+    }
+
+    protected function cityName(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): ?string => $this->city?->name,
+        );
     }
 }
