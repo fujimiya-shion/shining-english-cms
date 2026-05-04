@@ -278,6 +278,7 @@ it('returns persisted learning progress payload for enrollment', function (): vo
     $course = Course::factory()->create();
     $lessonA = Lesson::query()->create([
         'name' => 'A',
+        'slug' => 'a',
         'course_id' => $course->id,
         'group_name' => 'M1',
         'video_url' => 'lessons/a.mp4',
@@ -286,6 +287,7 @@ it('returns persisted learning progress payload for enrollment', function (): vo
     ]);
     $lessonB = Lesson::query()->create([
         'name' => 'B',
+        'slug' => 'b',
         'course_id' => $course->id,
         'group_name' => 'M1',
         'video_url' => 'lessons/b.mp4',
@@ -328,6 +330,7 @@ it('completes a lesson, moves to next lesson and returns next quiz hint', functi
     $course = Course::factory()->create();
     $lessonA = Lesson::query()->create([
         'name' => 'A',
+        'slug' => 'a',
         'course_id' => $course->id,
         'group_name' => 'M1',
         'video_url' => 'lessons/a.mp4',
@@ -336,6 +339,7 @@ it('completes a lesson, moves to next lesson and returns next quiz hint', functi
     ]);
     $lessonB = Lesson::query()->create([
         'name' => 'B',
+        'slug' => 'b',
         'course_id' => $course->id,
         'group_name' => 'M1',
         'video_url' => 'lessons/b.mp4',
@@ -366,4 +370,145 @@ it('completes a lesson, moves to next lesson and returns next quiz hint', functi
         'id' => $lessonB->id,
         'has_quiz' => true,
     ]);
+});
+
+it('returns null progress payload when enrollment is missing', function (): void {
+    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+
+    expect($service->getLearningProgress(999, 999))->toBeNull();
+});
+
+it('returns null when completing lesson without enrollment', function (): void {
+    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+
+    expect($service->completeLesson(999, 999, 1))->toBeNull();
+});
+
+it('returns null when completing lesson that is not in course', function (): void {
+    $user = User::factory()->create();
+    $course = Course::factory()->create();
+    $otherCourse = Course::factory()->create();
+    $foreignLesson = Lesson::factory()->create([
+        'course_id' => $otherCourse->id,
+    ]);
+
+    Enrollment::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'enrolled_at' => now(),
+    ]);
+
+    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+
+    expect($service->completeLesson($user->id, $course->id, $foreignLesson->id))->toBeNull();
+});
+
+it('returns null when setting current lesson without enrollment', function (): void {
+    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+
+    expect($service->setCurrentLesson(999, 999, 1))->toBeNull();
+});
+
+it('returns null when setting current lesson that is not in course', function (): void {
+    $user = User::factory()->create();
+    $course = Course::factory()->create();
+    $otherCourse = Course::factory()->create();
+    $foreignLesson = Lesson::factory()->create([
+        'course_id' => $otherCourse->id,
+    ]);
+
+    Enrollment::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'enrolled_at' => now(),
+    ]);
+
+    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+
+    expect($service->setCurrentLesson($user->id, $course->id, $foreignLesson->id))->toBeNull();
+});
+
+it('returns zero progress when enrolled course has no lessons', function (): void {
+    $user = User::factory()->create();
+    $course = Course::factory()->create();
+    Enrollment::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'enrolled_at' => now(),
+    ]);
+
+    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $progress = $service->getLearningProgress($user->id, $course->id);
+
+    expect($progress)->toBe([
+        'course_id' => $course->id,
+        'current_lesson_id' => null,
+        'completed_lesson_ids' => [],
+        'total_lessons' => 0,
+        'progress_percentage' => 0.0,
+    ]);
+});
+
+it('sets current lesson and clears previous current flags', function (): void {
+    $user = User::factory()->create();
+    $course = Course::factory()->create();
+    $lessonA = Lesson::factory()->create(['course_id' => $course->id]);
+    $lessonB = Lesson::factory()->create(['course_id' => $course->id]);
+
+    Enrollment::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'enrolled_at' => now(),
+    ]);
+
+    LessonProgress::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'lesson_id' => $lessonA->id,
+        'completed_at' => null,
+        'is_current' => true,
+    ]);
+
+    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $result = $service->setCurrentLesson($user->id, $course->id, $lessonB->id);
+
+    expect($result)->not->toBeNull();
+    expect((bool) LessonProgress::query()
+        ->where('user_id', $user->id)
+        ->where('course_id', $course->id)
+        ->where('lesson_id', $lessonA->id)
+        ->value('is_current'))->toBeFalse();
+    expect((bool) LessonProgress::query()
+        ->where('user_id', $user->id)
+        ->where('course_id', $course->id)
+        ->where('lesson_id', $lessonB->id)
+        ->value('is_current'))->toBeTrue();
+});
+
+it('ignores progress rows for soft deleted lessons when building progress payload', function (): void {
+    $user = User::factory()->create();
+    $course = Course::factory()->create();
+    $lessonActive = Lesson::factory()->create(['course_id' => $course->id]);
+    $lessonDeleted = Lesson::factory()->create(['course_id' => $course->id]);
+    $lessonDeleted->delete();
+
+    Enrollment::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'enrolled_at' => now(),
+    ]);
+
+    LessonProgress::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'lesson_id' => $lessonDeleted->id,
+        'completed_at' => now(),
+        'is_current' => true,
+    ]);
+
+    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $result = $service->getLearningProgress($user->id, $course->id);
+
+    expect($result['completed_lesson_ids'])->toBe([]);
+    expect($result['current_lesson_id'])->toBe($lessonActive->id);
 });

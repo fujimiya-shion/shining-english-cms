@@ -6,7 +6,7 @@ use Illuminate\Support\Str;
 
 trait Slugable
 {
-    protected static function booted(): void
+    protected static function bootSlugable(): void
     {
         static::creating(function ($model) {
             if (static::shouldGenerateSlugOnCreate($model)) {

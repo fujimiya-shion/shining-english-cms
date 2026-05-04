@@ -18,6 +18,8 @@ test('lessons table defines expected columns', function (): void {
         'slug',
         'course.name',
         'group_name',
+        'group_order',
+        'lesson_order',
         'duration_minutes',
         'video_url',
         'description',

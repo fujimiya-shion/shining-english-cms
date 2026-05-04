@@ -35,6 +35,13 @@ it('defines lessons relation', function (): void {
     expect((new Course)->lessons())->toBeInstanceOf(HasMany::class);
 });
 
+it('defines lesson groups relation', function (): void {
+    $method = new ReflectionMethod(Course::class, 'lessonGroups');
+
+    expect($method->getReturnType()?->getName())->toBe(HasMany::class);
+    expect((new Course)->lessonGroups())->toBeInstanceOf(HasMany::class);
+});
+
 it('defines level relation', function (): void {
     $method = new ReflectionMethod(Course::class, 'level');
 
