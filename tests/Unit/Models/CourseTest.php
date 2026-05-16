@@ -35,6 +35,13 @@ it('defines lessons relation', function (): void {
     expect((new Course)->lessons())->toBeInstanceOf(HasMany::class);
 });
 
+it('defines lesson groups relation', function (): void {
+    $method = new ReflectionMethod(Course::class, 'lessonGroups');
+
+    expect($method->getReturnType()?->getName())->toBe(HasMany::class);
+    expect((new Course)->lessonGroups())->toBeInstanceOf(HasMany::class);
+});
+
 it('defines level relation', function (): void {
     $method = new ReflectionMethod(Course::class, 'level');
 
@@ -47,6 +54,13 @@ it('defines enrollments relation', function (): void {
 
     expect($method->getReturnType()?->getName())->toBe(HasMany::class);
     expect((new Course)->enrollments())->toBeInstanceOf(HasMany::class);
+});
+
+it('defines reviews relation', function (): void {
+    $method = new ReflectionMethod(Course::class, 'reviews');
+
+    expect($method->getReturnType()?->getName())->toBe(HasMany::class);
+    expect((new Course)->reviews())->toBeInstanceOf(HasMany::class);
 });
 
 it('uses soft deletes', function (): void {

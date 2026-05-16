@@ -64,12 +64,13 @@ class OrderService extends Service implements IOrderService
         return DB::transaction(function () use ($userId, $items, $paymentMethod): Order {
             $total = $items->sum(fn ($item): int => $item->course->price * $item->quantity);
             $courseIds = $items->pluck('course_id')->unique()->values()->all();
+            $initialStatus = $total <= 0 ? OrderStatus::Paid : OrderStatus::Pending;
 
             /** @var Order $order */
             $order = $this->orderRepository->create([
                 'user_id' => $userId,
                 'total_amount' => $total,
-                'status' => OrderStatus::Pending,
+                'status' => $initialStatus,
                 'payment_method' => $paymentMethod,
                 'placed_at' => now(),
             ]);
@@ -104,11 +105,14 @@ class OrderService extends Service implements IOrderService
         }
 
         return DB::transaction(function () use ($userId, $course, $quantity, $paymentMethod): Order {
+            $total = (int) $course->price * $quantity;
+            $initialStatus = $total <= 0 ? OrderStatus::Paid : OrderStatus::Pending;
+
             /** @var Order $order */
             $order = $this->orderRepository->create([
                 'user_id' => $userId,
-                'total_amount' => $course->price * $quantity,
-                'status' => OrderStatus::Pending,
+                'total_amount' => $total,
+                'status' => $initialStatus,
                 'payment_method' => $paymentMethod,
                 'placed_at' => now(),
             ]);

@@ -135,7 +135,6 @@ return [
         'rules' => [
             'required',
             'file',
-            'mimetypes:video/mp4,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/x-matroska,video/webm',
             'max:' . PhpUploadLimit::maxKilobytes(),
         ],
         'directory' => null,                                  // Example: 'tmp'                     | Default: 'livewire-tmp'

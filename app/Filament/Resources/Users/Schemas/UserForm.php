@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Filament\Forms\Components\OptimizeFileUpload;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
@@ -46,7 +46,7 @@ class UserForm
                             ->searchable()
                             ->preload()
                             ->columnSpan(4),
-                        FileUpload::make('avatar')
+                        OptimizeFileUpload::make('avatar')
                             ->image()
                             ->disk('public')
                             ->directory('users')

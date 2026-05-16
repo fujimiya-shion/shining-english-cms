@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Repositories\IRepository;
 use App\ValueObjects\QueryOption;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -15,6 +16,11 @@ abstract class Service implements IService
     public function __construct(IRepository $repository)
     {
         $this->repository = $repository;
+    }
+
+    public function query(array $with = []): Builder
+    {
+        return $this->repository->query($with);
     }
 
     public function getAll(?QueryOption $options = null): Collection

@@ -77,3 +77,39 @@ it('clears cart items by user id', function (): void {
 
     expect(Cart::query()->where('user_id', $user->id)->count())->toBe(0);
 });
+
+it('finds cart item by user and course', function (): void {
+    $user = User::factory()->create();
+    $course = Course::factory()->create();
+
+    $cart = Cart::query()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'quantity' => 1,
+    ]);
+
+    $repository = new CartRepository(new Cart);
+
+    $result = $repository->findByUserAndCourse($user->id, $course->id);
+
+    expect($result?->id)->toBe($cart->id);
+});
+
+it('adds course to cart and reuses existing record for the same user and course', function (): void {
+    $user = User::factory()->create();
+    $course = Course::factory()->create();
+
+    $repository = new CartRepository(new Cart);
+
+    $created = $repository->addCourse($user->id, $course->id, 2);
+    $reused = $repository->addCourse($user->id, $course->id, 5);
+
+    expect($created->id)->toBe($reused->id);
+    expect($reused->quantity)->toBe(2);
+    expect(
+        Cart::query()
+            ->where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->count()
+    )->toBe(1);
+});

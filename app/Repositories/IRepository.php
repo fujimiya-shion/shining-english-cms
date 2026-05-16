@@ -3,12 +3,15 @@
 namespace App\Repositories;
 
 use App\ValueObjects\QueryOption;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 interface IRepository
 {
+    public function query(array $with = []): Builder;
+
     /**
      * @return Collection<int, Model>
      */

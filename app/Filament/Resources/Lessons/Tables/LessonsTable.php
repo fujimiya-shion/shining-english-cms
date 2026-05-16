@@ -13,6 +13,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class LessonsTable
 {
@@ -33,6 +34,14 @@ class LessonsTable
                 TextColumn::make('group_name')
                     ->label('Group')
                     ->searchable()
+                    ->sortable(),
+                TextColumn::make('group_order')
+                    ->label('Group Order')
+                    ->numeric()
+                    ->sortable(),
+                TextColumn::make('lesson_order')
+                    ->label('Lesson Order')
+                    ->numeric()
                     ->sortable(),
                 TextColumn::make('duration_minutes')
                     ->label('Duration')
@@ -79,6 +88,11 @@ class LessonsTable
                     ->preload(),
                 TrashedFilter::make(),
             ])
+            ->defaultSort('group_order')
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query
+                ->orderBy('group_order')
+                ->orderBy('lesson_order')
+                ->orderBy('id'))
             ->recordActions([
                 EditAction::make(),
             ])

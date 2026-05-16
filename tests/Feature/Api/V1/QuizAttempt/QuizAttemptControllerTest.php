@@ -9,6 +9,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function (): void {
+    $this->withHeader('Authorization', createDeveloperAccessToken());
+});
+
 function createQuizAttemptFixture(): Quiz
 {
     $course = Course::factory()->create();

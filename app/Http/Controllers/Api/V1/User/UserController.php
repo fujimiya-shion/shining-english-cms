@@ -24,7 +24,7 @@ class UserController extends ApiController
         $data = $request->validated();
 
         try {
-            $updated = $this->service->update($user->id, $data);
+            $updated = $this->service->updateProfile($user, $data);
 
             return $this->success('Updated', $updated);
         } catch (ModelNotFoundException $e) {

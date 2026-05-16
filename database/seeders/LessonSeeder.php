@@ -26,10 +26,16 @@ class LessonSeeder extends Seeder
                 foreach ($courses as $course) {
                     $totalLessons = fake()->numberBetween(8, 16);
                     $group = self::GROUPS[array_rand(self::GROUPS)];
+                    $groupOrder = 1;
+                    $lessonOrderInGroup = 1;
 
                     for ($index = 1; $index <= $totalLessons; $index++) {
                         if ($index === 1 || $index % 5 === 0) {
                             $group = self::GROUPS[array_rand(self::GROUPS)];
+                            if ($index !== 1) {
+                                $groupOrder++;
+                            }
+                            $lessonOrderInGroup = 1;
                         }
 
                         Lesson::query()->create([
@@ -37,6 +43,8 @@ class LessonSeeder extends Seeder
                             'slug' => null,
                             'course_id' => $course->id,
                             'group_name' => $group,
+                            'group_order' => $groupOrder,
+                            'lesson_order' => $lessonOrderInGroup,
                             'video_url' => sprintf(
                                 'https://cdn.shining-english.local/courses/%d/lesson-%d.mp4',
                                 $course->id,
@@ -48,6 +56,8 @@ class LessonSeeder extends Seeder
                             'star_reward_quiz' => fake()->numberBetween(0, 3),
                             'has_quiz' => $index % 3 === 0,
                         ]);
+
+                        $lessonOrderInGroup++;
                     }
                 }
             });

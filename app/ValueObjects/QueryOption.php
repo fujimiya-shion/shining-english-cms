@@ -9,6 +9,8 @@ class QueryOption
         public int $perPage = 15,
         /** @var string[] */
         public array $with = [],
+        public string $orderBy = 'created_at',
+        public string $orderDirection = 'desc',
     ) {}
 
     /* =========================
@@ -35,6 +37,16 @@ class QueryOption
     public function getWith(): array
     {
         return $this->with;
+    }
+
+    public function getOrderBy(): string
+    {
+        return $this->orderBy;
+    }
+
+    public function getOrderDirection(): string
+    {
+        return $this->orderDirection;
     }
 
     /* =========================
@@ -69,6 +81,24 @@ class QueryOption
         return $this;
     }
 
+    public function setOrderBy(string $orderBy): self
+    {
+        $orderBy = trim($orderBy);
+        if ($orderBy !== '') {
+            $this->orderBy = $orderBy;
+        }
+
+        return $this;
+    }
+
+    public function setOrderDirection(string $orderDirection): self
+    {
+        $orderDirection = strtolower(trim($orderDirection));
+        $this->orderDirection = $orderDirection === 'asc' ? 'asc' : 'desc';
+
+        return $this;
+    }
+
     /* =========================
      |  Factory
      ========================= */
@@ -97,6 +127,14 @@ class QueryOption
                 : (array) $raw['with'];
 
             $dto->setWith($with);
+        }
+
+        if (isset($raw['orderBy'])) {
+            $dto->setOrderBy((string) $raw['orderBy']);
+        }
+
+        if (isset($raw['orderDirection'])) {
+            $dto->setOrderDirection((string) $raw['orderDirection']);
         }
 
         return $dto;

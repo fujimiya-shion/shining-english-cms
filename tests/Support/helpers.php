@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Developer;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Schemas\Components\Component as SchemaComponent;
@@ -240,5 +241,18 @@ if (! function_exists('actionClassList')) {
             fn (object $action): string => $action::class,
             $actions
         ));
+    }
+}
+
+if (! function_exists('createDeveloperAccessToken')) {
+    function createDeveloperAccessToken(): string
+    {
+        $developer = Developer::query()->first()
+            ?? Developer::query()->create([
+                'email' => 'developer@example.com',
+                'password' => 'password',
+            ]);
+
+        return $developer->createToken('developer_access_token')->plainTextToken;
     }
 }

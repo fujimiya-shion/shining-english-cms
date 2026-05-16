@@ -4,8 +4,14 @@ use App\Models\User;
 use App\Services\User\IUserService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function (): void {
+    $this->withHeader('Authorization', createDeveloperAccessToken());
+});
 
 it('updates current user profile', function (): void {
     $user = User::factory()->create([
@@ -68,9 +74,9 @@ it('returns not found when service cannot find user', function (): void {
     $token = $user->createToken('user-update')->plainTextToken;
 
     $service = Mockery::mock(IUserService::class);
-    $service->shouldReceive('update')
+    $service->shouldReceive('updateProfile')
         ->once()
-        ->with($user->id, Mockery::type('array'))
+        ->with(Mockery::type(User::class), Mockery::type('array'))
         ->andThrow(new ModelNotFoundException('User not found'));
     app()->instance(IUserService::class, $service);
 
@@ -91,9 +97,9 @@ it('returns error when update fails', function (): void {
     $token = $user->createToken('user-update')->plainTextToken;
 
     $service = Mockery::mock(IUserService::class);
-    $service->shouldReceive('update')
+    $service->shouldReceive('updateProfile')
         ->once()
-        ->with($user->id, Mockery::type('array'))
+        ->with(Mockery::type(User::class), Mockery::type('array'))
         ->andThrow(new Exception('Update failed'));
     app()->instance(IUserService::class, $service);
 
@@ -123,4 +129,51 @@ it('rejects null for required user fields', function (): void {
     $response->assertStatus(422);
     $response->assertJsonPath('errors.name.0', 'Name is required.');
     $response->assertJsonPath('errors.phone.0', 'Phone is required.');
+});
+
+it('updates avatar from uploaded file and stores only webp', function (): void {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $token = $user->createToken('user-update')->plainTextToken;
+    $avatar = UploadedFile::fake()->image('avatar.jpg', 1200, 900);
+
+    $response = $this->post('/api/v1/user/update', [
+        'avatar' => $avatar,
+    ], [
+        'User-Authorization' => $token,
+    ]);
+
+    $response->assertStatus(200);
+
+    $user->refresh();
+    expect($user->avatar)->toBeString();
+    expect($user->avatar)->toEndWith('.webp');
+    $storedPath = ltrim(str_replace('/storage/', '', (string) $user->avatar), '/');
+    Storage::disk('public')->assertExists($storedPath);
+});
+
+it('replaces old local avatar when uploading a new one', function (): void {
+    Storage::fake('public');
+    Storage::disk('public')->put('users/old-avatar.webp', 'old');
+
+    $user = User::factory()->create([
+        'avatar' => 'users/old-avatar.webp',
+    ]);
+    $token = $user->createToken('user-update')->plainTextToken;
+    $avatar = UploadedFile::fake()->image('new-avatar.jpg', 800, 800);
+
+    $response = $this->post('/api/v1/user/update', [
+        'avatar' => $avatar,
+    ], [
+        'User-Authorization' => $token,
+    ]);
+
+    $response->assertStatus(200);
+    Storage::disk('public')->assertMissing('users/old-avatar.webp');
+
+    $user->refresh();
+    $storedPath = ltrim(str_replace('/storage/', '', (string) $user->avatar), '/');
+    Storage::disk('public')->assertExists($storedPath);
+    expect($user->avatar)->toEndWith('.webp');
 });

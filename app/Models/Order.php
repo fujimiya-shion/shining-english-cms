@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use BackedEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,6 +36,15 @@ class Order extends Model
             'status' => OrderStatus::class,
             'payment_method' => PaymentMethod::class,
         ];
+    }
+
+    public function setStatusAttribute(OrderStatus|string $status): void
+    {
+        $normalizedStatus = $status instanceof BackedEnum
+            ? $status->value
+            : strtolower(trim($status));
+
+        $this->attributes['status'] = $normalizedStatus;
     }
 
     public function user(): BelongsTo

@@ -4,6 +4,10 @@ use App\Services\Course\ICourseService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
+beforeEach(function (): void {
+    $this->withHeader('Authorization', createDeveloperAccessToken());
+});
+
 it('accepts valid filter params and returns success response', function (): void {
     $items = new Collection;
     $paginator = new LengthAwarePaginator($items, 0, 15, 1);

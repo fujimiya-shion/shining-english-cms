@@ -27,7 +27,7 @@ class QuizResource extends BaseResource
 
     protected static ?string $recordTitleAttribute = 'lesson_id';
 
-    protected function service(): IService
+    protected static function service(): IService
     {
         return app(IQuizService::class);
     }

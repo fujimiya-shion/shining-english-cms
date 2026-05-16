@@ -6,7 +6,10 @@ use App\Filament\Resources\BaseResource;
 use App\Filament\Resources\Courses\Pages\CreateCourse;
 use App\Filament\Resources\Courses\Pages\EditCourse;
 use App\Filament\Resources\Courses\Pages\ListCourses;
+use App\Filament\Resources\Courses\RelationManagers\CourseReviewsRelationManager;
 use App\Filament\Resources\Courses\RelationManagers\EnrollmentsRelationManager;
+use App\Filament\Resources\Courses\RelationManagers\LessonGroupsRelationManager;
+use App\Filament\Resources\Courses\RelationManagers\LessonsRelationManager;
 use App\Filament\Resources\Courses\Schemas\CourseForm;
 use App\Filament\Resources\Courses\Tables\CoursesTable;
 use App\Models\Course;
@@ -27,7 +30,7 @@ class CourseResource extends BaseResource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected function service(): IService
+    protected static function service(): IService
     {
         return app(ICourseService::class);
     }
@@ -45,7 +48,10 @@ class CourseResource extends BaseResource
     public static function getRelations(): array
     {
         return [
+            LessonGroupsRelationManager::class,
+            LessonsRelationManager::class,
             EnrollmentsRelationManager::class,
+            CourseReviewsRelationManager::class,
         ];
     }
 

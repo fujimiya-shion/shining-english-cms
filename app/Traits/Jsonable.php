@@ -41,6 +41,20 @@ trait Jsonable
         return $this->error($message, 404, $errors);
     }
 
+    public function forbidden(
+        string $message = 'Forbidden',
+        mixed $errors = null,
+    ): JsonResponse {
+        return $this->error($message, 403, $errors);
+    }
+
+    public function unauthorized(
+        string $message = 'Unauthorized',
+        mixed $errors = null,
+    ): JsonResponse {
+        return $this->error($message, 401, $errors);
+    }
+
     public function created(
         mixed $data,
         string $message = 'Created',
