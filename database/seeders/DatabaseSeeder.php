@@ -24,22 +24,28 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->truncateSeededTables();
-        $courseSeeder = app()->environment('staging')
+        $isStaging = app()->environment('staging');
+        $courseSeeder = $isStaging
             ? StagingCourseSeeder::class
             : CourseSeeder::class;
 
-        $this->call([
+        $seeders = [
             AdminSeeder::class,
             CitySeeder::class,
             CategorySeeder::class,
             LevelSeeder::class,
             $courseSeeder,
-            LessonSeeder::class,
-            CourseReviewSeeder::class,
-            LessonCommentSeeder::class,
             BlogSeeder::class,
             DeveloperSeeder::class,
-        ]);
+        ];
+
+        if (! $isStaging) {
+            $seeders[] = LessonSeeder::class;
+            $seeders[] = CourseReviewSeeder::class;
+            $seeders[] = LessonCommentSeeder::class;
+        }
+
+        $this->call($seeders);
     }
 
     private function truncateSeededTables(): void
