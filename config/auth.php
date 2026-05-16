@@ -44,7 +44,12 @@ return [
         'admin' => [
             'driver' => 'session',
             'provider' => 'admins',
-        ]
+        ],
+
+        'developer' => [
+            'driver' => 'sanctum',
+            'provider' => 'developers',
+        ],
     ],
 
     /*
@@ -73,6 +78,11 @@ return [
         'admins' => [
             'driver' => 'eloquent',
             'model' => App\Models\Admin::class,
+        ],
+
+        'developers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Developer::class,
         ],
 
         // 'users' => [
@@ -106,6 +116,11 @@ return [
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
             'expire' => 60,
             'throttle' => 60,
+        ],
+
+        'developers' => [
+            'provider' => 'developers',
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
         ],
     ],
 

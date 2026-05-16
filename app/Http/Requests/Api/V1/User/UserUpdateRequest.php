@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Api\V1\User;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\File;
 
 class UserUpdateRequest extends FormRequest
 {
@@ -25,7 +27,14 @@ class UserUpdateRequest extends FormRequest
             'name' => ['sometimes', 'filled', 'string', 'max:255'],
             'phone' => ['sometimes', 'filled', 'string', 'max:30'],
             'birthday' => ['sometimes', 'filled', 'date'],
-            'avatar' => ['sometimes', 'filled', 'string'],
+            'avatar' => [
+                'sometimes',
+                Rule::when(
+                    is_string($this->input('avatar')),
+                    ['filled', 'string'],
+                    [File::image()->max(5 * 1024)],
+                ),
+            ],
             'city_id' => ['sometimes', 'filled', 'integer', 'exists:cities,id'],
             'password' => ['sometimes', 'filled', 'string', 'min:6'],
         ];

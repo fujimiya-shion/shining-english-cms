@@ -88,6 +88,80 @@ it('returns false when cancelling missing order', function (): void {
     expect($service->cancelByUserId(10, 999))->toBeFalse();
 });
 
+it('delegates order list and detail lookups to the repository', function (): void {
+    $orders = Mockery::mock(IOrderRepository::class);
+    $orderItems = Mockery::mock(IOrderItemRepository::class);
+    $cart = Mockery::mock(ICartRepository::class);
+    $courses = Mockery::mock(ICourseRepository::class);
+    $enrollments = Mockery::mock(IEnrollmentService::class);
+    $options = new \App\ValueObjects\QueryOption(perPage: 15);
+    $paginator = new \Illuminate\Pagination\LengthAwarePaginator(collect(), 0, 15, 1);
+    $order = new Order;
+
+    $orders->shouldReceive('paginateByUserId')->once()->with(10, $options)->andReturn($paginator);
+    $orders->shouldReceive('findByUserId')->once()->with(10, 99)->andReturn($order);
+
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
+
+    expect($service->listByUserId(10, $options))->toBe($paginator);
+    expect($service->detailByUserId(10, 99))->toBe($order);
+});
+
+it('creates an order from cart items and clears the cart after commit enrollment setup', function (): void {
+    $orders = Mockery::mock(IOrderRepository::class);
+    $orderItems = Mockery::mock(IOrderItemRepository::class);
+    $cart = Mockery::mock(ICartRepository::class);
+    $courses = Mockery::mock(ICourseRepository::class);
+    $enrollments = Mockery::mock(IEnrollmentService::class);
+
+    $courseA = new \App\Models\Course;
+    $courseA->id = 11;
+    $courseA->price = 100000;
+    $courseB = new \App\Models\Course;
+    $courseB->id = 12;
+    $courseB->price = 200000;
+
+    $cartItems = new Collection([
+        new \App\Models\Cart(['course_id' => 11, 'quantity' => 1, 'course' => $courseA]),
+        new \App\Models\Cart(['course_id' => 12, 'quantity' => 2, 'course' => $courseB]),
+    ]);
+    $cartItems[0]->setRelation('course', $courseA);
+    $cartItems[1]->setRelation('course', $courseB);
+
+    $cart->shouldReceive('itemsByUserId')->once()->with(10)->andReturn($cartItems);
+    $cart->shouldReceive('clearByUserId')->once()->with(10);
+
+    $order = new Order([
+        'user_id' => 10,
+        'total_amount' => 500000,
+        'status' => OrderStatus::Pending,
+        'payment_method' => PaymentMethod::Cod,
+        'placed_at' => now(),
+    ]);
+    $order->id = 99;
+
+    $orders->shouldReceive('create')->once()->with(\Mockery::subset([
+        'user_id' => 10,
+        'total_amount' => 500000,
+        'status' => OrderStatus::Pending,
+        'payment_method' => PaymentMethod::Cod,
+    ]))->andReturn($order);
+
+    $orderItems->shouldReceive('create')->twice();
+
+    $enrollments->shouldReceive('enroll')->once()->with(10, 11, 99)->andReturn(Mockery::mock(\App\Models\Enrollment::class));
+    $enrollments->shouldReceive('enroll')->once()->with(10, 12, 99)->andReturn(Mockery::mock(\App\Models\Enrollment::class));
+
+    DB::shouldReceive('transaction')->once()->andReturnUsing(fn (callable $callback) => $callback());
+    DB::shouldReceive('afterCommit')->once()->andReturnUsing(function (callable $callback) {
+        $callback();
+    });
+
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
+
+    expect($service->createFromCart(10, PaymentMethod::Cod))->toBe($order);
+});
+
 it('enrolls user after creating buy now order', function (): void {
     $orders = Mockery::mock(IOrderRepository::class);
     $orderItems = Mockery::mock(IOrderItemRepository::class);
@@ -149,4 +223,23 @@ it('enrolls user after creating buy now order', function (): void {
     $result = $service->createBuyNow(10, 55, 1, PaymentMethod::Cod);
 
     expect($result)->toBe($order);
+});
+
+it('cancels an existing order', function (): void {
+    $orders = Mockery::mock(IOrderRepository::class);
+    $orderItems = Mockery::mock(IOrderItemRepository::class);
+    $cart = Mockery::mock(ICartRepository::class);
+    $courses = Mockery::mock(ICourseRepository::class);
+    $enrollments = Mockery::mock(IEnrollmentService::class);
+
+    $order = Mockery::mock(Order::class)->makePartial();
+    $order->status = OrderStatus::Pending;
+    $order->shouldReceive('save')->once()->andReturnTrue();
+
+    $orders->shouldReceive('findByUserId')->once()->with(10, 123)->andReturn($order);
+
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
+
+    expect($service->cancelByUserId(10, 123))->toBeTrue();
+    expect($order->getAttributes()['status'])->toBe(OrderStatus::Cancelled->value);
 });

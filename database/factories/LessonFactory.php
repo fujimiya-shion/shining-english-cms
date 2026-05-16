@@ -36,6 +36,8 @@ class LessonFactory extends Factory
                 'Grammar in Depth',
                 'Vocabulary Expansion',
             ]),
+            'group_order' => fake()->numberBetween(1, 5),
+            'lesson_order' => fake()->numberBetween(1, 20),
             'video_url' => fake()->url(),
             'description' => fake()->paragraph(),
             'duration_minutes' => fake()->numberBetween(8, 40),

@@ -95,6 +95,38 @@ it('returns notfound response', function (): void {
     ]);
 });
 
+it('returns forbidden response', function (): void {
+    $target = new class
+    {
+        use Jsonable;
+    };
+
+    $response = $target->forbidden('Forbidden access', ['role' => ['missing']]);
+
+    assertJsonResponsePayload($response, 403, [
+        'message' => 'Forbidden access',
+        'status' => false,
+        'status_code' => 403,
+        'errors' => ['role' => ['missing']],
+    ]);
+});
+
+it('returns unauthorized response', function (): void {
+    $target = new class
+    {
+        use Jsonable;
+    };
+
+    $response = $target->unauthorized('Invalid token', ['token' => ['invalid']]);
+
+    assertJsonResponsePayload($response, 401, [
+        'message' => 'Invalid token',
+        'status' => false,
+        'status_code' => 401,
+        'errors' => ['token' => ['invalid']],
+    ]);
+});
+
 it('returns created response', function (): void {
     $target = new class
     {

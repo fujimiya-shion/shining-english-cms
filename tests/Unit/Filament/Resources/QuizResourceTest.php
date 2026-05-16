@@ -4,6 +4,7 @@ use App\Filament\Resources\BaseResource;
 use App\Filament\Resources\Quizzes\QuizResource;
 use App\Models\Quiz;
 use App\Services\Quiz\IQuizService;
+use Illuminate\Database\Eloquent\Builder;
 
 test('quiz resource extends base resource', function (): void {
     expect(is_subclass_of(QuizResource::class, BaseResource::class))->toBeTrue();
@@ -31,13 +32,19 @@ test('quiz resource configures form and table', function (): void {
 test('quiz resource builds record route binding query', function (): void {
     $query = QuizResource::getRecordRouteBindingEloquentQuery();
 
-    expect($query)->toBeInstanceOf(\Illuminate\Database\Eloquent\Builder::class);
+    expect($query)->toBeInstanceOf(Builder::class);
 });
 
 test('quiz resource resolves the quiz service', function (): void {
-    $resource = new QuizResource;
-
-    $service = invokeProtectedMethod($resource, 'service');
+    $method = new ReflectionMethod(QuizResource::class, 'service');
+    $method->setAccessible(true);
+    $service = $method->invoke(null);
 
     expect($service)->toBeInstanceOf(IQuizService::class);
+});
+
+test('quiz resource builds list query via service', function (): void {
+    $query = QuizResource::getEloquentQuery();
+
+    expect($query)->toBeInstanceOf(Builder::class);
 });

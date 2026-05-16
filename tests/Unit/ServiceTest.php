@@ -3,6 +3,7 @@
 use App\Repositories\IRepository;
 use App\Services\Service;
 use App\ValueObjects\QueryOption;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -22,6 +23,16 @@ test('getAll delegates to repository', function (): void {
     $service = new TestService($repository);
 
     expect($service->getAll())->toBe($collection);
+});
+
+test('query delegates to repository', function (): void {
+    $builder = \Mockery::mock(Builder::class);
+    $repository = \Mockery::mock(IRepository::class);
+    $repository->shouldReceive('query')->once()->with(['user'])->andReturn($builder);
+
+    $service = new TestService($repository);
+
+    expect($service->query(['user']))->toBe($builder);
 });
 
 test('getById delegates to repository', function (): void {

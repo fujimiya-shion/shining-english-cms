@@ -46,3 +46,14 @@ it('defines enrollments relation', function (): void {
 
     expect($order->enrollments())->toBeInstanceOf(HasMany::class);
 });
+
+it('normalizes status values before persisting', function (): void {
+    $order = new Order;
+    $order->status = ' Paid ';
+
+    expect($order->getAttributes()['status'])->toBe('paid');
+
+    $order->status = OrderStatus::Cancelled;
+
+    expect($order->getAttributes()['status'])->toBe('cancelled');
+});

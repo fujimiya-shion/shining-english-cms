@@ -1,6 +1,8 @@
 <?php
 
+use App\Filament\Forms\Components\OptimizeFileUpload;
 use App\Filament\Resources\Courses\Schemas\CourseForm;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
@@ -21,7 +23,9 @@ test('course form defines expected components', function (): void {
         'price',
         'rating',
         'learned',
+        'thumbnail_source',
         'thumbnail',
+        'thumbnail_file',
         'description',
     ]);
 
@@ -33,7 +37,9 @@ test('course form defines expected components', function (): void {
     expect($components['price'])->toBeInstanceOf(TextInput::class);
     expect($components['rating'])->toBeInstanceOf(TextInput::class);
     expect($components['learned'])->toBeInstanceOf(TextInput::class);
-    expect($components['thumbnail'])->toBeInstanceOf(FileUpload::class);
+    expect($components['thumbnail'])->toBeInstanceOf(Hidden::class);
+    expect($components['thumbnail_file'])->toBeInstanceOf(FileUpload::class);
+    expect($components['thumbnail_file'])->toBeInstanceOf(OptimizeFileUpload::class);
     expect($components['description'])->toBeInstanceOf(RichEditor::class);
 });
 

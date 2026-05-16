@@ -2,19 +2,25 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\AuthenticatedBy;
+use App\Notifications\Auth\ResetPasswordNotification;
+use Illuminate\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmailContract
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, MustVerifyEmail, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -30,6 +36,7 @@ class User extends Authenticatable
         'avatar',
         'city_id',
         'password',
+        'authenticated_by',
         'email_verified_at',
     ];
 
@@ -44,6 +51,13 @@ class User extends Authenticatable
     ];
 
     /**
+     * @var list<string>
+     */
+    protected $appends = [
+        'city_name',
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -54,6 +68,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'birthday' => 'date',
             'password' => 'hashed',
+            'authenticated_by' => AuthenticatedBy::class,
         ];
     }
 
@@ -82,10 +97,60 @@ class User extends Authenticatable
         return $this->hasMany(BlogUnlock::class);
     }
 
-    public function setPasswordAttribute(string $password): void
+    public function courseReviews(): HasMany
     {
+        return $this->hasMany(CourseReview::class);
+    }
+
+    public function lessonComments(): HasMany
+    {
+        return $this->hasMany(LessonComment::class);
+    }
+
+    public function lessonNotes(): HasMany
+    {
+        return $this->hasMany(LessonNote::class);
+    }
+
+    public function setPasswordAttribute(?string $password): void
+    {
+        if ($password === null || $password === '') {
+            $this->attributes['password'] = null;
+
+            return;
+        }
+
         $this->attributes['password'] = Hash::needsRehash($password)
             ? Hash::make($password)
             : $password;
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    }
+
+    protected function avatar(): Attribute
+    {
+        return Attribute::make(
+            get: static function (?string $value): ?string {
+                if (! filled($value)) {
+                    return $value;
+                }
+
+                if (Str::startsWith($value, ['http://', 'https://'])) {
+                    return $value;
+                }
+
+                return Storage::disk('public')->url(ltrim($value, '/'));
+            }
+        );
+    }
+
+    protected function cityName(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): ?string => $this->city?->name,
+        );
     }
 }

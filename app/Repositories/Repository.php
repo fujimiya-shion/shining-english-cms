@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 abstract class Repository implements IRepository
@@ -28,6 +29,22 @@ abstract class Repository implements IRepository
         }
 
         return $query;
+    }
+
+    protected function applyDefaultOrderIfMissing(Builder $query, ?QueryOption $options = null): Builder
+    {
+        $options ??= new QueryOption;
+
+        if (! empty($query->getQuery()->orders)) {
+            return $query;
+        }
+
+        $orderBy = $options->getOrderBy();
+        if ($orderBy === '' || ! Schema::hasColumn($this->model->getTable(), $orderBy)) {
+            return $query;
+        }
+
+        return $query->orderBy($this->model->qualifyColumn($orderBy), $options->getOrderDirection());
     }
 
     protected function applyCriteria(Builder $query, array $criteria): Builder
@@ -88,9 +105,21 @@ abstract class Repository implements IRepository
      |  Query APIs
      ========================= */
 
+    public function query(array $with = []): Builder
+    {
+        $query = $this->model->newQuery();
+
+        if ($with !== []) {
+            $query->with($with);
+        }
+
+        return $this->applyDefaultOrderIfMissing($query);
+    }
+
     public function getAll(?QueryOption $options = null): Collection
     {
         $query = $this->applyQueryOption($this->model->newQuery(), $options);
+        $query = $this->applyDefaultOrderIfMissing($query, $options);
 
         return $query->get();
     }
@@ -99,6 +128,7 @@ abstract class Repository implements IRepository
     {
         $options ??= new QueryOption;
         $query = $this->applyQueryOption($this->model->newQuery(), $options);
+        $query = $this->applyDefaultOrderIfMissing($query, $options);
 
         return $query->paginate(perPage: $options->perPage, page: $options->page);
     }
@@ -119,6 +149,7 @@ abstract class Repository implements IRepository
         $query = $this->model->newQuery();
         $query = $this->applyCriteria($query, $criteria);
         $query = $this->applyQueryOption($query, $options);
+        $query = $this->applyDefaultOrderIfMissing($query, $options);
 
         return $query->get();
     }
@@ -129,6 +160,7 @@ abstract class Repository implements IRepository
         $query = $this->model->newQuery();
         $query = $this->applyCriteria($query, $criteria);
         $query = $this->applyQueryOption($query, $options);
+        $query = $this->applyDefaultOrderIfMissing($query, $options);
 
         return $query->paginate(perPage: $options->perPage, page: $options->page);
     }
@@ -183,13 +215,15 @@ abstract class Repository implements IRepository
         return $query->count();
     }
 
-    public function delete(int $id, bool $force = false): bool {
+    public function delete(int $id, bool $force = false): bool
+    {
         $query = $this->model->newQuery()->where('id', $id);
         try {
             $rowAffected = $force ? $query->forceDelete() : $query->delete();
+
             return is_int($rowAffected) && $rowAffected > 0;
-        } catch(Throwable $e) {
-            logger()->error('An error occured when delete model: ' . class_basename($this->model));
+        } catch (Throwable $e) {
+            logger()->error('An error occured when delete model: '.class_basename($this->model));
             logger()->error($e->getTraceAsString());
             throw $e;
         }

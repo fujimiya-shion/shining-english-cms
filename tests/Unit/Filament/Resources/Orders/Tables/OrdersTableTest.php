@@ -1,6 +1,7 @@
 <?php
 
 use App\Filament\Resources\Orders\Tables\OrdersTable;
+use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 
 test('orders table defines expected columns', function (): void {
@@ -19,10 +20,10 @@ test('orders table defines expected columns', function (): void {
     ]);
 });
 
-test('orders table registers view record action', function (): void {
+test('orders table registers view and edit record actions', function (): void {
     $table = OrdersTable::configure(makeTable());
 
     $actions = $table->getRecordActions();
 
-    expect(actionClassList($actions))->toEqual([ViewAction::class]);
+    expect(actionClassList($actions))->toEqual([ViewAction::class, EditAction::class]);
 });

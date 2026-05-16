@@ -2,26 +2,21 @@
 
 use App\DTO\User\Auth\LoginResponse;
 use App\DTO\User\Auth\RegisterResponse;
+use App\Jobs\InitUserStarJob;
+use App\Jobs\SendEmailVerificationJob;
 use App\Models\User;
 use App\Repositories\User\IUserDeviceRepository;
 use App\Repositories\User\IUserRepository;
 use App\Services\User\UserService;
 use App\ValueObjects\DeviceInfo;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Bus;
 use Tests\TestCase;
 
 uses(TestCase::class);
 
-it('registers a user and returns a token response', function (): void {
-    $user = new class extends User {
-        public function createToken(string $name, array $abilities = ['*'], ?\DateTimeInterface $expiresAt = null): object
-        {
-            return new class {
-                public string $plainTextToken = 'test-token';
-            };
-        }
-    };
+it('registers a user and dispatches follow-up jobs', function (): void {
+    $user = new User;
     $user->id = 1;
 
     $repository = \Mockery::mock(IUserRepository::class);
@@ -36,14 +31,16 @@ it('registers a user and returns a token response', function (): void {
         ->andReturn($user);
 
     $deviceRepository = \Mockery::mock(IUserDeviceRepository::class);
+    Bus::fake();
 
     $service = new UserService($repository, $deviceRepository);
 
     $response = $service->register('Test User', 'test@example.com', '0900000000', 'secret');
 
     expect($response)->toBeInstanceOf(RegisterResponse::class);
-    expect($response->token)->toBe('test-token');
     expect($response->user)->toBe($user);
+    Bus::assertDispatched(InitUserStarJob::class);
+    Bus::assertDispatched(SendEmailVerificationJob::class);
 });
 
 it('throws when register result is not a user instance', function (): void {
@@ -82,12 +79,13 @@ it('logs in a user and returns a token response', function (): void {
     };
 
     $user->password = \Illuminate\Support\Facades\Hash::make('secret');
+    $user->email_verified_at = now();
 
     $repository = \Mockery::mock(IUserRepository::class);
-    $repository->shouldReceive('getBy')
+    $repository->shouldReceive('findByEmail')
         ->once()
-        ->with(['email' => 'test@example.com'])
-        ->andReturn(new Collection([$user]));
+        ->with('test@example.com')
+        ->andReturn($user);
 
     $deviceRepository = \Mockery::mock(IUserDeviceRepository::class);
     $now = Carbon::parse('2025-01-01 10:00:00');
@@ -126,10 +124,10 @@ it('logs in a user and returns a token response', function (): void {
 
 it('throws when credentials are invalid', function (): void {
     $repository = \Mockery::mock(IUserRepository::class);
-    $repository->shouldReceive('getBy')
+    $repository->shouldReceive('findByEmail')
         ->once()
-        ->with(['email' => 'missing@example.com'])
-        ->andReturn(new Collection([]));
+        ->with('missing@example.com')
+        ->andReturn(null);
 
     $deviceRepository = \Mockery::mock(IUserDeviceRepository::class);
     $service = new UserService($repository, $deviceRepository);
@@ -139,4 +137,25 @@ it('throws when credentials are invalid', function (): void {
         'secret',
         DeviceInfo::fromArray(['device_identifier' => 'device-1'])
     ))->toThrow(Exception::class, 'Invalid credentials');
+});
+
+it('throws when email is not verified', function (): void {
+    $user = new User;
+    $user->password = \Illuminate\Support\Facades\Hash::make('secret');
+    $user->email_verified_at = null;
+
+    $repository = \Mockery::mock(IUserRepository::class);
+    $repository->shouldReceive('findByEmail')
+        ->once()
+        ->with('test@example.com')
+        ->andReturn($user);
+
+    $deviceRepository = \Mockery::mock(IUserDeviceRepository::class);
+    $service = new UserService($repository, $deviceRepository);
+
+    expect(fn () => $service->login(
+        'test@example.com',
+        'secret',
+        DeviceInfo::fromArray(['device_identifier' => 'device-1'])
+    ))->toThrow(Exception::class, 'Email is not verified.');
 });

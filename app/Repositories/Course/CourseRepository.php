@@ -15,9 +15,22 @@ class CourseRepository extends Repository implements ICourseRepository
     public function __construct(
         Course $model,
         protected ICategoryRepository $categoryRepository
-    )
-    {
+    ) {
         $this->model = $model;
+    }
+
+    public function paginateAll(?QueryOption $options = null): LengthAwarePaginator
+    {
+        $options ??= new QueryOption;
+        $query = $this->applyQueryOption($this->model->newQuery(), $options)
+            ->where('status', true)
+            ->withCardMetrics();
+        $query = $this->applyDefaultOrderIfMissing($query, $options);
+
+        return $query->paginate(
+            perPage: $options->perPage,
+            page: $options->page
+        );
     }
 
     public function getBySlug(string $slug): ?Course
@@ -26,21 +39,38 @@ class CourseRepository extends Repository implements ICourseRepository
             ->with([
                 'category:id,name,slug',
                 'level:id,name',
+                'reviews' => fn ($query) => $query
+                    ->select(['id', 'course_id', 'user_id', 'rating', 'content', 'created_at'])
+                    ->with(['user:id,name,avatar'])
+                    ->orderByDesc('created_at'),
                 'lessons' => fn ($query) => $query
                     ->select([
                         'id',
                         'name',
                         'slug',
                         'course_id',
+                        'lesson_group_id',
                         'group_name',
+                        'group_order',
+                        'lesson_order',
                         'video_url',
+                        'documents',
+                        'document_names',
                         'description',
                         'duration_minutes',
                         'has_quiz',
+                        'is_preview_free',
                         'star_reward_video',
                         'star_reward_quiz',
                     ])
-                    ->orderBy('group_name')
+                    ->with([
+                        'comments' => fn ($commentQuery) => $commentQuery
+                            ->select(['id', 'lesson_id', 'user_id', 'content', 'created_at'])
+                            ->with(['user:id,name,avatar'])
+                            ->orderByDesc('created_at'),
+                    ])
+                    ->orderBy('group_order')
+                    ->orderBy('lesson_order')
                     ->orderBy('id'),
             ])
             ->where('status', true)
@@ -50,7 +80,9 @@ class CourseRepository extends Repository implements ICourseRepository
 
     public function filter(CourseFilter $filters): LengthAwarePaginator
     {
-        $query = $this->model->newQuery()->where('status', true);
+        $query = $this->model->newQuery()
+            ->where('status', true)
+            ->withCardMetrics();
 
         if ($filters->categoryId !== null) {
             $query->where('category_id', $filters->categoryId);
@@ -84,8 +116,35 @@ class CourseRepository extends Repository implements ICourseRepository
             $query->where('learned', '<=', $filters->learnedMax);
         }
 
+        if ($filters->durationMinHours !== null || $filters->durationMaxHours !== null) {
+            $minMinutes = $filters->durationMinHours !== null
+                ? (int) floor($filters->durationMinHours * 60)
+                : null;
+            $maxMinutes = $filters->durationMaxHours !== null
+                ? (int) floor($filters->durationMaxHours * 60)
+                : null;
+
+            if ($minMinutes !== null && $maxMinutes !== null) {
+                $query->havingBetween('total_duration_minutes', [$minMinutes, $maxMinutes]);
+            } elseif ($minMinutes !== null) {
+                $query->having('total_duration_minutes', '>=', $minMinutes);
+            } elseif ($maxMinutes !== null) {
+                $query->having('total_duration_minutes', '<=', $maxMinutes);
+            }
+        }
+
         if ($filters->keyword !== null) {
-            $query->whereRaw('MATCH(name, slug) AGAINST (? IN BOOLEAN MODE)', [$filters->keyword]);
+            $keyword = trim($filters->keyword);
+            $booleanKeyword = collect(preg_split('/\s+/', $keyword))
+                ->filter()
+                ->map(fn (string $term): string => "{$term}*")
+                ->implode(' ');
+
+            $query->where(function ($query) use ($booleanKeyword, $keyword): void {
+                $query->whereRaw('MATCH(name, slug) AGAINST (? IN BOOLEAN MODE)', [$booleanKeyword])
+                    ->orWhere('name', 'like', "%{$keyword}%")
+                    ->orWhere('slug', 'like', "%{$keyword}%");
+            });
         }
 
         $options = $filters->options ?? new QueryOption;
@@ -123,6 +182,28 @@ class CourseRepository extends Repository implements ICourseRepository
             ->values()
             ->all();
 
+        $durationRanges = $this->durationHourRanges();
+        $durationOptions = collect($durationRanges)
+            ->map(function (array $range): array {
+                $count = $this->model->newQuery()
+                    ->where('status', true)
+                    ->withSum('lessons as total_duration_minutes', 'duration_minutes')
+                    ->havingBetween('total_duration_minutes', [
+                        $range['min_hours'] * 60,
+                        $range['max_hours'] * 60,
+                    ])
+                    ->count();
+
+                return [
+                    'min_hours' => $range['min_hours'],
+                    'max_hours' => $range['max_hours'],
+                    'label' => $range['label'],
+                    'count' => $count,
+                ];
+            })
+            ->values()
+            ->all();
+
         return [
             'categories' => $categories,
             'price' => [
@@ -138,6 +219,19 @@ class CourseRepository extends Repository implements ICourseRepository
                 'max' => $range?->learned_max !== null ? (int) $range->learned_max : null,
             ],
             'levels' => $levels,
+            'duration_hours' => $durationOptions,
+        ];
+    }
+
+    /**
+     * @return array<int, array{min_hours: int, max_hours: int, label: string}>
+     */
+    protected function durationHourRanges(): array
+    {
+        return [
+            ['min_hours' => 0, 'max_hours' => 3, 'label' => '< 4 giờ'],
+            ['min_hours' => 4, 'max_hours' => 8, 'label' => '4 - 8 giờ'],
+            ['min_hours' => 9, 'max_hours' => 9999, 'label' => '> 8 giờ'],
         ];
     }
 }

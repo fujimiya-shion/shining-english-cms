@@ -2,14 +2,18 @@
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\CourseReview;
 use App\Models\Level;
+use App\Models\Lesson;
+use App\Models\LessonComment;
+use App\Models\User;
 use App\Repositories\Course\CourseRepository;
 use App\ValueObjects\CourseFilter;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 uses(TestCase::class);
-uses(DatabaseMigrations::class);
+uses(RefreshDatabase::class);
 
 it('filters courses by category level ranges and keyword', function (): void {
     $categoryA = Category::factory()->create();
@@ -256,4 +260,58 @@ it('gets active course by slug', function (): void {
 
     expect($result?->id)->toBe($activeCourse->id);
     expect($inactive)->toBeNull();
+});
+
+it('loads reviews and lesson comments when getting course by slug', function (): void {
+    $course = Course::factory()->create([
+        'slug' => 'course-has-feedback',
+        'status' => true,
+    ]);
+
+    $lesson = Lesson::query()->create([
+        'name' => 'Lesson With Comment',
+        'slug' => null,
+        'course_id' => $course->id,
+        'group_name' => 'Fundamentals',
+        'video_url' => 'lessons/example.mp4',
+        'documents' => ['lesson-documents/grammar-guide.pdf'],
+        'document_names' => ['grammar-guide.pdf'],
+        'description' => 'Lesson description',
+        'duration_minutes' => 12,
+        'star_reward_video' => 1,
+        'star_reward_quiz' => 0,
+        'has_quiz' => false,
+    ]);
+
+    $reviewUser = User::factory()->create(['name' => 'Ha Linh']);
+    $commentUser = User::factory()->create(['name' => 'Ngoc Anh']);
+
+    CourseReview::query()->create([
+        'course_id' => $course->id,
+        'user_id' => $reviewUser->id,
+        'rating' => 5,
+        'content' => 'Rất tốt',
+    ]);
+
+    LessonComment::query()->create([
+        'lesson_id' => $lesson->id,
+        'user_id' => $commentUser->id,
+        'content' => 'Có bài tập không ạ?',
+    ]);
+
+    $repository = app(CourseRepository::class);
+    $result = $repository->getBySlug('course-has-feedback');
+
+    expect($result)->not()->toBeNull();
+    expect($result?->relationLoaded('reviews'))->toBeTrue();
+    expect($result?->reviews->count())->toBe(1);
+    expect($result?->reviews->first()?->relationLoaded('user'))->toBeTrue();
+    expect($result?->reviews->first()?->user?->name)->toBe('Ha Linh');
+    expect($result?->relationLoaded('lessons'))->toBeTrue();
+    expect($result?->lessons->first()?->documents)->toBe(['lesson-documents/grammar-guide.pdf']);
+    expect($result?->lessons->first()?->document_names)->toBe(['grammar-guide.pdf']);
+    expect($result?->lessons->first()?->relationLoaded('comments'))->toBeTrue();
+    expect($result?->lessons->first()?->comments->count())->toBe(1);
+    expect($result?->lessons->first()?->comments->first()?->relationLoaded('user'))->toBeTrue();
+    expect($result?->lessons->first()?->comments->first()?->user?->name)->toBe('Ngoc Anh');
 });

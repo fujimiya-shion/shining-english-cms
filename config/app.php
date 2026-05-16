@@ -53,6 +53,8 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
+    'frontend_reset_password_url' => env('FRONTEND_RESET_PASSWORD_URL', 'http://localhost:3000/reset-password'),
+    'frontend_email_verification_url' => env('FRONTEND_EMAIL_VERIFICATION_URL', 'http://localhost:3000/login?verified=1'),
 
     /*
     |--------------------------------------------------------------------------

@@ -27,11 +27,17 @@ beforeEach(function (): void {
         $table->string('status')->nullable();
         $table->integer('age')->nullable();
         $table->integer('price')->nullable();
+        $table->timestamps();
     });
 
     Schema::create('test_model_children', function (Blueprint $table): void {
         $table->id();
         $table->unsignedBigInteger('test_model_id');
+        $table->string('name')->nullable();
+    });
+
+    Schema::create('test_models_without_timestamps', function (Blueprint $table): void {
+        $table->id();
         $table->string('name')->nullable();
     });
 
@@ -43,15 +49,40 @@ afterEach(function (): void {
 });
 
 test('getAll returns all records', function (): void {
-    TestModel::query()->create(['name' => 'John', 'status' => 'active', 'age' => 25, 'price' => 15]);
-    TestModel::query()->create(['name' => 'Jane', 'status' => 'inactive', 'age' => 30, 'price' => 25]);
+    TestModel::query()->create([
+        'name' => 'John',
+        'status' => 'active',
+        'age' => 25,
+        'price' => 15,
+        'created_at' => now()->subMinute(),
+        'updated_at' => now()->subMinute(),
+    ]);
+    TestModel::query()->create([
+        'name' => 'Jane',
+        'status' => 'inactive',
+        'age' => 30,
+        'price' => 25,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
 
     $repository = app()->make(TestRepository::class);
     $result = $repository->getAll();
 
     expect($result)->toHaveCount(2);
-    expect($result->pluck('name')->sort()->values()->all())
+    expect($result->pluck('name')->values()->all())
         ->toEqual(['Jane', 'John']);
+});
+
+test('query builds builder with eager loads and default ordering', function (): void {
+    $repository = app()->make(TestRepository::class);
+    $query = $repository->query(['children']);
+
+    expect($query)->toBeInstanceOf(\Illuminate\Database\Eloquent\Builder::class);
+    expect($query->getEagerLoads())->toHaveKey('children');
+    expect($query->getQuery()->orders)->toHaveCount(1);
+    expect($query->getQuery()->orders[0]['column'])->toBe('test_models.created_at');
+    expect($query->getQuery()->orders[0]['direction'])->toBe('desc');
 });
 
 test('getAll applies eager loading options', function (): void {
@@ -68,8 +99,22 @@ test('getAll applies eager loading options', function (): void {
 });
 
 test('paginateAll returns a paginator', function (): void {
-    TestModel::query()->create(['name' => 'John', 'status' => 'active', 'age' => 25, 'price' => 15]);
-    TestModel::query()->create(['name' => 'Jane', 'status' => 'inactive', 'age' => 30, 'price' => 25]);
+    TestModel::query()->create([
+        'name' => 'John',
+        'status' => 'active',
+        'age' => 25,
+        'price' => 15,
+        'created_at' => now()->subMinute(),
+        'updated_at' => now()->subMinute(),
+    ]);
+    TestModel::query()->create([
+        'name' => 'Jane',
+        'status' => 'inactive',
+        'age' => 30,
+        'price' => 25,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
 
     $options = (new QueryOption)->setPage(1)->setPerPage(1);
     $repository = app()->make(TestRepository::class);
@@ -78,6 +123,7 @@ test('paginateAll returns a paginator', function (): void {
 
     expect($result)->toBeInstanceOf(LengthAwarePaginator::class);
     expect($result->items())->toHaveCount(1);
+    expect($result->items()[0]->name)->toBe('Jane');
 });
 
 test('getBy returns records matching criteria', function (): void {
@@ -385,6 +431,33 @@ test('applyPrefixMatch returns query unchanged for empty term', function (): voi
     expect($result->toSql())->toBe($originalSql);
 });
 
+test('applyDefaultOrderIfMissing keeps existing order clauses', function (): void {
+    $repository = app()->make(TestRepository::class);
+    $query = TestModel::query()->orderBy('name');
+
+    $method = new ReflectionMethod(Repository::class, 'applyDefaultOrderIfMissing');
+    $method->setAccessible(true);
+
+    /** @var \Illuminate\Database\Eloquent\Builder $result */
+    $result = $method->invoke($repository, $query, new QueryOption);
+
+    expect($result->getQuery()->orders)->toHaveCount(1);
+    expect($result->getQuery()->orders[0]['column'])->toBe('name');
+});
+
+test('applyDefaultOrderIfMissing skips ordering when model table has no created_at column', function (): void {
+    $repository = new TestRepositoryWithoutTimestamps(new TestModelWithoutTimestamps);
+    $query = TestModelWithoutTimestamps::query();
+
+    $method = new ReflectionMethod(Repository::class, 'applyDefaultOrderIfMissing');
+    $method->setAccessible(true);
+
+    /** @var \Illuminate\Database\Eloquent\Builder $result */
+    $result = $method->invoke($repository, $query, new QueryOption);
+
+    expect($result->getQuery()->orders ?? [])->toBe([]);
+});
+
 test('delete returns true for existing record', function () {
     TestModel::query()->create(['id' => 3, 'name' => 'John']);
     $repository = app()->make(TestRepository::class);
@@ -429,6 +502,15 @@ class TestModelChild extends Model
     public $timestamps = false;
 }
 
+class TestModelWithoutTimestamps extends Model
+{
+    protected $table = 'test_models_without_timestamps';
+
+    protected $guarded = [];
+
+    public $timestamps = false;
+}
+
 class FailingCreateModel extends TestModel
 {
     public function create(array $attributes = []): Model
@@ -451,7 +533,16 @@ class FailingDeleteModel extends TestModel
 
 class TestRepository extends Repository
 {
-    public function __construct(TestModel $model) {
+    public function __construct(TestModel $model)
+    {
+        parent::__construct($model);
+    }
+}
+
+class TestRepositoryWithoutTimestamps extends Repository
+{
+    public function __construct(TestModelWithoutTimestamps $model)
+    {
         parent::__construct($model);
     }
 }

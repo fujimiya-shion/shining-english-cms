@@ -2,11 +2,13 @@
 
 namespace App\Filament\Resources\Courses\Schemas;
 
-use Filament\Forms\Components\FileUpload;
+use App\Filament\Forms\Components\OptimizeFileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
 
@@ -63,13 +65,36 @@ class CourseForm
                             ->minValue(0)
                             ->step(1)
                             ->columnSpan(3),
-                        FileUpload::make('thumbnail')
+                        Select::make('thumbnail_source')
+                            ->label('Thumbnail source')
+                            ->options([
+                                'upload' => 'Upload ảnh',
+                                'url' => 'Dùng URL ngoài',
+                            ])
+                            ->default('upload')
+                            ->native(false)
+                            ->live()
+                            ->columnSpan(4),
+                        Hidden::make('thumbnail')
+                            ->dehydrated(true),
+                        OptimizeFileUpload::make('thumbnail_file')
+                            ->label('Thumbnail')
                             ->image()
                             ->disk('public')
                             ->directory('courses')
                             ->visibility('public')
                             ->imageEditor()
                             ->maxSize(2048)
+                            ->visible(fn (Get $get): bool => $get('thumbnail_source') !== 'url')
+                            ->dehydrated(true)
+                            ->columnSpan(12),
+                        TextInput::make('thumbnail_url')
+                            ->label('Thumbnail URL')
+                            ->placeholder('https://example.com/thumbnail.jpg')
+                            ->url()
+                            ->maxLength(2048)
+                            ->visible(fn (Get $get): bool => $get('thumbnail_source') === 'url')
+                            ->dehydrated(true)
                             ->columnSpan(12),
                         RichEditor::make('description')
                             ->columnSpan(12),

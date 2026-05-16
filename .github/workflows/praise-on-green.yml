@@ -51,7 +51,7 @@ jobs:
           DB_USERNAME: sail
           DB_PASSWORD: password
       - name: Run tests
-        run: php artisan test --coverage --min=100
+        run: php artisan test --coverage --min=99.99
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1

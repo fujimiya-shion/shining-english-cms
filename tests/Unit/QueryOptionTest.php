@@ -14,6 +14,8 @@ it('initializes with perPage default and empty with', function (): void {
 
     expect($option->getPerPage())->toBe(15);
     expect($option->getWith())->toBe([]);
+    expect($option->getOrderBy())->toBe('created_at');
+    expect($option->getOrderDirection())->toBe('desc');
 });
 
 it('sets page and perPage with minimums', function (): void {
@@ -61,4 +63,24 @@ it('builds from array with with array', function (): void {
     ]);
 
     expect($option->getWith())->toBe(['posts', 'comments']);
+});
+
+it('sets order by and normalizes direction', function (): void {
+    $option = new QueryOption;
+
+    $option->setOrderBy('id');
+    $option->setOrderDirection('ASC');
+
+    expect($option->getOrderBy())->toBe('id');
+    expect($option->getOrderDirection())->toBe('asc');
+});
+
+it('builds from array with ordering fields', function (): void {
+    $option = QueryOption::fromArray([
+        'orderBy' => 'id',
+        'orderDirection' => 'ASC',
+    ]);
+
+    expect($option->getOrderBy())->toBe('id');
+    expect($option->getOrderDirection())->toBe('asc');
 });

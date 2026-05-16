@@ -7,9 +7,14 @@ class PhpUploadLimit
     public static function maxKilobytes(): int
     {
         return self::maxKilobytesFromIniValues(
-            ini_get('upload_max_filesize'),
-            ini_get('post_max_size'),
+            static::readIniValue('upload_max_filesize'),
+            static::readIniValue('post_max_size'),
         );
+    }
+
+    protected static function readIniValue(string $option): string|false
+    {
+        return ini_get($option);
     }
 
     public static function maxKilobytesFromIniValues(string|false $uploadMaxFileSize, string|false $postMaxSize): int

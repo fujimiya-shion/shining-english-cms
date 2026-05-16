@@ -13,7 +13,7 @@
         "james-heinrich/getid3": "^1.9",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
-        "laravel/socialite": "^5.24",
+        "laravel/socialite": "^5.26",
         "laravel/tinker": "^2.10.1"
     },
     "require-dev": {
@@ -55,6 +55,14 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"
+        ],
+        "test:fast": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test --parallel"
+        ],
+        "test:coverage": [
+            "@php artisan config:clear --ansi",
+            "XDEBUG_MODE=off php -d pcov.enabled=1 artisan test --parallel --coverage"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
