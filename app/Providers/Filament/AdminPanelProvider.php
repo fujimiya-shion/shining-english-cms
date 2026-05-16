@@ -24,7 +24,6 @@ class AdminPanelProvider extends PanelProvider
         $configuration = $panel
             ->default()
             ->id('admin')
-            ->path('admin')
             ->login()
             ->authGuard('admin')
             ->plugins([
@@ -71,15 +70,15 @@ class AdminPanelProvider extends PanelProvider
             $domain = "staging-cms.$appDomain";
             $configuration = $panel
                 ->domain($domain)
-                ->path('/');
+                ->path('');
         }
 
-        if ($this->app->environment('production')) {
+        else if ($this->app->environment('production')) {
             $domain = "cms.$appDomain";
             $configuration = $panel
                 ->domain($domain)
-                ->path('/');
-        }
+                ->path('');
+        } else $configuration->path('admin');
 
         return $configuration;
     }
