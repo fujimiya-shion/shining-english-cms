@@ -15,7 +15,7 @@ class AdminSeeder extends Seeder
     {
         $email = 'admin@shining-english.edu.vn';
         $password = '123456';
-        if (app()->isProduction()) {
+        if (!app()->environment('local')) {
             $email = env('ADMIN_EMAIL');
             $password = env('ADMIN_PASSWORD');
         }
