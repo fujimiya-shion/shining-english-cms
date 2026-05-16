@@ -24,13 +24,16 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->truncateSeededTables();
+        $courseSeeder = app()->environment('staging')
+            ? StagingCourseSeeder::class
+            : CourseSeeder::class;
 
         $this->call([
             AdminSeeder::class,
             CitySeeder::class,
             CategorySeeder::class,
             LevelSeeder::class,
-            CourseSeeder::class,
+            $courseSeeder,
             LessonSeeder::class,
             CourseReviewSeeder::class,
             LessonCommentSeeder::class,
