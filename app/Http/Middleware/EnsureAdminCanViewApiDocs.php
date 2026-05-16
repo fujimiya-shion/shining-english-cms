@@ -10,7 +10,7 @@ class EnsureAdminCanViewApiDocs
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (app()->environment('local')) {
+        if (app()->environment(['local', 'staging'])) {
             return $next($request);
         }
 
