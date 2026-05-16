@@ -86,11 +86,12 @@ it('validates register request', function (): void {
 });
 
 it('rejects register when recaptcha verification fails', function (): void {
+    config()->set('recaptcha.register_action', 'register-blocked');
     Http::fake([
         'https://www.google.com/recaptcha/api/siteverify' => Http::response([
-            'success' => false,
+            'success' => true,
             'action' => 'register',
-            'score' => 0.1,
+            'score' => 0.9,
         ], 200),
     ]);
 
