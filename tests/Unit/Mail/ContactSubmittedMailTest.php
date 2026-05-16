@@ -15,5 +15,5 @@ it('builds contact submitted mail content', function (): void {
     $mail = new ContactSubmittedMail($contact);
 
     expect($mail->envelope()->subject)->toBe('New contact request received');
-    expect($mail->content()->text)->toBe('emails.contact-submitted-text');
+    expect($mail->content()->view)->toBe('emails.contact-submitted-text');
 });
