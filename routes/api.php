@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Blog\BlogController;
 use App\Http\Controllers\Api\V1\Cart\CartController;
 use App\Http\Controllers\Api\V1\City\CityController;
+use App\Http\Controllers\Api\V1\Contact\ContactController;
 use App\Http\Controllers\Api\V1\Course\CourseController;
 use App\Http\Controllers\Api\V1\Dashboard\DashboardController;
 use App\Http\Controllers\Api\V1\Developer\DeveloperController;
@@ -49,6 +50,12 @@ Route::prefix('/v1')->group(function () {
             ->prefix('/cities')
             ->group(function () {
                 Route::get('/', 'index');
+            });
+
+        Route::controller(ContactController::class)
+            ->prefix('/contact')
+            ->group(function () {
+                Route::post('/', 'store');
             });
 
         Route::controller(LessonController::class)

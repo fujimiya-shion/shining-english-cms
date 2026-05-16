@@ -10,11 +10,11 @@ class LevelSeeder extends Seeder
     public function run(): void
     {
         $levels = [
-            'Beginner',
-            'Elementary',
-            'Intermediate',
-            'Upper Intermediate',
-            'Advanced',
+            'Sơ cấp',
+            'Cơ bản',
+            'Trung cấp',
+            'Trung cấp nâng cao',
+            'Nâng cao',
         ];
 
         foreach ($levels as $name) {

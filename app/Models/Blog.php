@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Traits\Slugable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class Blog extends Model
 {
@@ -80,6 +82,13 @@ class Blog extends Model
         return $this->isUnlockedBy($user);
     }
 
+    protected function userCanView(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): bool => $this->canViewBy($this->resolveCurrentUser()),
+        );
+    }
+
     public function getReadTimeMinutesAttribute(): int
     {
         $plainContent = trim(strip_tags((string) $this->content));
@@ -113,5 +122,22 @@ class Blog extends Model
         }
 
         return rtrim((string) config('app.url'), '/').'/storage/'.ltrim($thumbnail, '/');
+    }
+
+    protected function resolveCurrentUser(): ?User
+    {
+        $user = request()->user();
+        if ($user instanceof User) {
+            return $user;
+        }
+
+        $token = request()->header('User-Authorization');
+        if (! is_string($token) || trim($token) === '') {
+            return null;
+        }
+
+        $accessToken = PersonalAccessToken::findToken($token);
+
+        return $accessToken?->tokenable instanceof User ? $accessToken->tokenable : null;
     }
 }

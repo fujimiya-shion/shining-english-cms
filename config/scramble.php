@@ -1,6 +1,6 @@
 <?php
 
-use Dedoc\Scramble\Http\Middleware\RestrictedDocsAccess;
+use App\Http\Middleware\EnsureAdminCanViewApiDocs;
 
 return [
     /*
@@ -129,7 +129,7 @@ return [
 
     'middleware' => [
         'web',
-        RestrictedDocsAccess::class,
+        EnsureAdminCanViewApiDocs::class,
     ],
 
     'extensions' => [],

@@ -9,9 +9,9 @@ use Illuminate\Database\Seeder;
 class LessonSeeder extends Seeder
 {
     private const GROUPS = [
-        'Fundamentals of English',
-        'Grammar in Depth',
-        'Vocabulary Expansion',
+        'Nền tảng tiếng Anh',
+        'Ngữ pháp chuyên sâu',
+        'Mở rộng từ vựng',
     ];
 
     public function run(): void
@@ -39,7 +39,7 @@ class LessonSeeder extends Seeder
                         }
 
                         Lesson::query()->create([
-                            'name' => sprintf('Lesson %d - %s', $index, $course->name),
+                            'name' => sprintf('Bài %d - %s', $index, $course->name),
                             'slug' => null,
                             'course_id' => $course->id,
                             'group_name' => $group,

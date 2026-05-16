@@ -5,9 +5,11 @@ use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+if (app()->environment(['local', 'testing'])) {
+    Route::get('/', function () {
+        return view('welcome');
+    });
+}
 
 Route::get('/email/verify/{id}/{hash}', function (int $id, string $hash) {
     abort_unless(URL::hasValidSignature(request()), 403);

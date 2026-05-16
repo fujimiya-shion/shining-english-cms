@@ -13,6 +13,8 @@ use App\Repositories\Course\CourseRepository;
 use App\Repositories\Course\ICourseRepository;
 use App\Repositories\CourseReview\CourseReviewRepository;
 use App\Repositories\CourseReview\ICourseReviewRepository;
+use App\Repositories\Contact\ContactRepository;
+use App\Repositories\Contact\IContactRepository;
 use App\Repositories\Dashboard\DashboardRepository;
 use App\Repositories\Dashboard\IDashboardRepository;
 use App\Repositories\Developer\DeveloperRepository;
@@ -49,6 +51,8 @@ use App\Services\Course\CourseService;
 use App\Services\Course\ICourseService;
 use App\Services\CourseReview\CourseReviewService;
 use App\Services\CourseReview\ICourseReviewService;
+use App\Services\Contact\ContactService;
+use App\Services\Contact\IContactService;
 use App\Services\Dashboard\DashboardService;
 use App\Services\Dashboard\IDashboardService;
 use App\Services\Developer\DeveloperService;
@@ -69,6 +73,8 @@ use App\Services\OrderItem\IOrderItemService;
 use App\Services\OrderItem\OrderItemService;
 use App\Services\Quiz\IQuizService;
 use App\Services\Quiz\QuizService;
+use App\Services\Security\Recaptcha\IRecaptchaVerifier;
+use App\Services\Security\Recaptcha\RecaptchaVerifier;
 use App\Services\Star\IStarService;
 use App\Services\Star\StarService;
 use App\Services\StarTransaction\IStarTransactionService;
@@ -79,6 +85,7 @@ use App\Services\User\UserDeviceService;
 use App\Services\User\UserService;
 use App\Services\UserQuizAttempt\IUserQuizAttemptService;
 use App\Services\UserQuizAttempt\UserQuizAttemptService;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -95,6 +102,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IOrderItemRepository::class, OrderItemRepository::class);
         $this->app->bind(ICourseRepository::class, CourseRepository::class);
         $this->app->bind(ICourseReviewRepository::class, CourseReviewRepository::class);
+        $this->app->bind(IContactRepository::class, ContactRepository::class);
         $this->app->bind(ILessonRepository::class, LessonRepository::class);
         $this->app->bind(ILessonCommentRepository::class, LessonCommentRepository::class);
         $this->app->bind(ILessonNoteRepository::class, LessonNoteRepository::class);
@@ -114,11 +122,13 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IOrderItemService::class, OrderItemService::class);
         $this->app->bind(ICourseService::class, CourseService::class);
         $this->app->bind(ICourseReviewService::class, CourseReviewService::class);
+        $this->app->bind(IContactService::class, ContactService::class);
         $this->app->bind(ILessonService::class, LessonService::class);
         $this->app->bind(ILessonCommentService::class, LessonCommentService::class);
         $this->app->bind(ILessonAccessService::class, LessonAccessService::class);
         $this->app->bind(ILessonNoteService::class, LessonNoteService::class);
         $this->app->bind(IQuizService::class, QuizService::class);
+        $this->app->bind(IRecaptchaVerifier::class, RecaptchaVerifier::class);
         $this->app->bind(IStarService::class, StarService::class);
         $this->app->bind(IStarTransactionService::class, StarTransactionService::class);
         $this->app->bind(IUserQuizAttemptService::class, UserQuizAttemptService::class);
@@ -136,5 +146,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Lesson::observe(LessonObserver::class);
+
+        Gate::define('viewApiDocs', function (): bool {
+            $admin = auth('admin')->user();
+
+            return $admin?->can('View:ApiDocs') ?? false;
+        });
     }
 }

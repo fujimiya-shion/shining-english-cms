@@ -8,6 +8,7 @@ use App\Services\User\IUserService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -17,6 +18,15 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     $this->withHeader('Authorization', createDeveloperAccessToken());
+    config()->set('recaptcha.secret_key', 'test-secret');
+    config()->set('recaptcha.register_action', 'register');
+    Http::fake([
+        'https://www.google.com/recaptcha/api/siteverify' => Http::response([
+            'success' => true,
+            'action' => 'register',
+            'score' => 0.9,
+        ], 200),
+    ]);
 });
 
 it('registers a user', function (): void {
@@ -28,6 +38,7 @@ it('registers a user', function (): void {
         'email' => $email,
         'phone' => '0900000000',
         'password' => 'secret123',
+        'recaptcha_token' => 'token-ok',
     ]);
 
     $response->assertStatus(201);
@@ -53,6 +64,7 @@ it('returns error when register service throws', function (): void {
         'email' => 'newuser-'.Str::random(8).'@example.com',
         'phone' => '0900000000',
         'password' => 'secret123',
+        'recaptcha_token' => 'token-ok',
     ]);
 
     $response->assertStatus(422);
@@ -70,6 +82,31 @@ it('validates register request', function (): void {
     $response->assertJsonPath('errors.name.0', 'Name is required.');
     $response->assertJsonPath('errors.email.0', 'Email is required.');
     $response->assertJsonPath('errors.phone.0', 'Phone is required.');
+    $response->assertJsonPath('errors.recaptcha_token.0', 'reCAPTCHA token is required.');
+});
+
+it('rejects register when recaptcha verification fails', function (): void {
+    config()->set('recaptcha.register_action', 'register-blocked');
+    Http::fake([
+        'https://www.google.com/recaptcha/api/siteverify' => Http::response([
+            'success' => true,
+            'action' => 'register',
+            'score' => 0.9,
+        ], 200),
+    ]);
+
+    $response = $this->postJson('/api/v1/auth/register', [
+        'name' => 'New User',
+        'email' => 'newuser-'.Str::random(8).'@example.com',
+        'phone' => '0900000000',
+        'password' => 'secret123',
+        'recaptcha_token' => 'token-bad',
+    ]);
+
+    $response->assertStatus(422);
+    $response->assertJsonFragment([
+        'message' => 'reCAPTCHA verification failed.',
+    ]);
 });
 
 it('logs in a user', function (): void {

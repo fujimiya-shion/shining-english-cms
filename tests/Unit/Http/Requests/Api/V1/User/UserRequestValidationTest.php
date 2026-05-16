@@ -50,6 +50,7 @@ it('defines expected register request rules and messages', function (): void {
         'email' => ['required', 'email', 'unique:users,email'],
         'phone' => ['required', 'string', 'max:30'],
         'password' => ['required', 'string', 'min:6'],
+        'recaptcha_token' => ['required', 'string'],
     ]);
     expect($request->messages())->toBe([
         'name.required' => 'Name is required.',
@@ -59,6 +60,7 @@ it('defines expected register request rules and messages', function (): void {
         'phone.required' => 'Phone is required.',
         'password.required' => 'Password is required.',
         'password.min' => 'Password must be at least 6 characters.',
+        'recaptcha_token.required' => 'reCAPTCHA token is required.',
     ]);
 });
 

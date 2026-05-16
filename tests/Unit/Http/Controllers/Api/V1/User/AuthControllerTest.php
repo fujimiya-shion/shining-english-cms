@@ -8,6 +8,8 @@ use App\Http\Requests\Api\V1\User\LoginRequest;
 use App\Http\Requests\Api\V1\User\RegisterRequest;
 use App\Http\Requests\Api\V1\User\ResetPasswordRequest;
 use App\Http\Requests\Api\V1\User\ThirdPartyLoginRequest;
+use App\Services\Security\Recaptcha\IRecaptchaVerifier;
+use App\Services\Security\Recaptcha\RecaptchaVerificationException;
 use App\Models\User;
 use App\Services\User\IThirdPartyAuthService;
 use App\Services\User\IUserService;
@@ -33,6 +35,12 @@ it('registers a user and returns a created response', function (): void {
         ->with('Shion', 'shion@example.com', '0123', 'secret123')
         ->andReturn($result);
     app()->instance(IUserService::class, $service);
+    $recaptchaVerifier = \Mockery::mock(IRecaptchaVerifier::class);
+    $recaptchaVerifier->shouldReceive('verifyOrFail')
+        ->once()
+        ->with('token-ok', 'register', \Mockery::any())
+        ->andReturnNull();
+    app()->instance(IRecaptchaVerifier::class, $recaptchaVerifier);
 
     $controller = app()->make(AuthController::class);
     $request = RegisterRequest::create('/api/v1/auth/register', 'POST', [
@@ -40,6 +48,7 @@ it('registers a user and returns a created response', function (): void {
         'email' => 'shion@example.com',
         'phone' => '0123',
         'password' => 'secret123',
+        'recaptcha_token' => 'token-ok',
     ]);
     $request->setContainer(app())->setRedirector(app('redirect'));
     $request->validateResolved();
@@ -64,8 +73,13 @@ it('registers a user and returns a created response', function (): void {
 
 it('returns an error response when registration fails', function (): void {
     $service = \Mockery::mock(IUserService::class);
-    $service->shouldReceive('register')->once()->andThrow(new RuntimeException('Email already exists'));
+    $service->shouldReceive('register')->never();
     app()->instance(IUserService::class, $service);
+    $recaptchaVerifier = \Mockery::mock(IRecaptchaVerifier::class);
+    $recaptchaVerifier->shouldReceive('verifyOrFail')
+        ->once()
+        ->andThrow(RecaptchaVerificationException::failed());
+    app()->instance(IRecaptchaVerifier::class, $recaptchaVerifier);
 
     $controller = app()->make(AuthController::class);
     $request = RegisterRequest::create('/api/v1/auth/register', 'POST', [
@@ -73,6 +87,7 @@ it('returns an error response when registration fails', function (): void {
         'email' => 'shion@example.com',
         'phone' => '0123',
         'password' => 'secret123',
+        'recaptcha_token' => 'token-bad',
     ]);
     $request->setContainer(app())->setRedirector(app('redirect'));
     $request->validateResolved();
@@ -80,7 +95,7 @@ it('returns an error response when registration fails', function (): void {
     $response = $controller->register($request);
 
     assertJsonResponsePayload($response, 422, [
-        'message' => 'Email already exists',
+        'message' => 'reCAPTCHA verification failed.',
         'status' => false,
         'status_code' => 422,
     ]);

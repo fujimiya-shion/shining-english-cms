@@ -9,6 +9,8 @@ use App\Http\Requests\Api\V1\User\LoginRequest;
 use App\Http\Requests\Api\V1\User\RegisterRequest;
 use App\Http\Requests\Api\V1\User\ResetPasswordRequest;
 use App\Http\Requests\Api\V1\User\ThirdPartyLoginRequest;
+use App\Services\Security\Recaptcha\IRecaptchaVerifier;
+use App\Services\Security\Recaptcha\RecaptchaVerificationException;
 use App\Services\User\IThirdPartyAuthService;
 use App\Services\User\IUserService;
 use App\Traits\Jsonable;
@@ -23,7 +25,8 @@ class AuthController extends ApiController
     use Jsonable;
 
     public function __construct(
-        private IUserService $service
+        private IUserService $service,
+        private readonly IRecaptchaVerifier $recaptchaVerifier,
     ) {}
 
     public function register(RegisterRequest $request): JsonResponse
@@ -31,6 +34,12 @@ class AuthController extends ApiController
         $data = $request->validated();
 
         try {
+            $this->recaptchaVerifier->verifyOrFail(
+                token: $data['recaptcha_token'],
+                expectedAction: (string) config('recaptcha.register_action'),
+                ipAddress: $request->ip(),
+            );
+
             $result = $this->service->register(
                 $data['name'],
                 $data['email'],
@@ -39,6 +48,8 @@ class AuthController extends ApiController
             );
 
             return $this->created($result->toArray(), 'Register successfully');
+        } catch (RecaptchaVerificationException $e) {
+            return $this->error($e->getMessage(), 422);
         } catch (Throwable $e) {
             return $this->error($e->getMessage(), 422);
         }
