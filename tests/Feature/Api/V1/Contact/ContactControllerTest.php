@@ -29,6 +29,8 @@ it('stores contact when recaptcha is valid', function (): void {
         'email' => 'a@example.com',
         'message' => 'Can tu van khoa hoc.',
         'recaptcha_token' => 'token-ok',
+        'ip_address' => '203.113.10.20',
+        'user_agent' => 'Mozilla/5.0 Test',
     ]);
 
     $response->assertStatus(201);
@@ -36,6 +38,9 @@ it('stores contact when recaptcha is valid', function (): void {
         'message' => 'Contact submitted successfully.',
     ]);
     expect(Contact::query()->count())->toBe(1);
+    $contact = Contact::query()->first();
+    expect($contact?->ip_address)->toBe('203.113.10.20')
+        ->and($contact?->user_agent)->toBe('Mozilla/5.0 Test');
     Bus::assertDispatched(SendContactSubmittedMailJob::class);
 });
 

@@ -29,7 +29,7 @@ class ContactReplyMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            text: 'emails.contact-reply-text',
+            view: 'emails.contact-reply-text',
             with: [
                 'contact' => $this->contact,
                 'replyMessage' => $this->replyMessage,
@@ -37,4 +37,3 @@ class ContactReplyMail extends Mailable
         );
     }
 }
-

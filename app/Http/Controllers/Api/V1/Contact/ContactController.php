@@ -25,7 +25,7 @@ class ContactController extends ApiController
             $this->recaptchaVerifier->verifyOrFail(
                 token: $data['recaptcha_token'],
                 expectedAction: (string) config('recaptcha.contact_action'),
-                ipAddress: $request->ip(),
+                ipAddress: $data['ip_address'] ?? $request->ip(),
             );
         } catch (RecaptchaVerificationException $e) {
             return $this->error($e->getMessage(), 422);
@@ -37,8 +37,8 @@ class ContactController extends ApiController
             name: $data['name'],
             email: $data['email'],
             message: $data['message'],
-            ipAddress: $request->ip(),
-            userAgent: $request->userAgent(),
+            ipAddress: $data['ip_address'] ?? $request->ip(),
+            userAgent: $data['user_agent'] ?? $request->userAgent(),
         );
 
         return $this->created(data: null, message: 'Contact submitted successfully.');

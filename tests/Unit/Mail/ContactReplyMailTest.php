@@ -15,5 +15,5 @@ it('builds contact reply mail content', function (): void {
     $mail = new ContactReplyMail($contact, 'Cam on ban da lien he.', 'Re: Tu van');
 
     expect($mail->envelope()->subject)->toBe('Re: Tu van');
-    expect($mail->content()->text)->toBe('emails.contact-reply-text');
+    expect($mail->content()->view)->toBe('emails.contact-reply-text');
 });

@@ -11,6 +11,8 @@ it('defines expected contact store request rules and messages', function (): voi
         'email' => ['required', 'email'],
         'message' => ['required', 'string', 'max:5000'],
         'recaptcha_token' => ['required', 'string'],
+        'ip_address' => ['nullable', 'ip'],
+        'user_agent' => ['nullable', 'string'],
     ]);
     expect($request->messages())->toBe([
         'name.required' => 'Name is required.',
@@ -18,6 +20,6 @@ it('defines expected contact store request rules and messages', function (): voi
         'email.email' => 'Email must be valid.',
         'message.required' => 'Message is required.',
         'recaptcha_token.required' => 'reCAPTCHA token is required.',
+        'ip_address.ip' => 'IP address must be valid.',
     ]);
 });
-
