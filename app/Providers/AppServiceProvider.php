@@ -79,6 +79,7 @@ use App\Services\User\UserDeviceService;
 use App\Services\User\UserService;
 use App\Services\UserQuizAttempt\IUserQuizAttemptService;
 use App\Services\UserQuizAttempt\UserQuizAttemptService;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -136,5 +137,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Lesson::observe(LessonObserver::class);
+
+        Gate::define('viewApiDocs', function (): bool {
+            $admin = auth('admin')->user();
+
+            return $admin?->can('View:ApiDocs') ?? false;
+        });
     }
 }

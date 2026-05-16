@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Admin;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class AdminSeeder extends Seeder
 {
@@ -20,7 +21,7 @@ class AdminSeeder extends Seeder
             $password = env('ADMIN_PASSWORD');
         }
 
-        Admin::query()->firstOrCreate(
+        $admin = Admin::query()->firstOrCreate(
             ['email' => $email],
             [
                 'name' => 'Admin',
@@ -29,5 +30,13 @@ class AdminSeeder extends Seeder
                 'password' => Hash::make($password),
             ]
         );
+
+        $superAdminRoleName = config('filament-shield.super_admin.name', 'super_admin');
+        $superAdminRole = Role::query()->firstOrCreate([
+            'name' => $superAdminRoleName,
+            'guard_name' => 'admin',
+        ]);
+
+        $admin->assignRole($superAdminRole);
     }
 }
