@@ -16,6 +16,9 @@ it('defines fillable attributes', function (): void {
     expect($model->getFillable())->toEqual([
         'title',
         'description',
+        'short_description',
+        'thumbnail',
+        'content',
         'slug',
         'status',
         'required_star',
