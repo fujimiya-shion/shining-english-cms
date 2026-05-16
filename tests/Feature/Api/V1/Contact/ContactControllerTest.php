@@ -1,7 +1,9 @@
 <?php
 
+use App\Jobs\SendContactSubmittedMailJob;
 use App\Models\Contact;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
@@ -13,6 +15,7 @@ beforeEach(function (): void {
 });
 
 it('stores contact when recaptcha is valid', function (): void {
+    Bus::fake();
     Http::fake([
         'https://www.google.com/recaptcha/api/siteverify' => Http::response([
             'success' => true,
@@ -33,6 +36,7 @@ it('stores contact when recaptcha is valid', function (): void {
         'message' => 'Contact submitted successfully.',
     ]);
     expect(Contact::query()->count())->toBe(1);
+    Bus::assertDispatched(SendContactSubmittedMailJob::class);
 });
 
 it('returns validation errors for missing contact fields', function (): void {
@@ -84,4 +88,3 @@ it('rejects contact when recaptcha provider is unavailable', function (): void {
         'message' => 'reCAPTCHA verification is unavailable. Please try again.',
     ]);
 });
-

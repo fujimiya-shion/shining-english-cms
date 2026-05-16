@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api\V1\Contact;
 
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Api\V1\Contact\ContactStoreRequest;
-use App\Models\Contact;
 use App\Services\Security\Recaptcha\IRecaptchaVerifier;
 use App\Services\Security\Recaptcha\RecaptchaVerificationException;
+use App\Services\Contact\IContactService;
 use Illuminate\Http\JsonResponse;
 use Throwable;
 
@@ -14,6 +14,7 @@ class ContactController extends ApiController
 {
     public function __construct(
         private readonly IRecaptchaVerifier $recaptchaVerifier,
+        private readonly IContactService $contactService,
     ) {}
 
     public function store(ContactStoreRequest $request): JsonResponse
@@ -32,15 +33,14 @@ class ContactController extends ApiController
             return $this->error('Unable to submit contact request.', 422);
         }
 
-        Contact::query()->create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'message' => $data['message'],
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
+        $this->contactService->submitContact(
+            name: $data['name'],
+            email: $data['email'],
+            message: $data['message'],
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
+        );
 
         return $this->created(data: null, message: 'Contact submitted successfully.');
     }
 }
-
