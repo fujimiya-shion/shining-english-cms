@@ -3,6 +3,9 @@
 use App\Services\OptimizedImageService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
+
+uses(TestCase::class);
 
 it('stores optimized webp image path without storing original file', function (): void {
     Storage::fake('public');

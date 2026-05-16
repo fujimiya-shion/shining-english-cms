@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\V1\Lesson\LessonController;
 use App\Models\Lesson;
 use App\Models\Quiz;
 use App\Services\Lesson\ILessonService;
+use App\Services\LessonAccess\ILessonAccessService;
+use App\Services\LessonComment\ILessonCommentService;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -36,7 +38,17 @@ function makeLessonRequestWithId(int $id): Request
     return $request;
 }
 
+function makeUserLessonRequest(int $lessonId, ?int $userId = 7): Request
+{
+    $request = makeLessonRequestWithId($lessonId);
+    $request->setUserResolver(fn () => $userId ? tap(new \App\Models\User, fn ($user) => $user->id = $userId) : null);
+
+    return $request;
+}
+
 it('can be instantiated', function (): void {
+    app()->instance(ILessonAccessService::class, \Mockery::mock(ILessonAccessService::class));
+    app()->instance(ILessonCommentService::class, \Mockery::mock(ILessonCommentService::class));
     $controller = app()->make(LessonController::class);
 
     expect($controller)->toBeInstanceOf(LessonController::class);
@@ -49,6 +61,8 @@ it('returns success response from index', function (): void {
     $service = \Mockery::mock(ILessonService::class);
     $service->shouldReceive('paginateAll')->once()->andReturn($paginator);
     app()->instance(ILessonService::class, $service);
+    app()->instance(ILessonAccessService::class, \Mockery::mock(ILessonAccessService::class));
+    app()->instance(ILessonCommentService::class, \Mockery::mock(ILessonCommentService::class));
 
     $controller = app()->make(LessonController::class);
     $response = $controller->index(new Request);
@@ -70,6 +84,9 @@ it('returns notfound when lesson quiz has no lesson record', function (): void {
     $service = \Mockery::mock(ILessonService::class);
     $service->shouldReceive('getById')->once()->with(10)->andReturn(null);
     app()->instance(ILessonService::class, $service);
+    $accessService = \Mockery::mock(ILessonAccessService::class);
+    app()->instance(ILessonAccessService::class, $accessService);
+    app()->instance(ILessonCommentService::class, \Mockery::mock(ILessonCommentService::class));
 
     $controller = app()->make(LessonController::class);
     $response = $controller->quiz(makeLessonRequestWithId(10));
@@ -99,9 +116,13 @@ it('returns notfound when lesson quiz has no quiz record', function (): void {
     $service = \Mockery::mock(ILessonService::class);
     $service->shouldReceive('getById')->once()->with(10)->andReturn($lesson);
     app()->instance(ILessonService::class, $service);
+    $accessService = \Mockery::mock(ILessonAccessService::class);
+    $accessService->shouldReceive('canAccessLessonProtectedContent')->once()->andReturnTrue();
+    app()->instance(ILessonAccessService::class, $accessService);
+    app()->instance(ILessonCommentService::class, \Mockery::mock(ILessonCommentService::class));
 
     $controller = app()->make(LessonController::class);
-    $response = $controller->quiz(makeLessonRequestWithId(10));
+    $response = $controller->quiz(makeUserLessonRequest(10));
 
     assertJsonResponsePayload($response, 404, [
         'message' => 'Not found',
@@ -131,9 +152,13 @@ it('returns quiz data for lesson quiz endpoint', function (): void {
     $service = \Mockery::mock(ILessonService::class);
     $service->shouldReceive('getById')->once()->with(10)->andReturn($lesson);
     app()->instance(ILessonService::class, $service);
+    $accessService = \Mockery::mock(ILessonAccessService::class);
+    $accessService->shouldReceive('canAccessLessonProtectedContent')->once()->andReturnTrue();
+    app()->instance(ILessonAccessService::class, $accessService);
+    app()->instance(ILessonCommentService::class, \Mockery::mock(ILessonCommentService::class));
 
     $controller = app()->make(LessonController::class);
-    $response = $controller->quiz(makeLessonRequestWithId(10));
+    $response = $controller->quiz(makeUserLessonRequest(10));
 
     assertJsonResponsePayload($response, 200, [
         'message' => 'Get Quiz Successfully',
@@ -156,9 +181,13 @@ it('downloads lesson document by index', function (): void {
     $service = \Mockery::mock(ILessonService::class);
     $service->shouldReceive('getById')->once()->with(10)->andReturn($lesson);
     app()->instance(ILessonService::class, $service);
+    $accessService = \Mockery::mock(ILessonAccessService::class);
+    $accessService->shouldReceive('canAccessLessonProtectedContent')->once()->andReturnTrue();
+    app()->instance(ILessonAccessService::class, $accessService);
+    app()->instance(ILessonCommentService::class, \Mockery::mock(ILessonCommentService::class));
 
     $controller = app()->make(LessonController::class);
-    $response = $controller->downloadDocument(10, 0);
+    $response = $controller->downloadDocument(makeUserLessonRequest(10), 10, 0);
 
     expect($response->getStatusCode())->toBe(200);
     expect($response->headers->get('content-disposition'))->toContain('grammar-guide.pdf');
@@ -174,9 +203,13 @@ it('returns not found when lesson document index is invalid', function (): void 
     $service = \Mockery::mock(ILessonService::class);
     $service->shouldReceive('getById')->once()->with(10)->andReturn($lesson);
     app()->instance(ILessonService::class, $service);
+    $accessService = \Mockery::mock(ILessonAccessService::class);
+    $accessService->shouldReceive('canAccessLessonProtectedContent')->once()->andReturnTrue();
+    app()->instance(ILessonAccessService::class, $accessService);
+    app()->instance(ILessonCommentService::class, \Mockery::mock(ILessonCommentService::class));
 
     $controller = app()->make(LessonController::class);
-    $response = $controller->downloadDocument(10, 1);
+    $response = $controller->downloadDocument(makeUserLessonRequest(10), 10, 1);
 
     assertJsonResponsePayload($response, 404, [
         'message' => 'Not found',
@@ -189,9 +222,11 @@ it('returns not found when downloading document for missing lesson', function ()
     $service = \Mockery::mock(ILessonService::class);
     $service->shouldReceive('getById')->once()->with(10)->andReturn(null);
     app()->instance(ILessonService::class, $service);
+    app()->instance(ILessonAccessService::class, \Mockery::mock(ILessonAccessService::class));
+    app()->instance(ILessonCommentService::class, \Mockery::mock(ILessonCommentService::class));
 
     $controller = app()->make(LessonController::class);
-    $response = $controller->downloadDocument(10, 0);
+    $response = $controller->downloadDocument(makeUserLessonRequest(10), 10, 0);
 
     assertJsonResponsePayload($response, 404, [
         'message' => 'Not found',
@@ -213,9 +248,13 @@ it('falls back to basename when document name at index is empty', function (): v
     $service = \Mockery::mock(ILessonService::class);
     $service->shouldReceive('getById')->once()->with(10)->andReturn($lesson);
     app()->instance(ILessonService::class, $service);
+    $accessService = \Mockery::mock(ILessonAccessService::class);
+    $accessService->shouldReceive('canAccessLessonProtectedContent')->once()->andReturnTrue();
+    app()->instance(ILessonAccessService::class, $accessService);
+    app()->instance(ILessonCommentService::class, \Mockery::mock(ILessonCommentService::class));
 
     $controller = app()->make(LessonController::class);
-    $response = $controller->downloadDocument(10, 0);
+    $response = $controller->downloadDocument(makeUserLessonRequest(10), 10, 0);
 
     expect($response->getStatusCode())->toBe(200);
     expect($response->headers->get('content-disposition'))->toContain('grammar-guide.pdf');
@@ -225,9 +264,11 @@ it('returns not found when streaming video for missing lesson', function (): voi
     $service = \Mockery::mock(ILessonService::class);
     $service->shouldReceive('getById')->once()->with(10)->andReturn(null);
     app()->instance(ILessonService::class, $service);
+    app()->instance(ILessonAccessService::class, \Mockery::mock(ILessonAccessService::class));
+    app()->instance(ILessonCommentService::class, \Mockery::mock(ILessonCommentService::class));
 
     $controller = app()->make(LessonController::class);
-    $response = $controller->video(10);
+    $response = $controller->video(makeUserLessonRequest(10), 10);
 
     assertJsonResponsePayload($response, 404, [
         'message' => 'Not found',
@@ -245,9 +286,13 @@ it('returns not found when lesson video path is invalid', function (): void {
     $service = \Mockery::mock(ILessonService::class);
     $service->shouldReceive('getById')->once()->with(10)->andReturn($lesson);
     app()->instance(ILessonService::class, $service);
+    $accessService = \Mockery::mock(ILessonAccessService::class);
+    $accessService->shouldReceive('canWatchLessonVideo')->once()->andReturnTrue();
+    app()->instance(ILessonAccessService::class, $accessService);
+    app()->instance(ILessonCommentService::class, \Mockery::mock(ILessonCommentService::class));
 
     $controller = app()->make(LessonController::class);
-    $response = $controller->video(10);
+    $response = $controller->video(makeUserLessonRequest(10), 10);
 
     assertJsonResponsePayload($response, 404, [
         'message' => 'Not found',
@@ -268,9 +313,13 @@ it('streams lesson video inline', function (): void {
     $service = \Mockery::mock(ILessonService::class);
     $service->shouldReceive('getById')->once()->with(10)->andReturn($lesson);
     app()->instance(ILessonService::class, $service);
+    $accessService = \Mockery::mock(ILessonAccessService::class);
+    $accessService->shouldReceive('canWatchLessonVideo')->once()->andReturnTrue();
+    app()->instance(ILessonAccessService::class, $accessService);
+    app()->instance(ILessonCommentService::class, \Mockery::mock(ILessonCommentService::class));
 
     $controller = app()->make(LessonController::class);
-    $response = $controller->video(10);
+    $response = $controller->video(makeUserLessonRequest(10), 10);
 
     expect($response->getStatusCode())->toBe(200);
     expect((string) $response->headers->get('accept-ranges'))->toBe('bytes');

@@ -32,6 +32,7 @@ it('defines fillable attributes', function (): void {
         'star_reward_video',
         'star_reward_quiz',
         'has_quiz',
+        'is_preview_free',
     ]);
 });
 

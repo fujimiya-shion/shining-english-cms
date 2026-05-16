@@ -93,6 +93,14 @@ Route::prefix('/v1')->group(function () {
                 Route::get('/{id}/learning-progress', 'learningProgress');
                 Route::post('/{id}/lessons/{lessonId}/complete', 'completeLesson');
                 Route::post('/{id}/current-lesson', 'setCurrentLesson');
+                Route::post('/{id}/reviews', 'storeReview');
+            });
+
+        Route::middleware(VerifyUserToken::class)
+            ->controller(LessonController::class)
+            ->prefix('/lessons')
+            ->group(function () {
+                Route::post('/{id}/comments', 'storeComment');
             });
 
         Route::middleware(VerifyUserToken::class)

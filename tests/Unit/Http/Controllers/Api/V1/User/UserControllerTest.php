@@ -40,6 +40,8 @@ it('updates the authenticated user', function (): void {
         'data' => [
             'id' => 6,
             'name' => 'Updated',
+            'city_name' => null,
+            'city' => null,
         ],
     ]);
 });

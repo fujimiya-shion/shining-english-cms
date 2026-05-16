@@ -19,7 +19,8 @@ interface IEnrollmentService extends IService
      *   current_lesson_id:int|null,
      *   completed_lesson_ids:list<int>,
      *   total_lessons:int,
-     *   progress_percentage:float
+     *   progress_percentage:float,
+     *   has_reviewed:bool
      * }|null
      */
     public function getLearningProgress(int $userId, int $courseId): ?array;
@@ -31,6 +32,7 @@ interface IEnrollmentService extends IService
      *   completed_lesson_ids:list<int>,
      *   total_lessons:int,
      *   progress_percentage:float,
+     *   has_reviewed:bool,
      *   next_lesson:array{id:int,has_quiz:bool}|null
      * }|null
      */
@@ -42,7 +44,8 @@ interface IEnrollmentService extends IService
      *   current_lesson_id:int|null,
      *   completed_lesson_ids:list<int>,
      *   total_lessons:int,
-     *   progress_percentage:float
+     *   progress_percentage:float,
+     *   has_reviewed:bool
      * }|null
      */
     public function setCurrentLesson(int $userId, int $courseId, int $lessonId): ?array;

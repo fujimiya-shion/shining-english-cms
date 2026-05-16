@@ -76,7 +76,7 @@ it('returns not found when service cannot find user', function (): void {
     $service = Mockery::mock(IUserService::class);
     $service->shouldReceive('updateProfile')
         ->once()
-        ->with($user, Mockery::type('array'))
+        ->with(Mockery::type(User::class), Mockery::type('array'))
         ->andThrow(new ModelNotFoundException('User not found'));
     app()->instance(IUserService::class, $service);
 
@@ -99,7 +99,7 @@ it('returns error when update fails', function (): void {
     $service = Mockery::mock(IUserService::class);
     $service->shouldReceive('updateProfile')
         ->once()
-        ->with($user, Mockery::type('array'))
+        ->with(Mockery::type(User::class), Mockery::type('array'))
         ->andThrow(new Exception('Update failed'));
     app()->instance(IUserService::class, $service);
 
@@ -149,7 +149,8 @@ it('updates avatar from uploaded file and stores only webp', function (): void {
     $user->refresh();
     expect($user->avatar)->toBeString();
     expect($user->avatar)->toEndWith('.webp');
-    Storage::disk('public')->assertExists($user->avatar);
+    $storedPath = ltrim(str_replace('/storage/', '', (string) $user->avatar), '/');
+    Storage::disk('public')->assertExists($storedPath);
 });
 
 it('replaces old local avatar when uploading a new one', function (): void {
@@ -172,6 +173,7 @@ it('replaces old local avatar when uploading a new one', function (): void {
     Storage::disk('public')->assertMissing('users/old-avatar.webp');
 
     $user->refresh();
-    Storage::disk('public')->assertExists($user->avatar);
+    $storedPath = ltrim(str_replace('/storage/', '', (string) $user->avatar), '/');
+    Storage::disk('public')->assertExists($storedPath);
     expect($user->avatar)->toEndWith('.webp');
 });

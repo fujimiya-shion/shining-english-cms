@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\V1\Course;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Api\V1\Course\CourseCurrentLessonRequest;
 use App\Http\Requests\Api\V1\Course\CourseFilterRequest;
+use App\Http\Requests\Api\V1\Course\CourseReviewStoreRequest;
 use App\Services\Cart\ICartService;
 use App\Services\Course\ICourseService;
+use App\Services\CourseReview\ICourseReviewService;
 use App\Services\Enrollment\IEnrollmentService;
 use App\Services\IService;
 use App\Traits\ApiBehaviour;
@@ -23,6 +25,7 @@ class CourseController extends ApiController
         protected ICourseService $service,
         protected ICartService $cartService,
         protected IEnrollmentService $enrollmentService,
+        protected ICourseReviewService $courseReviewService,
     ) {}
 
     protected function service(): IService
@@ -143,5 +146,30 @@ class CourseController extends ApiController
         }
 
         return $this->success(data: $progress);
+    }
+
+    public function storeReview(CourseReviewStoreRequest $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+        $course = $this->service->getById($id);
+
+        if (! $course) {
+            return $this->notfound();
+        }
+
+        if (! $this->enrollmentService->isEnrolled($user->id, $id)) {
+            return $this->unauthorized('Course access denied');
+        }
+
+        $validated = $request->validated();
+
+        $review = $this->courseReviewService->upsertByUser(
+            courseId: $id,
+            userId: $user->id,
+            rating: (int) $validated['rating'],
+            content: (string) $validated['content'],
+        );
+
+        return $this->created($review, 'Review submitted');
     }
 }

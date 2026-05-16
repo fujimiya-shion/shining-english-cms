@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1\Lesson;
 
 use App\Http\Controllers\Api\ApiController;
+use App\Http\Requests\Api\V1\Lesson\LessonCommentStoreRequest;
+use App\Services\LessonComment\ILessonCommentService;
 use App\Services\IService;
 use App\Services\Lesson\ILessonService;
 use App\Services\LessonAccess\ILessonAccessService;
@@ -21,6 +23,7 @@ class LessonController extends ApiController
     public function __construct(
         protected ILessonService $service,
         protected ILessonAccessService $lessonAccessService,
+        protected ILessonCommentService $lessonCommentService,
     ) {}
 
     protected function service(): IService
@@ -109,5 +112,27 @@ class LessonController extends ApiController
         );
 
         return $response;
+    }
+
+    public function storeComment(LessonCommentStoreRequest $request, int $id): JsonResponse
+    {
+        $lesson = $this->service->getById($id);
+        if (! $lesson) {
+            return $this->notfound();
+        }
+
+        $user = $request->user();
+        if (! $this->lessonAccessService->canWatchLessonVideo($user->id, $lesson)) {
+            return $this->unauthorized('Lesson access denied');
+        }
+
+        $validated = $request->validated();
+        $comment = $this->lessonCommentService->createForUser(
+            lessonId: $id,
+            userId: $user->id,
+            content: (string) $validated['content'],
+        );
+
+        return $this->created($comment, 'Comment submitted');
     }
 }

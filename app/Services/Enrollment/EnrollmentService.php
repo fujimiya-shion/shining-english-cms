@@ -4,6 +4,7 @@ namespace App\Services\Enrollment;
 
 use App\Enums\OrderStatus;
 use App\Models\Enrollment;
+use App\Models\CourseReview;
 use App\Models\Lesson;
 use App\Models\LessonProgress;
 use App\Repositories\Enrollment\IEnrollmentRepository;
@@ -98,7 +99,13 @@ class EnrollmentService extends Service implements IEnrollmentService
         $orderedLessonIds = $orderedLessons->pluck('id')->map(fn (mixed $id): int => (int) $id)->all();
         [$completedLessonIds, $currentLessonId] = $this->collectProgressState($userId, $courseId, $orderedLessonIds);
 
-        return $this->buildProgressPayload($courseId, $currentLessonId, $completedLessonIds, count($orderedLessonIds));
+        return $this->buildProgressPayload(
+            userId: $userId,
+            courseId: $courseId,
+            currentLessonId: $currentLessonId,
+            completedLessonIds: $completedLessonIds,
+            totalLessons: count($orderedLessonIds),
+        );
     }
 
     public function completeLesson(int $userId, int $courseId, int $lessonId): ?array
@@ -154,7 +161,13 @@ class EnrollmentService extends Service implements IEnrollmentService
         }
 
         return [
-            ...$this->buildProgressPayload($courseId, $currentLessonId, $completedLessonIds, count($orderedLessonIds)),
+            ...$this->buildProgressPayload(
+                userId: $userId,
+                courseId: $courseId,
+                currentLessonId: $currentLessonId,
+                completedLessonIds: $completedLessonIds,
+                totalLessons: count($orderedLessonIds),
+            ),
             'next_lesson' => $nextLesson
                 ? [
                     'id' => (int) $nextLesson->id,
@@ -197,7 +210,13 @@ class EnrollmentService extends Service implements IEnrollmentService
 
         [$completedLessonIds, $currentLessonId] = $this->collectProgressState($userId, $courseId, $orderedLessonIds);
 
-        return $this->buildProgressPayload($courseId, $currentLessonId, $completedLessonIds, count($orderedLessonIds));
+        return $this->buildProgressPayload(
+            userId: $userId,
+            courseId: $courseId,
+            currentLessonId: $currentLessonId,
+            completedLessonIds: $completedLessonIds,
+            totalLessons: count($orderedLessonIds),
+        );
     }
 
     /**
@@ -279,14 +298,25 @@ class EnrollmentService extends Service implements IEnrollmentService
      *   current_lesson_id:int|null,
      *   completed_lesson_ids:list<int>,
      *   total_lessons:int,
-     *   progress_percentage:float
+     *   progress_percentage:float,
+     *   has_reviewed:bool
      * }
      */
-    private function buildProgressPayload(int $courseId, ?int $currentLessonId, array $completedLessonIds, int $totalLessons): array
+    private function buildProgressPayload(
+        int $userId,
+        int $courseId,
+        ?int $currentLessonId,
+        array $completedLessonIds,
+        int $totalLessons
+    ): array
     {
         $progressPercentage = $totalLessons > 0
             ? round((count($completedLessonIds) / $totalLessons) * 100, 2)
             : 0.0;
+        $hasReviewed = CourseReview::query()
+            ->where('course_id', $courseId)
+            ->where('user_id', $userId)
+            ->exists();
 
         return [
             'course_id' => $courseId,
@@ -294,6 +324,7 @@ class EnrollmentService extends Service implements IEnrollmentService
             'completed_lesson_ids' => $completedLessonIds,
             'total_lessons' => $totalLessons,
             'progress_percentage' => $progressPercentage,
+            'has_reviewed' => $hasReviewed,
         ];
     }
 }

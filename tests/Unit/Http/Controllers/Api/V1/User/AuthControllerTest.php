@@ -12,10 +12,12 @@ use App\Models\User;
 use App\Services\User\IThirdPartyAuthService;
 use App\Services\User\IUserService;
 use App\ValueObjects\DeviceInfo;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Tests\TestCase;
 
 uses(TestCase::class);
+uses(RefreshDatabase::class);
 
 afterEach(function (): void {
     \Mockery::close();
@@ -54,6 +56,8 @@ it('registers a user and returns a created response', function (): void {
         'user' => [
             'name' => 'Shion',
             'email' => 'shion@example.com',
+            'city_name' => null,
+            'city' => null,
         ],
     ]);
 });
@@ -132,6 +136,8 @@ it('logs in a user with request fallback device info and returns an error on fai
         'token' => 'user-token',
         'user' => [
             'email' => 'shion@example.com',
+            'city_name' => null,
+            'city' => null,
         ],
     ]);
 
@@ -280,6 +286,8 @@ it('authenticates by third-party access token and returns an error payload on fa
         'token' => 'third-party-token',
         'user' => [
             'email' => 'shion@example.com',
+            'city_name' => null,
+            'city' => null,
         ],
     ]);
 

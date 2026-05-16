@@ -244,6 +244,8 @@ it('returns course access state for authenticated user', function (): void {
             'enrolled' => false,
             'pending_access' => true,
             'in_cart' => true,
+            'is_free_course' => true,
+            'can_enroll_free' => true,
         ],
     ]);
 });
@@ -304,6 +306,7 @@ it('returns learning progress for enrolled user', function (): void {
             'completed_lesson_ids' => [99],
             'total_lessons' => 2,
             'progress_percentage' => 50.0,
+            'has_reviewed' => false,
         ]);
     app()->instance(IEnrollmentService::class, $enrollmentService);
 
@@ -325,6 +328,7 @@ it('returns learning progress for enrolled user', function (): void {
             'completed_lesson_ids' => [99],
             'total_lessons' => 2,
             'progress_percentage' => 50.0,
+            'has_reviewed' => false,
         ],
     ]);
 });

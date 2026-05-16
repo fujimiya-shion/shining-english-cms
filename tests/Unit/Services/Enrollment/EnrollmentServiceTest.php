@@ -446,6 +446,7 @@ it('returns zero progress when enrolled course has no lessons', function (): voi
         'completed_lesson_ids' => [],
         'total_lessons' => 0,
         'progress_percentage' => 0.0,
+        'has_reviewed' => false,
     ]);
 });
 
