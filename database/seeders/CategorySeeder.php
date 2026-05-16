@@ -11,12 +11,12 @@ class CategorySeeder extends Seeder
     {
         Category::truncate();
         $categories = [
-            ['name' => 'Grammar Basics', 'slug' => 'grammar-basics'],
-            ['name' => 'Vocabulary Expansion', 'slug' => 'vocabulary-expansion'],
-            ['name' => 'Listening Mastery', 'slug' => 'listening-mastery'],
-            ['name' => 'Speaking Fluency', 'slug' => 'speaking-fluency'],
-            ['name' => 'Writing Practice', 'slug' => 'writing-practice'],
-            ['name' => 'Exam Prep', 'slug' => 'exam-prep'],
+            ['name' => 'Ngữ pháp nền tảng', 'slug' => 'ngu-phap-nen-tang'],
+            ['name' => 'Mở rộng từ vựng', 'slug' => 'mo-rong-tu-vung'],
+            ['name' => 'Luyện nghe chuyên sâu', 'slug' => 'luyen-nghe-chuyen-sau'],
+            ['name' => 'Nói trôi chảy', 'slug' => 'noi-troi-chay'],
+            ['name' => 'Luyện viết thực hành', 'slug' => 'luyen-viet-thuc-hanh'],
+            ['name' => 'Luyện thi chứng chỉ', 'slug' => 'luyen-thi-chung-chi'],
         ];
 
         foreach ($categories as $data) {
