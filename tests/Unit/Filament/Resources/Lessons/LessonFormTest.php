@@ -89,9 +89,10 @@ test('lesson form clears duration when video state is empty', function (): void 
             parent::__construct($component);
         }
 
-        public function __invoke(string | Component $path, mixed $value, bool $isAbsolute = false, bool $shouldCallUpdatedHooks = false): mixed
+        public function __invoke(string|Component $path, mixed $value, bool $isAbsolute = false, bool $shouldCallUpdatedHooks = false): mixed
         {
             $this->state[$path] = $value;
+
             return $value;
         }
     };
@@ -127,9 +128,10 @@ test('lesson form sets duration from relative video path', function (): void {
             parent::__construct($component);
         }
 
-        public function __invoke(string | Component $path, mixed $value, bool $isAbsolute = false, bool $shouldCallUpdatedHooks = false): mixed
+        public function __invoke(string|Component $path, mixed $value, bool $isAbsolute = false, bool $shouldCallUpdatedHooks = false): mixed
         {
             $this->state[$path] = $value;
+
             return $value;
         }
     };
@@ -165,9 +167,10 @@ test('lesson form resolves array state and sets duration', function (): void {
             parent::__construct($component);
         }
 
-        public function __invoke(string | Component $path, mixed $value, bool $isAbsolute = false, bool $shouldCallUpdatedHooks = false): mixed
+        public function __invoke(string|Component $path, mixed $value, bool $isAbsolute = false, bool $shouldCallUpdatedHooks = false): mixed
         {
             $this->state[$path] = $value;
+
             return $value;
         }
     };
@@ -211,9 +214,10 @@ test('lesson form sets duration from uploaded temp file object', function (): vo
             parent::__construct($component);
         }
 
-        public function __invoke(string | Component $path, mixed $value, bool $isAbsolute = false, bool $shouldCallUpdatedHooks = false): mixed
+        public function __invoke(string|Component $path, mixed $value, bool $isAbsolute = false, bool $shouldCallUpdatedHooks = false): mixed
         {
             $this->state[$path] = $value;
+
             return $value;
         }
     };
@@ -243,9 +247,10 @@ test('lesson form toggles quiz state when has_quiz changes', function (): void {
             parent::__construct($component);
         }
 
-        public function __invoke(string | Component $path, mixed $value, bool $isAbsolute = false, bool $shouldCallUpdatedHooks = false): mixed
+        public function __invoke(string|Component $path, mixed $value, bool $isAbsolute = false, bool $shouldCallUpdatedHooks = false): mixed
         {
             $this->state[$path] = $value;
+
             return $value;
         }
     };
@@ -277,7 +282,7 @@ test('lesson form resolves lesson group options and create option behavior', fun
             parent::__construct($component);
         }
 
-        public function __invoke(string | Component $path = '', bool $isAbsolute = false): mixed
+        public function __invoke(string|Component $path = '', bool $isAbsolute = false): mixed
         {
             return $path === 'course_id' ? $this->course->id : null;
         }
@@ -313,7 +318,7 @@ test('lesson form returns empty group options when course is missing', function 
             parent::__construct($component);
         }
 
-        public function __invoke(string | Component $path = '', bool $isAbsolute = false): mixed
+        public function __invoke(string|Component $path = '', bool $isAbsolute = false): mixed
         {
             return null;
         }

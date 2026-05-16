@@ -63,11 +63,14 @@ it('throws when register result is not a user instance', function (): void {
 });
 
 it('logs in a user and returns a token response', function (): void {
-    $user = new class extends User {
+    $user = new class extends User
+    {
         public function createToken(string $name, array $abilities = ['*'], ?\DateTimeInterface $expiresAt = null): object
         {
-            return new class {
+            return new class
+            {
                 public string $plainTextToken = 'login-token';
+
                 public object $accessToken;
 
                 public function __construct()

@@ -1,12 +1,12 @@
 <?php
 
+use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Models\Cart;
 use App\Models\Course;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
-use App\Enums\OrderStatus;
-use App\Enums\PaymentMethod;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);

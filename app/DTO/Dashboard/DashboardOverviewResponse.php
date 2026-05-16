@@ -5,10 +5,10 @@ namespace App\DTO\Dashboard;
 class DashboardOverviewResponse
 {
     /**
-     * @param array<int, DashboardEnrolledCourseResponse> $enrolledCourses
-     * @param array<int, DashboardRecentActivityResponse> $recentActivity
-     * @param array<int, array<string, mixed>> $certificates
-     * @param array<int, array<string, mixed>> $weeklyPlan
+     * @param  array<int, DashboardEnrolledCourseResponse>  $enrolledCourses
+     * @param  array<int, DashboardRecentActivityResponse>  $recentActivity
+     * @param  array<int, array<string, mixed>>  $certificates
+     * @param  array<int, array<string, mixed>>  $weeklyPlan
      */
     public function __construct(
         public DashboardStatsResponse $stats,

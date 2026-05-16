@@ -34,4 +34,3 @@ class LessonAccessService implements ILessonAccessService
         return $this->enrollmentService->isEnrolled($userId, $courseId);
     }
 }
-

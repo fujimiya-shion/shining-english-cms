@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Developer;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DeveloperSeeder extends Seeder
@@ -15,8 +14,9 @@ class DeveloperSeeder extends Seeder
     {
         $email = env('ACCESS_TOKEN_EMAIL');
         $password = env('ACCESS_TOKEN_PASSWORD');
-        if(!$email || !$password) {
+        if (! $email || ! $password) {
             $this->command->warn('DeveloperSeeder skipped: ACCESS_TOKEN_EMAIL or ACCESS_TOKEN_PASSWORD is missing.');
+
             return;
         }
 

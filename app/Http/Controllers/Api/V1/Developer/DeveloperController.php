@@ -12,20 +12,22 @@ class DeveloperController extends ApiController
         protected IDeveloperService $service,
     ) {}
 
-    public function accessToken(DeveloperLoginRequest $request) {
+    public function accessToken(DeveloperLoginRequest $request)
+    {
         $credentials = $request->validated();
         $developer = $this->service->login(
-            $credentials["email"], 
-            $credentials["password"]
+            $credentials['email'],
+            $credentials['password']
         );
-        if(! $developer)
+        if (! $developer) {
             return $this->unauthorized();
+        }
 
         $accessToken = $developer->createToken('developer_access_token');
 
         return $this->success(data: [
             'access_token' => $accessToken->plainTextToken,
         ]);
-        
+
     }
 }

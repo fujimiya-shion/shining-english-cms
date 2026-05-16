@@ -3,6 +3,7 @@
 namespace Tests\Unit\Services\Enrollment;
 
 use App\Enums\OrderStatus;
+use App\Jobs\GrantLessonStarRewardJob;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Lesson;
@@ -15,6 +16,7 @@ use App\Services\Enrollment\EnrollmentService;
 use App\Services\Enrollment\IEnrollmentService;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Mockery;
 use RuntimeException;
 use Tests\TestCase;
@@ -326,6 +328,8 @@ it('returns persisted learning progress payload for enrollment', function (): vo
 });
 
 it('completes a lesson, moves to next lesson and returns next quiz hint', function (): void {
+    Bus::fake();
+
     $user = User::factory()->create();
     $course = Course::factory()->create();
     $lessonA = Lesson::query()->create([
@@ -336,6 +340,7 @@ it('completes a lesson, moves to next lesson and returns next quiz hint', functi
         'video_url' => 'lessons/a.mp4',
         'duration_minutes' => 5,
         'has_quiz' => false,
+        'star_reward_video' => 3,
     ]);
     $lessonB = Lesson::query()->create([
         'name' => 'B',
@@ -370,6 +375,13 @@ it('completes a lesson, moves to next lesson and returns next quiz hint', functi
         'id' => $lessonB->id,
         'has_quiz' => true,
     ]);
+
+    Bus::assertDispatched(GrantLessonStarRewardJob::class, function (GrantLessonStarRewardJob $job) use ($user, $course, $lessonA): bool {
+        return $job->userId === $user->id
+            && $job->courseId === $course->id
+            && $job->lessonId === $lessonA->id
+            && $job->source === GrantLessonStarRewardJob::SOURCE_VIDEO;
+    });
 });
 
 it('returns null progress payload when enrollment is missing', function (): void {

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Services\Dashboard;
@@ -63,9 +64,9 @@ class DashboardService implements IDashboardService
     }
 
     /**
-     * @param Collection<int, Enrollment> $enrollments
-     * @param Collection<int, LessonProgress> $completedRows
-     * @param Collection<int, LessonProgress> $currentRows
+     * @param  Collection<int, Enrollment>  $enrollments
+     * @param  Collection<int, LessonProgress>  $completedRows
+     * @param  Collection<int, LessonProgress>  $currentRows
      * @return array<int, DashboardEnrolledCourseResponse>
      */
     protected function buildCourses(Collection $enrollments, Collection $completedRows, Collection $currentRows): array
@@ -110,9 +111,9 @@ class DashboardService implements IDashboardService
     }
 
     /**
-     * @param Collection<int, LessonProgress> $completedRows
-     * @param Collection<int, UserQuizAttempt> $attempts
-     * @param Collection<int, Enrollment> $enrollments
+     * @param  Collection<int, LessonProgress>  $completedRows
+     * @param  Collection<int, UserQuizAttempt>  $attempts
+     * @param  Collection<int, Enrollment>  $enrollments
      * @return array<int, DashboardRecentActivityResponse>
      */
     protected function buildRecentActivity(Collection $completedRows, Collection $attempts, Collection $enrollments): array
@@ -123,7 +124,7 @@ class DashboardService implements IDashboardService
             ->map(function (LessonProgress $row): array {
                 return [
                     'type' => 'completed',
-                    'title' => 'Hoàn thành bài: ' . (string) ($row->lesson?->name ?? 'Bài học'),
+                    'title' => 'Hoàn thành bài: '.(string) ($row->lesson?->name ?? 'Bài học'),
                     'course' => (string) ($row->lesson?->course?->name ?? 'Khóa học'),
                     'time' => $row->completed_at ? Carbon::parse($row->completed_at)->diffForHumans() : 'Vừa xong',
                     'score' => null,
@@ -136,7 +137,7 @@ class DashboardService implements IDashboardService
             ->map(function (UserQuizAttempt $attempt): array {
                 return [
                     'type' => 'passed',
-                    'title' => 'Đạt quiz: ' . (string) ($attempt->quiz?->lesson?->name ?? 'Quiz'),
+                    'title' => 'Đạt quiz: '.(string) ($attempt->quiz?->lesson?->name ?? 'Quiz'),
                     'course' => (string) ($attempt->quiz?->lesson?->course?->name ?? 'Khóa học'),
                     'time' => $attempt->submitted_at ? Carbon::parse($attempt->submitted_at)->diffForHumans() : 'Vừa xong',
                     'score' => (int) round((float) $attempt->score_percent),
@@ -177,7 +178,7 @@ class DashboardService implements IDashboardService
     }
 
     /**
-     * @param Collection<int, LessonProgress> $completedRows
+     * @param  Collection<int, LessonProgress>  $completedRows
      */
     protected function estimateStreakDays(Collection $completedRows): int
     {
@@ -199,12 +200,14 @@ class DashboardService implements IDashboardService
             if ($dates->contains($cursor->toDateString())) {
                 $streak++;
                 $cursor = $cursor->subDay();
+
                 continue;
             }
 
             if ($streak === 0 && $dates->contains(Carbon::yesterday()->toDateString())) {
                 $streak++;
                 $cursor = Carbon::yesterday()->subDay();
+
                 continue;
             }
 
@@ -215,8 +218,8 @@ class DashboardService implements IDashboardService
     }
 
     /**
-     * @param Collection<int, LessonProgress> $completedRows
-     * @param Collection<int, LessonProgress> $currentRows
+     * @param  Collection<int, LessonProgress>  $completedRows
+     * @param  Collection<int, LessonProgress>  $currentRows
      * @return array<int, array{label: string, status: string, tone: string}>
      */
     protected function buildWeeklyPlan(

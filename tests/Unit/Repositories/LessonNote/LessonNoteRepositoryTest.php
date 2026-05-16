@@ -1,9 +1,6 @@
 <?php
 
-use App\Enums\PaymentMethod;
 use App\Models\LessonNote;
-use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\User;
 use App\Repositories\LessonNote\ILessonNoteRepository;
 use App\Repositories\LessonNote\LessonNoteRepository;

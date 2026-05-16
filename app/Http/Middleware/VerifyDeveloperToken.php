@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 class VerifyDeveloperToken
 {
     use Jsonable;
+
     /**
      * Handle an incoming request.
      *

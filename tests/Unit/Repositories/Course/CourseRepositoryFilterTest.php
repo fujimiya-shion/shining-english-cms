@@ -3,9 +3,9 @@
 use App\Models\Category;
 use App\Models\Course;
 use App\Models\CourseReview;
-use App\Models\Level;
 use App\Models\Lesson;
 use App\Models\LessonComment;
+use App\Models\Level;
 use App\Models\User;
 use App\Repositories\Course\CourseRepository;
 use App\ValueObjects\CourseFilter;

@@ -10,4 +10,3 @@ interface ILessonAccessService
 
     public function canAccessLessonProtectedContent(?int $userId, Lesson $lesson): bool;
 }
-

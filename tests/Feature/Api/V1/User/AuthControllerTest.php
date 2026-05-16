@@ -1,8 +1,8 @@
 <?php
 
+use App\Jobs\SendEmailVerificationJob;
 use App\Models\User;
 use App\Models\UserDevice;
-use App\Jobs\SendEmailVerificationJob;
 use App\Notifications\Auth\ResetPasswordNotification;
 use App\Services\User\IUserService;
 use Illuminate\Foundation\Testing\RefreshDatabase;

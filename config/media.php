@@ -7,4 +7,3 @@ return [
         'webp_quality' => (int) env('MEDIA_IMAGE_WEBP_QUALITY', 82),
     ],
 ];
-

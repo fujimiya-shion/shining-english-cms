@@ -7,8 +7,8 @@ use App\Enums\ThirdPartyAuthProviders;
 use App\Integrations\Auth\Contracts\ThirdPartyAuthStrategy;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Laravel\Socialite\Two\AbstractProvider;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\AbstractProvider;
 use RuntimeException;
 use Throwable;
 

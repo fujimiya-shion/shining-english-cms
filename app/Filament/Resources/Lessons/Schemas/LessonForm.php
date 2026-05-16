@@ -3,11 +3,11 @@
 namespace App\Filament\Resources\Lessons\Schemas;
 
 use App\Models\LessonGroup;
-use App\Util\Video\VideoMetadataReader;
 use App\Util\Php\PhpUploadLimit;
-use Filament\Forms\Components\Select;
+use App\Util\Video\VideoMetadataReader;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\KeyValue;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -23,8 +23,7 @@ class LessonForm
         Schema $schema,
         bool $withCourseField = true,
         ?int $fixedCourseId = null
-    ): Schema
-    {
+    ): Schema {
         return $schema
             ->columns(1)
             ->components([

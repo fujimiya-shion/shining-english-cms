@@ -2,8 +2,8 @@
 
 use App\Filament\Forms\Components\OptimizeFileUpload;
 use App\Filament\Resources\Courses\Schemas\CourseForm;
-use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;

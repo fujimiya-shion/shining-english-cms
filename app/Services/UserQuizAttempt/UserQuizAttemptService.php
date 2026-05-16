@@ -2,6 +2,8 @@
 
 namespace App\Services\UserQuizAttempt;
 
+use App\Jobs\GrantLessonStarRewardJob;
+use App\Models\Quiz;
 use App\Models\UserQuizAttempt;
 use App\Repositories\UserQuizAttempt\IUserQuizAttemptRepository;
 use App\Services\Service;
@@ -25,13 +27,28 @@ class UserQuizAttemptService extends Service implements IUserQuizAttemptService
         bool $passed,
         ?\DateTimeInterface $submittedAt = null,
     ): UserQuizAttempt {
-        return $this->attemptRepository->create([
+        $attempt = $this->attemptRepository->create([
             'user_id' => $userId,
             'quiz_id' => $quizId,
             'score_percent' => $scorePercent,
             'passed' => $passed,
             'submitted_at' => $submittedAt ?? now(),
         ]);
+
+        $quiz = Quiz::query()
+            ->with('lesson:id,course_id,star_reward_quiz')
+            ->find($quizId);
+
+        if ($quiz?->lesson && (int) $quiz->lesson->star_reward_quiz > 0) {
+            dispatch(new GrantLessonStarRewardJob(
+                userId: $userId,
+                courseId: (int) $quiz->lesson->course_id,
+                lessonId: (int) $quiz->lesson->id,
+                source: GrantLessonStarRewardJob::SOURCE_QUIZ,
+            ));
+        }
+
+        return $attempt;
     }
 
     public function historyByUser(int $userId, QueryOption $options): LengthAwarePaginator

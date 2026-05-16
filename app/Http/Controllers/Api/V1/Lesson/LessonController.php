@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Api\V1\Lesson;
 
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Api\V1\Lesson\LessonCommentStoreRequest;
-use App\Services\LessonComment\ILessonCommentService;
 use App\Services\IService;
 use App\Services\Lesson\ILessonService;
 use App\Services\LessonAccess\ILessonAccessService;
+use App\Services\LessonComment\ILessonCommentService;
 use App\Traits\ApiBehaviour;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

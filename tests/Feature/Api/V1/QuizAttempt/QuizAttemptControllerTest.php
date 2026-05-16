@@ -1,11 +1,13 @@
 <?php
 
+use App\Jobs\GrantLessonStarRewardJob;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Quiz;
 use App\Models\User;
 use App\Models\UserQuizAttempt;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 
 uses(RefreshDatabase::class);
 
@@ -32,9 +34,13 @@ function createQuizAttemptFixture(): Quiz
 }
 
 it('records a quiz attempt for the current user', function (): void {
+    Bus::fake();
+
     $user = User::factory()->create();
     $token = $user->createToken('quiz-attempt')->plainTextToken;
     $quiz = createQuizAttemptFixture();
+
+    $quiz->lesson()->update(['star_reward_quiz' => 4]);
 
     $response = $this->postJson("/api/v1/quizzes/{$quiz->id}/attempts", [
         'score_percent' => 85,
@@ -57,6 +63,13 @@ it('records a quiz attempt for the current user', function (): void {
     expect($attempt)->not->toBeNull();
     expect($attempt->score_percent)->toBe(85.0);
     expect($attempt->passed)->toBeTrue();
+
+    Bus::assertDispatched(GrantLessonStarRewardJob::class, function (GrantLessonStarRewardJob $job) use ($user, $quiz): bool {
+        return $job->userId === $user->id
+            && $job->courseId === (int) $quiz->lesson->course_id
+            && $job->lessonId === (int) $quiz->lesson->id
+            && $job->source === GrantLessonStarRewardJob::SOURCE_QUIZ;
+    });
 });
 
 it('records attempt without submitted_at', function (): void {

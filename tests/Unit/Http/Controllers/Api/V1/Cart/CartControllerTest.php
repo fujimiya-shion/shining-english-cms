@@ -5,7 +5,6 @@ use App\Http\Requests\Api\V1\Cart\CartStoreRequest;
 use App\Models\User;
 use App\Services\Cart\ICartService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 uses(TestCase::class);

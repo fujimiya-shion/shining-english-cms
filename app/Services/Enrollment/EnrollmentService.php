@@ -3,8 +3,9 @@
 namespace App\Services\Enrollment;
 
 use App\Enums\OrderStatus;
-use App\Models\Enrollment;
+use App\Jobs\GrantLessonStarRewardJob;
 use App\Models\CourseReview;
+use App\Models\Enrollment;
 use App\Models\Lesson;
 use App\Models\LessonProgress;
 use App\Repositories\Enrollment\IEnrollmentRepository;
@@ -142,6 +143,9 @@ class EnrollmentService extends Service implements IEnrollmentService
 
         [$completedLessonIds, $currentLessonId] = $this->collectProgressState($userId, $courseId, $orderedLessonIds);
         $nextLesson = null;
+        $completedLesson = $orderedLessons->first(
+            fn (Lesson $lesson): bool => (int) $lesson->id === $lessonId,
+        );
 
         if ($currentLessonId !== null) {
             LessonProgress::query()->updateOrCreate(
@@ -158,6 +162,15 @@ class EnrollmentService extends Service implements IEnrollmentService
             $nextLesson = $orderedLessons->first(
                 fn (Lesson $lesson): bool => (int) $lesson->id === $currentLessonId,
             );
+        }
+
+        if ($completedLesson && (int) $completedLesson->star_reward_video > 0) {
+            dispatch(new GrantLessonStarRewardJob(
+                userId: $userId,
+                courseId: $courseId,
+                lessonId: $lessonId,
+                source: GrantLessonStarRewardJob::SOURCE_VIDEO,
+            ));
         }
 
         return [
@@ -229,7 +242,7 @@ class EnrollmentService extends Service implements IEnrollmentService
             ->orderBy('group_order')
             ->orderBy('lesson_order')
             ->orderBy('id')
-            ->get(['id', 'has_quiz']);
+            ->get(['id', 'name', 'has_quiz', 'star_reward_video']);
     }
 
     /**
@@ -308,8 +321,7 @@ class EnrollmentService extends Service implements IEnrollmentService
         ?int $currentLessonId,
         array $completedLessonIds,
         int $totalLessons
-    ): array
-    {
+    ): array {
         $progressPercentage = $totalLessons > 0
             ? round((count($completedLessonIds) / $totalLessons) * 100, 2)
             : 0.0;

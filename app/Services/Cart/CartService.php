@@ -22,8 +22,7 @@ class CartService extends Service implements ICartService
         ICartRepository $repository,
         ICourseRepository $courseRepository,
         IEnrollmentService $enrollmentService,
-    )
-    {
+    ) {
         parent::__construct($repository);
         $this->cartRepository = $repository;
         $this->courseRepository = $courseRepository;

@@ -1,13 +1,17 @@
 <?php
+
 namespace App\DTO\User\Auth;
-class ThirdPartyUserResponse {
+
+class ThirdPartyUserResponse
+{
     public function __construct(
         public string $name,
         public string $email,
         public ?string $avatar,
     ) {}
 
-    public static function fromJson(array $json): self {
+    public static function fromJson(array $json): self
+    {
         return new self(
             $json['name'],
             $json['email'],
@@ -15,7 +19,8 @@ class ThirdPartyUserResponse {
         );
     }
 
-    public function toJson(): array {
+    public function toJson(): array
+    {
         return [
             'name' => $this->name,
             'email' => $this->email,

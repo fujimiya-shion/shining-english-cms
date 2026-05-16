@@ -21,7 +21,7 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        return $panel
+        $configuration = $panel
             ->default()
             ->id('admin')
             ->path('admin')
@@ -59,5 +59,28 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+
+        return $this->configureEnvironmentDomain($configuration);
+    }
+
+    private function configureEnvironmentDomain(Panel $panel): Panel {
+        $configuration = $panel;
+        $appDomain = env('APP_DOMAIN');
+
+        if ($this->app->environment('staging')) {
+            $domain = "staging-cms.$appDomain";
+            $configuration = $panel
+                ->domain($domain)
+                ->path('/');
+        }
+
+        if ($this->app->environment('production')) {
+            $domain = "cms.$appDomain";
+            $configuration = $panel
+                ->domain($domain)
+                ->path('/');
+        }
+
+        return $configuration;
     }
 }

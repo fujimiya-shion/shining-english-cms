@@ -16,7 +16,7 @@ interface IDashboardRepository extends IRepository
     public function getEnrollmentsByUserId(int $userId): Collection;
 
     /**
-     * @param Collection<int, int> $courseIds
+     * @param  Collection<int, int>  $courseIds
      * @return Collection<int, LessonProgress>
      */
     public function getLessonProgressByUserAndCourseIds(int $userId, Collection $courseIds): Collection;

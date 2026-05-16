@@ -42,8 +42,8 @@ class OptimizedImageService
     protected function resolveStoragePath(Filesystem $storage, string $directory): string
     {
         do {
-            $baseName = hash('sha256', Str::ulid() . '|' . microtime(true) . '|' . random_int(1, PHP_INT_MAX));
-            $path = ltrim(($directory !== '' ? $directory . '/' : '') . $baseName . '.webp', '/');
+            $baseName = hash('sha256', Str::ulid().'|'.microtime(true).'|'.random_int(1, PHP_INT_MAX));
+            $path = ltrim(($directory !== '' ? $directory.'/' : '').$baseName.'.webp', '/');
         } while ($storage->exists($path));
 
         return $path;

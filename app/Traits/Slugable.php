@@ -11,7 +11,7 @@ trait Slugable
         static::creating(function ($model) {
             if (static::shouldGenerateSlugOnCreate($model)) {
                 $value = static::getSlugSourceValue($model);
-                if (!empty($value)) {
+                if (! empty($value)) {
                     $model->slug = static::generateUniqueSlug($model, $value);
                 }
             }
@@ -20,7 +20,7 @@ trait Slugable
         static::updating(function ($model) {
             if (static::shouldGenerateSlugOnUpdate($model)) {
                 $value = static::getSlugSourceValue($model);
-                if (!empty($value)) {
+                if (! empty($value)) {
                     $model->slug = static::generateUniqueSlug($model, $value);
                 }
             }
@@ -31,10 +31,11 @@ trait Slugable
     {
         $columns = $model->slugable ?? ['full_name', 'name', 'title'];
         foreach ($columns as $col) {
-            if (!empty($model->{$col})) {
+            if (! empty($model->{$col})) {
                 return $model->{$col};
             }
         }
+
         return null;
     }
 
@@ -42,17 +43,18 @@ trait Slugable
     {
         return static::modelHasSlugAttribute($model)
             && empty($model->slug)
-            && !empty(static::getSlugSourceValue($model));
+            && ! empty(static::getSlugSourceValue($model));
     }
 
     protected static function shouldGenerateSlugOnUpdate($model): bool
     {
         $cols = $model->slugable ?? ['full_name', 'name', 'title'];
         foreach ($cols as $col) {
-            if ($model->isDirty($col) && !$model->isDirty('slug')) {
+            if ($model->isDirty($col) && ! $model->isDirty('slug')) {
                 return true;
             }
         }
+
         return false;
     }
 

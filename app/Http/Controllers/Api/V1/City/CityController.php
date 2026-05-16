@@ -19,4 +19,3 @@ class CityController extends ApiController
         return $this->success(data: $cities);
     }
 }
-

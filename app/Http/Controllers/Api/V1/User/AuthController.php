@@ -13,14 +13,13 @@ use App\Services\User\IThirdPartyAuthService;
 use App\Services\User\IUserService;
 use App\Traits\Jsonable;
 use App\ValueObjects\DeviceInfo;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Throwable;
-use function Pest\Laravel\instance;
 
-class AuthController extends ApiController {
+class AuthController extends ApiController
+{
     use Jsonable;
 
     public function __construct(
@@ -112,7 +111,8 @@ class AuthController extends ApiController {
         return $this->success('Password reset successfully.');
     }
 
-    public function thirdPartyLogin(ThirdPartyLoginRequest $request): JsonResponse {
+    public function thirdPartyLogin(ThirdPartyLoginRequest $request): JsonResponse
+    {
         $data = $request->validated();
 
         try {
@@ -153,6 +153,7 @@ class AuthController extends ApiController {
                 'message' => $e->getMessage(),
                 'exception' => get_class($e),
             ]);
+
             return $this->error($e->getMessage(), 422);
         }
     }

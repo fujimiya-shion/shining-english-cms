@@ -3,6 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Admin;
+use App\Models\Blog;
+use App\Models\BlogTag;
+use App\Models\BlogUnlock;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Course;
@@ -31,6 +34,7 @@ class DatabaseSeeder extends Seeder
             LessonSeeder::class,
             CourseReviewSeeder::class,
             LessonCommentSeeder::class,
+            BlogSeeder::class,
             DeveloperSeeder::class,
         ]);
     }
@@ -40,6 +44,9 @@ class DatabaseSeeder extends Seeder
         Schema::disableForeignKeyConstraints();
 
         LessonComment::query()->truncate();
+        BlogUnlock::query()->truncate();
+        Blog::query()->truncate();
+        BlogTag::query()->truncate();
         CourseReview::query()->truncate();
         Lesson::query()->truncate();
         Course::query()->truncate();

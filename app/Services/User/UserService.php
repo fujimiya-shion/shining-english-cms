@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services\User;
 
 use App\DTO\User\Auth\LoginResponse;
@@ -23,9 +24,13 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 use Throwable;
-class UserService extends Service implements IUserService, IThirdPartyAuthService {
+
+class UserService extends Service implements IThirdPartyAuthService, IUserService
+{
     protected IUserRepository $userRepository;
+
     protected IUserDeviceRepository $userDeviceRepository;
+
     public function __construct(
         IUserRepository $repository,
         IUserDeviceRepository $userDeviceRepository,
@@ -63,7 +68,7 @@ class UserService extends Service implements IUserService, IThirdPartyAuthServic
 
             $created = $this->userRepository->create($payload);
 
-            if($created instanceof User) {
+            if ($created instanceof User) {
                 if ($created->id !== null) {
                     Log::info('User registration created model', [
                         'user_id' => $created->id,
@@ -76,11 +81,11 @@ class UserService extends Service implements IUserService, IThirdPartyAuthServic
                         dispatch(new SendEmailVerificationJob($created->id));
                     }
                 }
+
                 return new RegisterResponse($created);
             }
-            throw new Exception("return model is not instance of user");
-
-        } catch(Throwable $e) {
+            throw new Exception('return model is not instance of user');
+        } catch (Throwable $e) {
             Log::error('User registration failed', [
                 'email' => $email,
                 'authenticated_by' => $authenticatedBy->value,
@@ -91,11 +96,12 @@ class UserService extends Service implements IUserService, IThirdPartyAuthServic
         }
     }
 
-    public function login(string $email, ?string $password = null, DeviceInfo $device): LoginResponse {
+    public function login(string $email, ?string $password, DeviceInfo $device): LoginResponse
+    {
         try {
             $user = $this->userRepository->findByEmail($email);
 
-            if (!$user instanceof User || ($password && !Hash::check($password, $user->password))) {
+            if (! $user instanceof User || ($password && ! Hash::check($password, $user->password))) {
                 throw new Exception('Invalid credentials');
             }
 
@@ -107,7 +113,7 @@ class UserService extends Service implements IUserService, IThirdPartyAuthServic
             $this->createUserDevice($user, $device, $tokenResult->accessToken->id ?? null);
 
             return new LoginResponse($tokenResult->plainTextToken, $user);
-        } catch(Throwable $e) {
+        } catch (Throwable $e) {
             throw $e;
         }
     }
@@ -181,7 +187,8 @@ class UserService extends Service implements IUserService, IThirdPartyAuthServic
         return $status === Password::PASSWORD_RESET;
     }
 
-    public function authenticateByAccessToken(ThirdPartyAuthProviders $provider, DeviceInfo $deviceInfo, string $accessToken): LoginResponse {
+    public function authenticateByAccessToken(ThirdPartyAuthProviders $provider, DeviceInfo $deviceInfo, string $accessToken): LoginResponse
+    {
         try {
             Log::info('Third-party authentication by access token started', [
                 'provider' => $provider->value,
@@ -261,7 +268,8 @@ class UserService extends Service implements IUserService, IThirdPartyAuthServic
         }
     }
 
-    public function authenticateByIdToken(ThirdPartyAuthProviders $provider, DeviceInfo $deviceInfo, string $idToken): LoginResponse {
+    public function authenticateByIdToken(ThirdPartyAuthProviders $provider, DeviceInfo $deviceInfo, string $idToken): LoginResponse
+    {
         try {
             $strategy = ThirdPartyAuthFactory::make($provider);
             $thirdPartyUser = $strategy->getUserFromIdToken($idToken);
@@ -291,7 +299,8 @@ class UserService extends Service implements IUserService, IThirdPartyAuthServic
         }
     }
 
-    protected function createUserDevice(User $user, DeviceInfo $device, ?int $tokenId): void {
+    protected function createUserDevice(User $user, DeviceInfo $device, ?int $tokenId): void
+    {
         $this->userDeviceRepository->create([
             'user_id' => $user->id,
             'personal_access_token_id' => $tokenId,
@@ -304,5 +313,4 @@ class UserService extends Service implements IUserService, IThirdPartyAuthServic
             'last_seen_at' => now(),
         ]);
     }
-    
 }

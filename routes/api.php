@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Blog\BlogController;
 use App\Http\Controllers\Api\V1\Cart\CartController;
 use App\Http\Controllers\Api\V1\City\CityController;
 use App\Http\Controllers\Api\V1\Course\CourseController;
@@ -35,6 +36,13 @@ Route::prefix('/v1')->group(function () {
                 Route::get('/', 'index');
                 Route::get('/slug/{slug}', 'showBySlug');
                 Route::get('/{id}', 'show');
+            });
+
+        Route::controller(BlogController::class)
+            ->prefix('/blogs')
+            ->group(function () {
+                Route::get('/', 'index');
+                Route::get('/slug/{slug}', 'showBySlug');
             });
 
         Route::controller(CityController::class)
@@ -146,6 +154,13 @@ Route::prefix('/v1')->group(function () {
                 Route::post('/', 'store');
                 Route::get('/{id}', 'show');
                 Route::post('/{id}/cancel', 'cancel');
+            });
+
+        Route::middleware(VerifyUserToken::class)
+            ->controller(BlogController::class)
+            ->prefix('/blogs')
+            ->group(function () {
+                Route::post('/{id}/unlock', 'unlock');
             });
     });
 
