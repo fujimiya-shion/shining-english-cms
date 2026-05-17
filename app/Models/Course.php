@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Slugable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,6 +32,16 @@ class Course extends Model
         'rating',
         'learned',
     ];
+
+    #[Scope]
+    public function active(Builder $query): void {
+        $query->where(function (Builder $query): void {
+            $query
+                ->where('status', 1)
+                ->orWhere('status', true)
+                ->orWhere('status', 'active');
+        });
+    }
 
     public function scopeWithCardCounts(Builder $query): Builder
     {
