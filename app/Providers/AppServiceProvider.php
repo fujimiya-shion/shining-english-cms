@@ -38,8 +38,10 @@ use App\Repositories\Star\StarRepository;
 use App\Repositories\StarTransaction\IStarTransactionRepository;
 use App\Repositories\StarTransaction\StarTransactionRepository;
 use App\Repositories\User\IUserDeviceRepository;
+use App\Repositories\User\IUserHomeRepository;
 use App\Repositories\User\IUserRepository;
 use App\Repositories\User\UserDeviceRepository;
+use App\Repositories\User\UserHomeRepository;
 use App\Repositories\User\UserRepository;
 use App\Repositories\UserQuizAttempt\IUserQuizAttemptRepository;
 use App\Repositories\UserQuizAttempt\UserQuizAttemptRepository;
@@ -80,11 +82,16 @@ use App\Services\Star\StarService;
 use App\Services\StarTransaction\IStarTransactionService;
 use App\Services\StarTransaction\StarTransactionService;
 use App\Services\User\IUserDeviceService;
+use App\Services\User\IUserHomeService;
 use App\Services\User\IUserService;
 use App\Services\User\UserDeviceService;
+use App\Services\User\UserHomeService;
 use App\Services\User\UserService;
 use App\Services\UserQuizAttempt\IUserQuizAttemptService;
 use App\Services\UserQuizAttempt\UserQuizAttemptService;
+use Dedoc\Scramble\Scramble;
+use Dedoc\Scramble\Support\Generator\OpenApi;
+use Dedoc\Scramble\Support\Generator\SecurityScheme;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -114,6 +121,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IUserDeviceRepository::class, UserDeviceRepository::class);
         $this->app->bind(IDeveloperRepository::class, DeveloperRepository::class);
         $this->app->bind(IDashboardRepository::class, DashboardRepository::class);
+        $this->app->bind(IUserHomeRepository::class, UserHomeRepository::class);
 
         $this->app->bind(ICartService::class, CartService::class);
         $this->app->bind(ICategoryService::class, CategoryService::class);
@@ -136,6 +144,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IUserDeviceService::class, UserDeviceService::class);
         $this->app->bind(IDeveloperService::class, DeveloperService::class);
         $this->app->bind(IDashboardService::class, DashboardService::class);
+        $this->app->bind(IUserHomeService::class, UserHomeService::class);
 
         $this->app->instance(GoogleAuthStrategy::class, new GoogleAuthStrategy);
     }
@@ -152,5 +161,12 @@ class AppServiceProvider extends ServiceProvider
 
             return $admin?->can('View:ApiDocs') ?? false;
         });
+
+        Scramble::configure()
+            ->withDocumentTransformers(function (OpenApi $openApi) {
+                $openApi->secure(
+                    SecurityScheme::http('bearer')
+                );
+            });
     }
 }

@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\Lesson\LessonNoteController;
 use App\Http\Controllers\Api\V1\QuizAttempt\QuizAttemptController;
 use App\Http\Controllers\Api\V1\Transaction\OrderController;
 use App\Http\Controllers\Api\V1\User\AuthController;
+use App\Http\Controllers\Api\V1\User\HomeController;
 use App\Http\Controllers\Api\V1\User\UserController;
 use App\Http\Middleware\VerifyDeveloperToken;
 use App\Http\Middleware\VerifyUserToken;
@@ -91,6 +92,11 @@ Route::prefix('/v1')->group(function () {
             ->prefix('/user')
             ->group(function () {
                 Route::post('/update', 'update');
+            });
+        Route::controller(HomeController::class)
+            ->prefix('/home')
+            ->group(function () {
+                Route::get('/', 'index');
             });
 
         Route::middleware(VerifyUserToken::class)
