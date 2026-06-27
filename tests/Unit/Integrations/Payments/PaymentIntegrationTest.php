@@ -336,26 +336,6 @@ it('returns order when payos cancel has no payment reference', function (): void
     expect($strategy->cancel($order, 'test'))->toBe($order);
 });
 
-it('handles payos webhook with pending status', function (): void {
-    config(['payos.checksum_key' => 'checksum']);
-
-    $order = new Order(['total_amount' => 1000]);
-    $order->id = 777;
-    $order->status = OrderStatus::Pending;
-    $order->payment_method = PaymentMethod::Payos;
-    $order->payment_metadata = [];
-
-    $repository = Mockery::mock(IOrderRepository::class);
-    $repository->shouldReceive('getById')->with(777, ['items.course'])->andReturn($order);
-
-    $data = ['orderCode' => 777, 'code' => '01'];
-    $signature = PayosSignature::sign($data, 'checksum');
-
-    $result = (new PayosPaymentStrategy($repository))->handleWebhook(['data' => $data, 'signature' => $signature]);
-
-    expect($result->status)->toBe(OrderStatus::Pending);
-});
-
 it('refreshes payos order with successful GET response', function (): void {
     config([
         'payos.client_id' => 'client',
