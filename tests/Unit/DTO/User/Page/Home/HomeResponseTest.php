@@ -42,12 +42,12 @@ it('HomeBannerResponse constructs and serializes', function (): void {
 it('HomeCourseListingResponse constructs and serializes', function (): void {
     $dto = new HomeCourseListingResponse(
         title: 'Khóa học nổi bật',
-        slug: 'noi-bat',
+        description: 'Mô tả khóa học',
         courses: [],
         hexBgColors: ['#ff0'],
     );
 
-    expect($dto->type())->toBe('course_listing');
+    expect($dto->type())->toBe('courses');
     expect($dto->data()['title'])->toBe('Khóa học nổi bật');
     expect($dto->toArray()['data']['hex_bg_colors'])->toBe(['#ff0']);
 });
@@ -84,7 +84,13 @@ it('HomeHeroResponse constructs and serializes', function (): void {
         description: 'Hero description',
         actions: [],
         ctas: [],
+        image: 'hero.jpg',
         imageTags: [],
+        imageCTA: new \App\DTO\User\Page\Home\HomeHeroImageCTA(
+            icon: 'star',
+            title: 'CTA Title',
+            description: 'CTA Desc',
+        ),
     );
 
     expect($dto->type())->toBe('hero');
@@ -108,7 +114,7 @@ it('HomeProcessResponse constructs and serializes', function (): void {
 it('HomeStatisticResponse constructs and serializes', function (): void {
     $dto = new HomeStatisticResponse(items: []);
 
-    expect($dto->type())->toBe('statistic');
+    expect($dto->type())->toBe('statistics');
     expect($dto->data()['items'])->toBe([]);
     expect($dto->toArray()['data']['items'])->toBe([]);
 });
@@ -120,7 +126,7 @@ it('HomeTestimonialResponse constructs and serializes', function (): void {
         reviews: [],
     );
 
-    expect($dto->type())->toBe('testimonial');
+    expect($dto->type())->toBe('testimonials');
     expect($dto->data()['title'])->toBe('Cảm nhận');
     expect($dto->toArray()['data']['reviews'])->toBe([]);
 });

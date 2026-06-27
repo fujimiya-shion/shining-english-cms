@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Admin;
 use App\Models\Blog;
 use App\Models\BlogTag;
-use App\Models\BlogUnlock;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Contact;

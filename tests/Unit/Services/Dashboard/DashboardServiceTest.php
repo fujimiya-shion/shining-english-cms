@@ -17,19 +17,23 @@ it('implements service contract', function (): void {
 });
 
 it('returns overview for user with no activity', function (): void {
+    $enrollments = new Collection;
+    $courseIds = $enrollments->pluck('course_id')->filter()->values();
+    $empty = new Collection;
+
     $repository = Mockery::mock(IDashboardRepository::class);
     $repository->shouldReceive('getEnrollmentsByUserId')
         ->once()
         ->with(1)
-        ->andReturn(new Collection);
+        ->andReturn($enrollments);
     $repository->shouldReceive('getLessonProgressByUserAndCourseIds')
         ->once()
-        ->with(1, new Collection)
-        ->andReturn(new Collection);
+        ->with(1, $courseIds)
+        ->andReturn($empty);
     $repository->shouldReceive('getRecentQuizAttemptsByUserId')
         ->once()
         ->with(1, 10)
-        ->andReturn(new Collection);
+        ->andReturn($empty);
 
     $service = new DashboardService($repository);
     $result = $service->overview(1);
