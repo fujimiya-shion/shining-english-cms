@@ -399,10 +399,11 @@ it('throws when payos webhook payload has no signature', function (): void {
 it('throws when payos checksum key is not configured', function (): void {
     config(['payos.client_id' => '', 'payos.api_key' => '', 'payos.checksum_key' => '', 'payos.base_url' => '']);
 
-    $order = new Order(['total_amount' => 1000, 'payment_method' => PaymentMethod::Payos, 'payment_reference' => 'plink_missing_key']);
-
     $strategy = new PayosPaymentStrategy(Mockery::mock(IOrderRepository::class));
-    expect(fn () => $strategy->refresh($order))
+    expect(fn () => $strategy->handleWebhook([
+        'signature' => 'signature',
+        'data' => ['orderCode' => 123],
+    ]))
         ->toThrow(RuntimeException::class, 'PAYOS_CHECKSUM_KEY is missing.');
 });
 
