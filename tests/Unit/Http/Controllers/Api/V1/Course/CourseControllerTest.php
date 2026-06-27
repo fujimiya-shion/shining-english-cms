@@ -53,6 +53,30 @@ it('returns success response from index', function (): void {
     ]);
 });
 
+it('returns free courses paginated', function (): void {
+    $items = new Collection;
+    $paginator = new LengthAwarePaginator($items, 0, 15, 1);
+
+    $service = \Mockery::mock(ICourseService::class);
+    $service->shouldReceive('getFree')->once()->withNoArgs()->andReturn($paginator);
+    app()->instance(ICourseService::class, $service);
+
+    $controller = app()->make(CourseController::class);
+    $response = $controller->free();
+
+    assertJsonResponsePayload($response, 200, [
+        'message' => 'OK',
+        'status' => true,
+        'status_code' => 200,
+        'meta' => [
+            'page' => 1,
+            'per_page' => 15,
+            'total' => 0,
+            'page_count' => 0,
+        ],
+    ]);
+});
+
 it('inherits success and error json helpers', function (): void {
     $controller = app()->make(CourseController::class);
 

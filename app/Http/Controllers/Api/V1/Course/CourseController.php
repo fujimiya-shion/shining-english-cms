@@ -35,6 +35,18 @@ class CourseController extends ApiController
         return $this->service;
     }
 
+    public function free(): JsonResponse
+    {
+        $paginator = $this->service->getFree();
+        $collections = $paginator->getCollection();
+        $meta = MetaPagination::fromLengthAwarePaginator($paginator);
+
+        return $this->success(
+            data: $collections,
+            meta: $meta->toArray(),
+        );
+    }
+
     public function filter(CourseFilterRequest $request): JsonResponse
     {
         $filters = CourseFilter::fromArray($request->validated());

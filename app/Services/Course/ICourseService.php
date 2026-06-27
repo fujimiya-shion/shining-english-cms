@@ -14,4 +14,6 @@ interface ICourseService extends IService
     public function filter(CourseFilter $filters): LengthAwarePaginator;
 
     public function getFilterProps(): array;
+
+    public function getFree(?int $perPage = null): LengthAwarePaginator;
 }

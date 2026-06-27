@@ -316,6 +316,42 @@ it('loads reviews and lesson comments when getting course by slug', function ():
     expect($result?->lessons->first()?->comments->first()?->user?->name)->toBe('Ngoc Anh');
 });
 
+it('returns only free active courses', function (): void {
+    $category = Category::factory()->create();
+    $level = Level::factory()->create();
+
+    Course::factory()->create([
+        'category_id' => $category->id,
+        'level_id' => $level->id,
+        'name' => 'Free Course A',
+        'price' => 0,
+        'status' => true,
+    ]);
+
+    Course::factory()->create([
+        'category_id' => $category->id,
+        'level_id' => $level->id,
+        'name' => 'Free Course B',
+        'price' => 0,
+        'status' => false,
+    ]);
+
+    Course::factory()->create([
+        'category_id' => $category->id,
+        'level_id' => $level->id,
+        'name' => 'Paid Course',
+        'price' => 299000,
+        'status' => true,
+    ]);
+
+    $repository = app(CourseRepository::class);
+    $result = $repository->getFree();
+
+    expect($result->total())->toBe(1);
+    expect($result->items()[0]->name)->toBe('Free Course A');
+    expect($result->items()[0]->price)->toBe(0);
+});
+
 it('paginates only active courses with card metrics', function (): void {
     Course::factory()->create(['status' => true, 'name' => 'Active A']);
     Course::factory()->create(['status' => false, 'name' => 'Hidden B']);

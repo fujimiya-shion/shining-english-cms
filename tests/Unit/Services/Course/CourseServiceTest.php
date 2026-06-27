@@ -67,6 +67,22 @@ it('gets filter props via repository', function (): void {
     expect($result)->toBe($expected);
 });
 
+it('gets free courses via repository', function (): void {
+    $items = new Collection;
+    $paginator = new LengthAwarePaginator($items, 0, 15, 1);
+
+    $repository = Mockery::mock(ICourseRepository::class);
+    $repository->shouldReceive('getFree')
+        ->once()
+        ->andReturn($paginator);
+
+    $service = new CourseService($repository);
+
+    $result = $service->getFree();
+
+    expect($result)->toBe($paginator);
+});
+
 it('gets course by slug via repository', function (): void {
     $course = new Course;
     $course->id = 123;
