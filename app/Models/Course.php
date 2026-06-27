@@ -38,12 +38,7 @@ class Course extends Model
     #[Scope]
     public function active(Builder $query): void
     {
-        $query->where(function (Builder $query): void {
-            $query
-                ->where('status', 1)
-                ->orWhere('status', true)
-                ->orWhere('status', 'active');
-        });
+        $query->where('status', 1);
     }
 
     public function scopeWithCardCounts(Builder $query): Builder
@@ -146,10 +141,5 @@ class Course extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(CourseReview::class);
-    }
-
-    public function scopeActive($query)
-    {
-        return $query->where('status', true);
     }
 }

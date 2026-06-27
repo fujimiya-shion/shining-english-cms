@@ -8,6 +8,8 @@ use Tests\TestCase;
 uses(TestCase::class);
 
 it('allows api docs in local or testing environments', function (): void {
+    app()->detectEnvironment(fn () => 'local');
+
     $request = Request::create('/docs/api', 'GET');
     $response = new Response('ok');
 

@@ -12,6 +12,9 @@ use App\Models\OrderItem;
 use App\Repositories\Order\IOrderRepository;
 use App\ValueObjects\CheckoutCustomerData;
 use Illuminate\Support\Facades\Http;
+use Tests\TestCase;
+
+uses(TestCase::class);
 
 it('creates checkout action from payment initialization result', function (): void {
     expect(PaymentInitializationResult::none()->toCheckoutAction())->toBeNull();
