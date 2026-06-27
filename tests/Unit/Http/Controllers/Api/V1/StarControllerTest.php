@@ -14,7 +14,7 @@ use Tests\TestCase;
 uses(TestCase::class);
 
 it('handles star balance check-in and course payment flows', function (): void {
-    DB::statement('CREATE TABLE IF NOT EXISTS daily_check_ins (id integer primary key autoincrement, user_id integer, checked_in_at datetime, reward_amount integer, created_at datetime, updated_at datetime)');
+    DB::statement('CREATE TABLE IF NOT EXISTS daily_check_ins (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, user_id BIGINT UNSIGNED NOT NULL, checked_in_at DATETIME NOT NULL, reward_amount INT NOT NULL DEFAULT 0, created_at DATETIME, updated_at DATETIME)');
     config(['const.star.daily_checkin' => 2]);
 
     $user = new User;

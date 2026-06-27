@@ -147,4 +147,9 @@ class Course extends Model
     {
         return $this->hasMany(CourseReview::class);
     }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', true);
+    }
 }

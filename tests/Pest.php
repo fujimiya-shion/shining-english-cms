@@ -27,6 +27,45 @@ pest()->extend(Tests\TestCase::class)
 pest()->extend(Tests\TestCase::class)
     ->in('Unit/Filament');
 
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/DTO');
+
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Enums');
+
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Http');
+
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Integrations');
+
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Jobs');
+
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Mail');
+
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Notifications');
+
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Observers');
+
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Repositories');
+
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Services');
+
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Traits');
+
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/Util');
+
+pest()->extend(Tests\TestCase::class)
+    ->in('Unit/ValueObjects');
+
 /*
 |--------------------------------------------------------------------------
 | Expectations

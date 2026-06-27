@@ -48,8 +48,12 @@ it('middleware aborts for guest', function (): void {
     $middleware = new EnsureAdminCanViewApiDocs;
     $request = Request::create('/docs/api', 'GET');
 
-    expect(fn () => $middleware->handle($request, fn () => response('ok')))
-        ->toThrow(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+    try {
+        $middleware->handle($request, fn () => response('ok'));
+        expect(true)->toBeFalse('Expected HttpException was not thrown.');
+    } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+        expect($e->getStatusCode())->toBe(403);
+    }
 });
 
 it('middleware aborts for admin without permission', function (): void {
@@ -61,8 +65,12 @@ it('middleware aborts for admin without permission', function (): void {
 
     auth('admin')->setUser($admin);
 
-    expect(fn () => $middleware->handle($request, fn () => response('ok')))
-        ->toThrow(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+    try {
+        $middleware->handle($request, fn () => response('ok'));
+        expect(true)->toBeFalse('Expected HttpException was not thrown.');
+    } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+        expect($e->getStatusCode())->toBe(403);
+    }
 });
 
 it('middleware allows admin with permission', function (): void {
