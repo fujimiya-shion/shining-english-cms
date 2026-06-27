@@ -29,6 +29,9 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
+        <env name="PAYOS_CLIENT_ID" value="test_client_id"/>
+        <env name="PAYOS_API_KEY" value="test_api_key"/>
+        <env name="PAYOS_CHECKSUM_KEY" value="test_checksum_key"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

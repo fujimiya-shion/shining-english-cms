@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\StarTransactionType;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Course;
@@ -11,7 +12,6 @@ use App\Models\Star;
 use App\Models\StarTransaction;
 use App\Models\User;
 use App\Models\UserQuizAttempt;
-use App\Enums\StarTransactionType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 if (! extension_loaded('pdo')) {

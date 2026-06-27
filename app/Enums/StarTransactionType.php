@@ -6,6 +6,13 @@ enum StarTransactionType: string
 {
     case Increase = 'increase';
     case Decrease = 'decrease';
+    case RegistrationBonus = 'registration_bonus';
+    case DailyCheckin = 'daily_checkin';
+    case ReviewReward = 'review_reward';
+    case CourseComplete = 'course_complete';
+    case LessonRewardVideo = 'lesson_reward_video';
+    case LessonRewardQuiz = 'lesson_reward_quiz';
+    case StarPayment = 'star_payment';
 
     public static function values(): array
     {

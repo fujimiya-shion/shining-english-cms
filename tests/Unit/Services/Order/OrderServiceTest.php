@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services\Order;
 
+use App\DTO\Transaction\Checkout\CheckoutOrderResponse;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Models\Order;
@@ -13,6 +14,7 @@ use App\Repositories\OrderItem\IOrderItemRepository;
 use App\Services\Enrollment\IEnrollmentService;
 use App\Services\Order\IOrderService;
 use App\Services\Order\OrderService;
+use App\ValueObjects\CheckoutCustomerData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -49,7 +51,7 @@ it('throws when creating order from empty cart', function (): void {
 
     $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
 
-    expect(fn () => $service->createFromCart(10, PaymentMethod::Cod))
+    expect(fn () => $service->createFromCart(10, PaymentMethod::Cod, new CheckoutCustomerData))
         ->toThrow(RuntimeException::class, 'Cart is empty');
 });
 
@@ -67,7 +69,7 @@ it('throws when buying now with missing course', function (): void {
 
     $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
 
-    expect(fn () => $service->createBuyNow(10, 99, 1, PaymentMethod::Cod))
+    expect(fn () => $service->createBuyNow(10, 99, 1, PaymentMethod::Cod, new CheckoutCustomerData))
         ->toThrow(RuntimeException::class, 'Course not found');
 });
 
@@ -159,7 +161,9 @@ it('creates an order from cart items and clears the cart after commit enrollment
 
     $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
 
-    expect($service->createFromCart(10, PaymentMethod::Cod))->toBe($order);
+    $result = $service->createFromCart(10, PaymentMethod::Cod, new CheckoutCustomerData);
+    expect($result)->toBeInstanceOf(CheckoutOrderResponse::class);
+    expect($result->order->id)->toBe($order->id);
 });
 
 it('enrolls user after creating buy now order', function (): void {
@@ -220,9 +224,10 @@ it('enrolls user after creating buy now order', function (): void {
 
     $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
 
-    $result = $service->createBuyNow(10, 55, 1, PaymentMethod::Cod);
+    $result = $service->createBuyNow(10, 55, 1, PaymentMethod::Cod, new CheckoutCustomerData);
 
-    expect($result)->toBe($order);
+    expect($result)->toBeInstanceOf(CheckoutOrderResponse::class);
+    expect($result->order->id)->toBe($order->id);
 });
 
 it('cancels an existing order', function (): void {

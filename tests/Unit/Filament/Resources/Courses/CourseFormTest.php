@@ -18,29 +18,31 @@ test('course form defines expected components', function (): void {
         'status',
         'name',
         'slug',
+        'customize_slug',
         'category_id',
         'level_id',
         'price',
-        'rating',
-        'learned',
+        'description',
         'thumbnail_source',
         'thumbnail',
         'thumbnail_file',
-        'description',
+        'allow_star_payment',
     ]);
 
     expect($components['status'])->toBeInstanceOf(Toggle::class);
     expect($components['name'])->toBeInstanceOf(TextInput::class);
+    expect($components['customize_slug'])->toBeInstanceOf(Toggle::class);
     expect($components['slug'])->toBeInstanceOf(TextInput::class);
+    expect($components['slug']->isDisabled())->toBeTrue();
     expect($components['category_id'])->toBeInstanceOf(Select::class);
     expect($components['level_id'])->toBeInstanceOf(Select::class);
     expect($components['price'])->toBeInstanceOf(TextInput::class);
-    expect($components['rating'])->toBeInstanceOf(TextInput::class);
-    expect($components['learned'])->toBeInstanceOf(TextInput::class);
     expect($components['thumbnail'])->toBeInstanceOf(Hidden::class);
     expect($components['thumbnail_file'])->toBeInstanceOf(FileUpload::class);
     expect($components['thumbnail_file'])->toBeInstanceOf(OptimizeFileUpload::class);
     expect($components['description'])->toBeInstanceOf(RichEditor::class);
+    expect($components['allow_star_payment'])->toBeInstanceOf(Toggle::class);
+    expect($components['customize_slug']->isDehydrated())->toBeFalse();
 });
 
 test('course form marks required fields', function (): void {

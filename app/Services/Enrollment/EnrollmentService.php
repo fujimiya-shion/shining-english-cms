@@ -3,6 +3,7 @@
 namespace App\Services\Enrollment;
 
 use App\Enums\OrderStatus;
+use App\Enums\StarTransactionType;
 use App\Jobs\GrantLessonStarRewardJob;
 use App\Models\CourseReview;
 use App\Models\Enrollment;
@@ -10,6 +11,7 @@ use App\Models\Lesson;
 use App\Models\LessonProgress;
 use App\Repositories\Enrollment\IEnrollmentRepository;
 use App\Services\Service;
+use App\Services\Star\IStarService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -171,6 +173,14 @@ class EnrollmentService extends Service implements IEnrollmentService
                 lessonId: $lessonId,
                 source: GrantLessonStarRewardJob::SOURCE_VIDEO,
             ));
+        }
+
+        $isLastLesson = count($orderedLessonIds) > 0
+            && count($completedLessonIds) >= count($orderedLessonIds)
+            && in_array($lessonId, $orderedLessonIds, true);
+
+        if ($isLastLesson) {
+            $this->awardCourseCompletion($userId, $courseId);
         }
 
         return [
@@ -338,5 +348,40 @@ class EnrollmentService extends Service implements IEnrollmentService
             'progress_percentage' => $progressPercentage,
             'has_reviewed' => $hasReviewed,
         ];
+    }
+
+    private function awardCourseCompletion(int $userId, int $courseId): void
+    {
+        $amount = (int) config('const.star.course_complete', 10);
+
+        if ($amount <= 0) {
+            return;
+        }
+
+        DB::transaction(function () use ($userId, $courseId, $amount): void {
+            $inserted = DB::table('lesson_star_rewards')->insertOrIgnore([
+                'user_id' => $userId,
+                'course_id' => $courseId,
+                'lesson_id' => 0,
+                'source' => 'course_complete',
+                'amount' => $amount,
+                'awarded_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            if ((int) $inserted !== 1) {
+                return;
+            }
+
+            $starService = app(IStarService::class);
+
+            $starService->addStarByUserId(
+                $amount,
+                $userId,
+                __('Hoàn thành khóa học'),
+                StarTransactionType::CourseComplete,
+            );
+        });
     }
 }

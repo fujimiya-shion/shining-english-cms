@@ -7,7 +7,7 @@ namespace App\DTO\User\Page\Home;
 class HomeStatisticResponse extends AHomePayloadResponse
 {
     /**
-     * @param list<HomeStatisticItem> $items
+     * @param  list<HomeStatisticItem>  $items
      */
     public function __construct(
         public array $items,

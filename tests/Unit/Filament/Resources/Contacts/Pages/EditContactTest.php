@@ -12,4 +12,3 @@ test('edit contact page defines reply header action', function (): void {
         Action::class,
     ]);
 });
-

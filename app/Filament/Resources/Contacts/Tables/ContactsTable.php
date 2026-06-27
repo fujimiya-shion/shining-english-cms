@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Contacts\Tables;
 
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -30,7 +32,14 @@ class ContactsTable
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('duplicate')
+                    ->label('Nhân bản')
+                    ->icon('heroicon-o-document-duplicate')
+                    ->action(function ($record): void {
+                        $clone = $record->replicate();
+                        $clone->save();
+                    }),
+                DeleteAction::make(),
             ]);
     }
 }
-

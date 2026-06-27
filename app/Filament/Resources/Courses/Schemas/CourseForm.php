@@ -8,7 +8,7 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
@@ -19,8 +19,9 @@ class CourseForm
         return $schema
             ->columns(1)
             ->components([
-                Grid::make(12)
-                    ->columnSpanFull()
+                Section::make('Thông tin cơ bản')
+                    ->compact()
+                    ->columns(12)
                     ->schema([
                         Toggle::make('status')
                             ->required()
@@ -28,43 +29,47 @@ class CourseForm
                             ->default(true)
                             ->columnSpanFull(),
                         TextInput::make('name')
+                            ->label('Tên khóa học')
                             ->required()
                             ->maxLength(255)
                             ->columnSpan(8),
                         TextInput::make('slug')
                             ->maxLength(255)
                             ->unique(ignoreRecord: true)
-                            ->helperText('Auto-generate from name if left unchanged.')
+                            ->disabled(fn (Get $get): bool => ! (bool) $get('customize_slug'))
+                            ->helperText('Mặc định tự động tạo từ tên khóa học. Bật toggle để tự nhập.')
                             ->columnSpan(4),
+                        Toggle::make('customize_slug')
+                            ->label('Tự chỉnh sửa slug')
+                            ->default(false)
+                            ->live()
+                            ->dehydrated(false)
+                            ->columnSpan(4)
+                            ->columnStart(9),
                         Select::make('category_id')
+                            ->label('Danh mục')
                             ->relationship('category', 'name')
                             ->searchable()
                             ->preload()
                             ->required()
                             ->columnSpan(4),
                         Select::make('level_id')
+                            ->label('Trình độ')
                             ->relationship('level', 'name')
                             ->searchable()
                             ->preload()
                             ->required()
                             ->columnSpan(4),
                         TextInput::make('price')
+                            ->label('Giá (VND)')
                             ->required()
                             ->numeric()
                             ->prefix('VND')
                             ->minValue(0)
-                            ->columnSpan(3),
-                        TextInput::make('rating')
-                            ->numeric()
-                            ->minValue(0)
-                            ->maxValue(5)
-                            ->step(0.1)
-                            ->columnSpan(3),
-                        TextInput::make('learned')
-                            ->numeric()
-                            ->minValue(0)
-                            ->step(1)
-                            ->columnSpan(3),
+                            ->columnSpan(4),
+                        RichEditor::make('description')
+                            ->label('Mô tả')
+                            ->columnSpan(12),
                         Select::make('thumbnail_source')
                             ->label('Thumbnail source')
                             ->options([
@@ -96,8 +101,26 @@ class CourseForm
                             ->visible(fn (Get $get): bool => $get('thumbnail_source') === 'url')
                             ->dehydrated(true)
                             ->columnSpan(12),
-                        RichEditor::make('description')
-                            ->columnSpan(12),
+                    ]),
+                Section::make('Thanh toán bằng sao')
+                    ->compact()
+                    ->columns(12)
+                    ->schema([
+                        Toggle::make('allow_star_payment')
+                            ->label('Cho phép thanh toán bằng sao')
+                            ->helperText('Bật để cho phép học viên dùng sao mở khóa học này.')
+                            ->inline(false)
+                            ->default(false)
+                            ->live()
+                            ->columnSpanFull(),
+                        TextInput::make('star_price')
+                            ->label('Số sao cần để mở')
+                            ->numeric()
+                            ->minValue(0)
+                            ->default(0)
+                            ->step(1)
+                            ->visible(fn (Get $get): bool => (bool) $get('allow_star_payment'))
+                            ->columnSpan(4),
                     ]),
             ]);
     }

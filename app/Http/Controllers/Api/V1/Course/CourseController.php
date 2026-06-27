@@ -11,6 +11,7 @@ use App\Services\Course\ICourseService;
 use App\Services\CourseReview\ICourseReviewService;
 use App\Services\Enrollment\IEnrollmentService;
 use App\Services\IService;
+use App\Services\Star\IStarService;
 use App\Traits\ApiBehaviour;
 use App\ValueObjects\CourseFilter;
 use App\ValueObjects\MetaPagination;
@@ -26,6 +27,7 @@ class CourseController extends ApiController
         protected ICartService $cartService,
         protected IEnrollmentService $enrollmentService,
         protected ICourseReviewService $courseReviewService,
+        protected IStarService $starService,
     ) {}
 
     protected function service(): IService
@@ -73,6 +75,7 @@ class CourseController extends ApiController
 
         $isEnrolled = $this->enrollmentService->isEnrolled($user->id, $id);
         $isFreeCourse = (int) ($course->price ?? 0) === 0;
+        $starBalance = $this->starService->getBalance((int) $user->id);
 
         return $this->success(data: [
             'course_id' => $id,
@@ -81,6 +84,9 @@ class CourseController extends ApiController
             'in_cart' => $this->cartService->hasCourse($user->id, $id),
             'is_free_course' => $isFreeCourse,
             'can_enroll_free' => $isFreeCourse && ! $isEnrolled,
+            'allow_star_payment' => (bool) ($course->allow_star_payment ?? false),
+            'star_price' => (int) ($course->star_price ?? 0),
+            'star_balance' => $starBalance,
         ]);
     }
 

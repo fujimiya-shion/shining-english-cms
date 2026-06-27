@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\StarTransactionType;
 use App\Jobs\GrantLessonStarRewardJob;
 use App\Models\Course;
 use App\Models\Lesson;
@@ -24,7 +25,7 @@ it('grants lesson video stars only once for the same user and lesson', function 
     $starService = Mockery::mock(IStarService::class);
     $starService->shouldReceive('addStarByUserId')
         ->once()
-        ->with(3, $user->id, Mockery::type('string'))
+        ->with(3, $user->id, Mockery::type('string'), StarTransactionType::LessonRewardVideo)
         ->andReturnTrue();
     app()->instance(IStarService::class, $starService);
 
@@ -79,7 +80,7 @@ it('grants quiz stars with the quiz reward config', function (): void {
     $starService = Mockery::mock(IStarService::class);
     $starService->shouldReceive('addStarByUserId')
         ->once()
-        ->with(5, $user->id, Mockery::type('string'))
+        ->with(5, $user->id, Mockery::type('string'), StarTransactionType::LessonRewardQuiz)
         ->andReturnTrue();
     app()->instance(IStarService::class, $starService);
 

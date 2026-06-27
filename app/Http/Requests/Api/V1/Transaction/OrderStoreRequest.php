@@ -18,7 +18,7 @@ class OrderStoreRequest extends FormRequest
     {
         return [
             'type' => ['required', 'string', 'in:cart,buy_now'],
-            'payment_method' => ['nullable', 'string', 'in:cod,payos'],
+            'payment_method' => ['nullable', 'string', 'in:cod,payos,star'],
             'course_id' => ['required_if:type,buy_now', 'integer'],
             'quantity' => ['nullable', 'integer', 'min:1'],
             'buyer_name' => ['nullable', 'string', 'max:255'],
@@ -35,7 +35,7 @@ class OrderStoreRequest extends FormRequest
         return [
             'type.required' => 'Order type is required.',
             'type.in' => 'Order type must be cart or buy_now.',
-            'payment_method.in' => 'Payment method must be cod or payos.',
+            'payment_method.in' => 'Payment method must be cod, payos, or star.',
             'course_id.required_if' => 'Course id is required for buy now.',
             'course_id.integer' => 'Course id must be an integer.',
             'quantity.integer' => 'Quantity must be an integer.',

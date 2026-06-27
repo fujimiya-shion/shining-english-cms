@@ -12,4 +12,3 @@ class ContactRepository extends Repository implements IContactRepository
         $this->model = $model;
     }
 }
-

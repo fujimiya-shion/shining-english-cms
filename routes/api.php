@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Developer\DeveloperController;
 use App\Http\Controllers\Api\V1\Lesson\LessonController;
 use App\Http\Controllers\Api\V1\Lesson\LessonNoteController;
 use App\Http\Controllers\Api\V1\QuizAttempt\QuizAttemptController;
+use App\Http\Controllers\Api\V1\StarController;
 use App\Http\Controllers\Api\V1\Transaction\OrderController;
 use App\Http\Controllers\Api\V1\Transaction\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\User\AuthController;
@@ -85,6 +86,12 @@ Route::prefix('/v1')->group(function () {
                 Route::post('/reset-password', 'resetPassword');
             });
 
+        Route::controller(HomeController::class)
+            ->prefix('/home')
+            ->group(function () {
+                Route::get('/', 'index');
+            });
+
         Route::middleware(VerifyUserToken::class)
             ->controller(AuthController::class)
             ->prefix('/auth')
@@ -98,11 +105,6 @@ Route::prefix('/v1')->group(function () {
             ->prefix('/user')
             ->group(function () {
                 Route::post('/update', 'update');
-            });
-        Route::controller(HomeController::class)
-            ->prefix('/home')
-            ->group(function () {
-                Route::get('/', 'index');
             });
 
         Route::middleware(VerifyUserToken::class)
@@ -176,11 +178,12 @@ Route::prefix('/v1')->group(function () {
             });
 
         Route::middleware(VerifyUserToken::class)
-            ->controller(BlogController::class)
-            ->prefix('/blogs')
+            ->controller(StarController::class)
+            ->prefix('/stars')
             ->group(function () {
-                Route::post('/{id}/unlock', 'unlock');
+                Route::get('/balance', 'balance');
+                Route::post('/check-in', 'checkIn');
+                Route::post('/courses/{courseId}/pay', 'payForCourse');
             });
     });
-
 });

@@ -9,7 +9,7 @@ use App\Models\CourseReview;
 class HomeTestimonialResponse extends AHomePayloadResponse
 {
     /**
-     * @param list<CourseReview> $reviews
+     * @param  list<CourseReview>  $reviews
      */
     public function __construct(
         public string $title,

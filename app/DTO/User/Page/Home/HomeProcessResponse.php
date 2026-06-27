@@ -7,8 +7,8 @@ namespace App\DTO\User\Page\Home;
 class HomeProcessResponse extends AHomePayloadResponse
 {
     /**
-     * @param list<HomeProcessStep> $steps
-     * @param list<string> $tags
+     * @param  list<HomeProcessStep>  $steps
+     * @param  list<string>  $tags
      */
     public function __construct(
         public string $title,

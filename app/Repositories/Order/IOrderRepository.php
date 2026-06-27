@@ -2,10 +2,10 @@
 
 namespace App\Repositories\Order;
 
+use App\Models\Order;
 use App\Repositories\IRepository;
 use App\ValueObjects\QueryOption;
 use Illuminate\Pagination\LengthAwarePaginator;
-use App\Models\Order;
 
 interface IOrderRepository extends IRepository
 {

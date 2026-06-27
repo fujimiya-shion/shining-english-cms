@@ -246,6 +246,9 @@ it('returns course access state for authenticated user', function (): void {
             'in_cart' => true,
             'is_free_course' => true,
             'can_enroll_free' => true,
+            'allow_star_payment' => false,
+            'star_price' => 0,
+            'star_balance' => 0,
         ],
     ]);
 });

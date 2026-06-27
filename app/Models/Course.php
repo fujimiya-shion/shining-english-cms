@@ -31,10 +31,13 @@ class Course extends Model
         'description',
         'rating',
         'learned',
+        'allow_star_payment',
+        'star_price',
     ];
 
     #[Scope]
-    public function active(Builder $query): void {
+    public function active(Builder $query): void
+    {
         $query->where(function (Builder $query): void {
             $query
                 ->where('status', 1)

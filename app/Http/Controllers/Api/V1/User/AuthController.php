@@ -11,6 +11,7 @@ use App\Http\Requests\Api\V1\User\ResetPasswordRequest;
 use App\Http\Requests\Api\V1\User\ThirdPartyLoginRequest;
 use App\Services\Security\Recaptcha\IRecaptchaVerifier;
 use App\Services\Security\Recaptcha\RecaptchaVerificationException;
+use App\Services\Star\IStarService;
 use App\Services\User\IThirdPartyAuthService;
 use App\Services\User\IUserService;
 use App\Traits\Jsonable;
@@ -27,6 +28,7 @@ class AuthController extends ApiController
     public function __construct(
         private IUserService $service,
         private readonly IRecaptchaVerifier $recaptchaVerifier,
+        private readonly IStarService $starService,
     ) {}
 
     public function register(RegisterRequest $request): JsonResponse
@@ -81,7 +83,10 @@ class AuthController extends ApiController
         $user = $request->user();
         $user?->loadMissing('city:id,name');
 
-        return $this->success(data: $user);
+        $data = $user->toArray();
+        $data['star_balance'] = $this->starService->getBalance((int) $user->id);
+
+        return $this->success(data: $data);
     }
 
     public function logout(Request $request): JsonResponse

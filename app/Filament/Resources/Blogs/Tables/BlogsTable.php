@@ -2,14 +2,16 @@
 
 namespace App\Filament\Resources\Blogs\Tables;
 
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
@@ -34,12 +36,8 @@ class BlogsTable
                     ->label('Tag')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('required_star')
-                    ->label('Stars')
-                    ->numeric()
-                    ->sortable(),
-                IconColumn::make('status')
-                    ->boolean(),
+                ToggleColumn::make('status')
+                    ->label('Trạng thái'),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -63,6 +61,16 @@ class BlogsTable
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('duplicate')
+                    ->label('Nhân bản')
+                    ->icon('heroicon-o-document-duplicate')
+                    ->action(function ($record): void {
+                        $clone = $record->replicate();
+                        $clone->title = $clone->title.' (Sao chép)';
+                        $clone->slug = $clone->slug.'-copy';
+                        $clone->save();
+                    }),
+                DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

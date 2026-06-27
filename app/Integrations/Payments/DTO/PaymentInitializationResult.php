@@ -19,7 +19,7 @@ class PaymentInitializationResult
 
     public static function none(): self
     {
-        return new self();
+        return new self;
     }
 
     /**

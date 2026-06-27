@@ -70,12 +70,6 @@ it('defines enrollments relation', function (): void {
     expect($user->enrollments())->toBeInstanceOf(HasMany::class);
 });
 
-it('defines blog unlocks relation', function (): void {
-    $user = new User;
-
-    expect($user->blogUnlocks())->toBeInstanceOf(HasMany::class);
-});
-
 it('defines course reviews relation', function (): void {
     $user = new User;
 

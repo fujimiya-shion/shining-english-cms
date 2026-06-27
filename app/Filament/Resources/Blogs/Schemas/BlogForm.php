@@ -6,8 +6,8 @@ use App\Filament\Forms\Components\OptimizeFileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Utilities\Get;
@@ -35,19 +35,20 @@ class BlogForm
                         TextInput::make('slug')
                             ->maxLength(255)
                             ->unique(ignoreRecord: true)
-                            ->helperText('Auto-generate from title if left unchanged.')
+                            ->disabled(fn (Get $get): bool => ! (bool) $get('customize_slug'))
+                            ->helperText('Mặc định tự động tạo từ tiêu đề. Bật toggle để tự nhập.')
                             ->columnSpan(4),
+                        Toggle::make('customize_slug')
+                            ->label('Tự chỉnh sửa slug')
+                            ->default(false)
+                            ->live()
+                            ->dehydrated(false)
+                            ->columnSpan(4)
+                            ->columnStart(9),
                         Select::make('tag_id')
                             ->relationship('tag', 'name')
                             ->searchable()
                             ->preload()
-                            ->columnSpan(4),
-                        TextInput::make('required_star')
-                            ->label('Required stars')
-                            ->numeric()
-                            ->default(0)
-                            ->minValue(0)
-                            ->step(1)
                             ->columnSpan(4),
                         Textarea::make('short_description')
                             ->label('Short description')

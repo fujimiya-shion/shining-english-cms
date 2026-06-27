@@ -18,9 +18,9 @@ test('courses table defines expected columns', function (): void {
         'name',
         'slug',
         'price',
+        'allow_star_payment',
+        'star_price',
         'status',
-        'rating',
-        'learned',
         'category.name',
         'level.name',
         'deleted_at',
@@ -35,8 +35,9 @@ test('courses table registers trashed filter', function (): void {
     $filters = $table->getFilters();
     $filters = array_values($filters);
 
-    expect($filters)->toHaveCount(4);
+    expect($filters)->toHaveCount(5);
     expect(actionClassList($filters))->toEqual([
+        TernaryFilter::class,
         TernaryFilter::class,
         SelectFilter::class,
         SelectFilter::class,
@@ -44,12 +45,16 @@ test('courses table registers trashed filter', function (): void {
     ]);
 });
 
-test('courses table registers edit record action', function (): void {
+test('courses table registers record actions', function (): void {
     $table = CoursesTable::configure(makeTable());
 
     $actions = $table->getRecordActions();
 
-    expect(actionClassList($actions))->toEqual([EditAction::class]);
+    expect(actionClassList($actions))->toEqual([
+        EditAction::class,
+        \Filament\Actions\Action::class,
+        \Filament\Actions\DeleteAction::class,
+    ]);
 });
 
 test('courses table registers bulk action group', function (): void {

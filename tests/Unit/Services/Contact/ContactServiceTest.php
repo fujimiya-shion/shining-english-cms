@@ -80,4 +80,3 @@ it('replies to contact and dispatches reply mail job', function (): void {
     expect($result)->toBe($contact);
     Bus::assertDispatched(SendContactReplyMailJob::class);
 });
-

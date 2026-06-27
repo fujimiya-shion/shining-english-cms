@@ -1,6 +1,7 @@
 <?php
 
 use App\Filament\Resources\Categories\Tables\CategoriesTable;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
@@ -30,10 +31,18 @@ it('adds record action + bulk toolbar actions', function (): void {
     $table = CategoriesTable::configure(makeTable());
 
     $recordActions = $table->getRecordActions();
-    expect(actionClassList($recordActions))->toEqual([EditAction::class]);
+    expect(actionClassList($recordActions))->toEqual([
+        EditAction::class,
+        \Filament\Actions\Action::class,
+        \Filament\Actions\DeleteAction::class,
+    ]);
 
     $toolbarActions = $table->getToolbarActions();
-    expect(actionClassList($toolbarActions))->toEqual([
+    expect($toolbarActions)->toHaveCount(1);
+    expect($toolbarActions[0])->toBeInstanceOf(BulkActionGroup::class);
+
+    $groupActions = $toolbarActions[0]->getActions();
+    expect(actionClassList($groupActions))->toEqual([
         DeleteBulkAction::class,
         ForceDeleteBulkAction::class,
         RestoreBulkAction::class,

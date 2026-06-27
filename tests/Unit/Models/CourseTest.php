@@ -18,6 +18,8 @@ it('defines fillable attributes', function (): void {
         'description',
         'rating',
         'learned',
+        'allow_star_payment',
+        'star_price',
     ]);
 });
 

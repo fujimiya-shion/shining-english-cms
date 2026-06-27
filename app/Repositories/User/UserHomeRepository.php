@@ -91,9 +91,10 @@ class UserHomeRepository implements IUserHomeRepository
     }
 
     /**
-     * @param array{learner_count:int, content_count:int, average_rating:float} $metrics
+     * @param  array{learner_count:int, content_count:int, average_rating:float}  $metrics
      */
-    private function makeHeroPayload(array $metrics): HomeHeroResponse {
+    private function makeHeroPayload(array $metrics): HomeHeroResponse
+    {
         return new HomeHeroResponse(
             title: null,
             htmlTitle: 'More Than English.<br><span>Find Your Shine.</span>',
@@ -141,18 +142,19 @@ class UserHomeRepository implements IUserHomeRepository
         );
     }
 
-    private function makeCourseListingPayload(?string $token): HomeCourseListingResponse {
+    private function makeCourseListingPayload(?string $token): HomeCourseListingResponse
+    {
         $currentUser = $this->resolveCurrentUser($token);
         $courses = Course::query()
-                ->scopes(['active'])
-                ->with([
-                    'category:id,name',
-                    'level:id,name',
-                ])
-                ->withCardMetrics()
-                ->orderByDesc('created_at')
-                ->limit(4)
-                ->get();
+            ->scopes(['active'])
+            ->with([
+                'category:id,name',
+                'level:id,name',
+            ])
+            ->withCardMetrics()
+            ->orderByDesc('created_at')
+            ->limit(4)
+            ->get();
 
         $enrolledCourseIds = [];
         if ($currentUser instanceof User && $courses->isNotEmpty()) {
@@ -291,7 +293,7 @@ class UserHomeRepository implements IUserHomeRepository
     }
 
     /**
-     * @param array{learner_count:int, content_count:int, average_rating:float} $metrics
+     * @param  array{learner_count:int, content_count:int, average_rating:float}  $metrics
      */
     private function makeStatisticPayload(array $metrics): HomeStatisticResponse
     {
@@ -379,15 +381,15 @@ class UserHomeRepository implements IUserHomeRepository
 
     private function formatCompactNumber(int|string $number): string
     {
-        if(is_string($number)) {
+        if (is_string($number)) {
             return $number;
-        } 
-
-        if ($number >= 1000) {
-            return floor($number / 1000) . 'K+';
         }
 
-        return $number . '+';
+        if ($number >= 1000) {
+            return floor($number / 1000).'K+';
+        }
+
+        return $number.'+';
     }
 
     private function formatRating(int|float|null|string $rating): string
@@ -398,6 +400,6 @@ class UserHomeRepository implements IUserHomeRepository
 
         $rating = round((float) ($rating ?? 0), 1);
 
-        return $rating . '★';
+        return $rating.'★';
     }
 }

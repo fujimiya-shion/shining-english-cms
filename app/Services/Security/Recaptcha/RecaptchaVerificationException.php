@@ -16,4 +16,3 @@ class RecaptchaVerificationException extends RuntimeException
         return new self('reCAPTCHA verification is unavailable. Please try again.');
     }
 }
-

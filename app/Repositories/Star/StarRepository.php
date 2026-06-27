@@ -20,4 +20,14 @@ class StarRepository extends Repository implements IStarRepository
             ->lockForUpdate()
             ->first();
     }
+
+    public function getBalanceByUserId(int $userId): int
+    {
+        $record = $this->model
+            ->newQuery()
+            ->where('user_id', $userId)
+            ->first();
+
+        return $record ? (int) $record->amount : 0;
+    }
 }

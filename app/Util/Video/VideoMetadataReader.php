@@ -14,6 +14,7 @@ class VideoMetadataReader
 
         try {
             $absolutePath = Storage::disk($disk)->path($relativePath);
+
             return $this->detectDurationMinutesFromAbsolutePath($absolutePath);
         } catch (\Throwable) {
             return null;

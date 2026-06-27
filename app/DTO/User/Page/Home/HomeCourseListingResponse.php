@@ -1,15 +1,18 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\DTO\User\Page\Home;
+
 use App\Models\Course;
-class HomeCourseListingResponse extends AHomePayloadResponse {
+
+class HomeCourseListingResponse extends AHomePayloadResponse
+{
     /**
      * Summary of __construct
-     * @param string $title
-     * @param string $description
-     * @param list<Course> $courses
-     * @param list<string> $hexBgColors
-     * @param HomeCourseListingRenderBackgroundTypes $renderBackgroundType
+     *
+     * @param  list<Course>  $courses
+     * @param  list<string>  $hexBgColors
      */
     public function __construct(
         public string $title,
@@ -17,15 +20,17 @@ class HomeCourseListingResponse extends AHomePayloadResponse {
         public array $courses,
         public array $hexBgColors = [],
         public HomeCourseListingRenderBackgroundTypes $renderBackgroundType = HomeCourseListingRenderBackgroundTypes::BACKEND_RESPONSE
-   ) {}
-
-   #[\Override]
-   public function type(): string {
-       return 'courses';
-   }
+    ) {}
 
     #[\Override]
-    public function data(): array {
+    public function type(): string
+    {
+        return 'courses';
+    }
+
+    #[\Override]
+    public function data(): array
+    {
         return [
             'title' => $this->title,
             'description' => $this->description,
@@ -36,7 +41,8 @@ class HomeCourseListingResponse extends AHomePayloadResponse {
     }
 }
 
-enum HomeCourseListingRenderBackgroundTypes: string {
+enum HomeCourseListingRenderBackgroundTypes: string
+{
     case BACKEND_RESPONSE = 'backend_response';
     case FRONTEND = 'frontend';
 }

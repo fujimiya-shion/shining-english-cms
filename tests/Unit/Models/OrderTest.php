@@ -14,6 +14,10 @@ it('defines fillable attributes', function (): void {
         'total_amount',
         'status',
         'payment_method',
+        'payment_reference',
+        'payment_checkout_url',
+        'payment_metadata',
+        'paid_at',
         'placed_at',
     ]);
 });

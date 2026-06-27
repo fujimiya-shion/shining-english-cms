@@ -39,7 +39,11 @@ test('users table registers actions', function (): void {
     $table = UsersTable::configure(makeTable());
 
     $recordActions = $table->getRecordActions();
-    expect(actionClassList($recordActions))->toEqual([EditAction::class]);
+    expect(actionClassList($recordActions))->toEqual([
+        EditAction::class,
+        \Filament\Actions\Action::class,
+        \Filament\Actions\DeleteAction::class,
+    ]);
 
     $toolbarActions = $table->getToolbarActions();
     expect($toolbarActions)->toHaveCount(1);

@@ -24,9 +24,9 @@ class StarService extends Service implements IStarService
         $this->starTransactionRepository = $starTransactionRepository;
     }
 
-    public function addStarByUserId(int $amount, int $userId, ?string $message): bool
+    public function addStarByUserId(int $amount, int $userId, ?string $message = null, ?StarTransactionType $type = null): bool
     {
-        return DB::transaction(function () use ($amount, $userId, $message): bool {
+        return DB::transaction(function () use ($amount, $userId, $message, $type): bool {
             $record = $this->starRepository->findForUpdateByUserId($userId);
 
             if ($record === null) {
@@ -51,7 +51,7 @@ class StarService extends Service implements IStarService
             $this->starTransactionRepository->create([
                 'user_id' => $userId,
                 'amount' => $amount,
-                'type' => $amount >= 0 ? StarTransactionType::Increase : StarTransactionType::Decrease,
+                'type' => $type ?? ($amount >= 0 ? StarTransactionType::Increase : StarTransactionType::Decrease),
                 'description' => $message,
             ]);
 
@@ -59,13 +59,18 @@ class StarService extends Service implements IStarService
         });
     }
 
-    public function spendStarByUserId(int $amount, int $userId, ?string $message): bool
+    public function getBalance(int $userId): int
+    {
+        return $this->starRepository->getBalanceByUserId($userId);
+    }
+
+    public function spendStarByUserId(int $amount, int $userId, ?string $message = null, ?StarTransactionType $type = null): bool
     {
         if ($amount <= 0) {
             return true;
         }
 
-        return DB::transaction(function () use ($amount, $userId, $message): bool {
+        return DB::transaction(function () use ($amount, $userId, $message, $type): bool {
             $record = $this->starRepository->findForUpdateByUserId($userId);
 
             if ($record === null || (int) $record->amount < $amount) {
@@ -77,7 +82,7 @@ class StarService extends Service implements IStarService
             $this->starTransactionRepository->create([
                 'user_id' => $userId,
                 'amount' => -$amount,
-                'type' => StarTransactionType::Decrease,
+                'type' => $type ?? StarTransactionType::Decrease,
                 'description' => $message,
             ]);
 

@@ -66,8 +66,7 @@ class OrderService extends Service implements IOrderService
         int $userId,
         PaymentMethod $paymentMethod,
         CheckoutCustomerData $customerData,
-    ): CheckoutOrderResponse
-    {
+    ): CheckoutOrderResponse {
         $items = $this->cartRepository->itemsByUserId($userId);
 
         if ($items->isEmpty()) {
@@ -106,8 +105,7 @@ class OrderService extends Service implements IOrderService
         int $quantity,
         PaymentMethod $paymentMethod,
         CheckoutCustomerData $customerData,
-    ): CheckoutOrderResponse
-    {
+    ): CheckoutOrderResponse {
         $course = $this->courseRepository->getById($courseId);
 
         if (! $course) {
@@ -146,6 +144,36 @@ class OrderService extends Service implements IOrderService
         $order->save();
 
         return true;
+    }
+
+    public function createWithStarPayment(int $userId, int $courseId): Order
+    {
+        $course = $this->courseRepository->getById($courseId);
+
+        if (! $course) {
+            throw new RuntimeException('Course not found');
+        }
+
+        if (! (bool) ($course->allow_star_payment ?? false)) {
+            throw new RuntimeException('Course does not support star payment');
+        }
+
+        return DB::transaction(function () use ($userId, $course): Order {
+            $order = $this->createOrderRecord($userId, 0, PaymentMethod::Star);
+
+            $this->orderItemRepository->create([
+                'order_id' => $order->id,
+                'course_id' => $course->id,
+                'quantity' => 1,
+                'price' => 0,
+            ]);
+
+            DB::afterCommit(function () use ($userId, $course, $order): void {
+                $this->enrollmentService->enroll($userId, $course->id, $order->id);
+            });
+
+            return $order;
+        });
     }
 
     private function createOrderRecord(int $userId, int $total, PaymentMethod $paymentMethod): Order

@@ -1,14 +1,15 @@
 <?php
-declare(strict_types=1);
-namespace App\DTO\User\Page\Home;
-class HomeFeatureResponse extends AHomePayloadResponse {
 
+declare(strict_types=1);
+
+namespace App\DTO\User\Page\Home;
+
+class HomeFeatureResponse extends AHomePayloadResponse
+{
     /**
      * Summary of __construct
-     * @param string $eyebrow
-     * @param string $title
-     * @param string $description
-     * @param list<HomeFeatureCard> $items
+     *
+     * @param  list<HomeFeatureCard>  $items
      */
     public function __construct(
         public string $eyebrow,
@@ -18,12 +19,14 @@ class HomeFeatureResponse extends AHomePayloadResponse {
     ) {}
 
     #[\Override]
-    public function type(): string {
+    public function type(): string
+    {
         return 'feature';
     }
 
     #[\Override]
-    public function data(): array {
+    public function data(): array
+    {
         return [
             'eyebrow' => $this->eyebrow,
             'title' => $this->title,

@@ -1,17 +1,19 @@
 <?php
+
 declare(strict_types=1);
+
 namespace App\DTO\User\Page\Home;
-class HomeHeroResponse extends AHomePayloadResponse {
+
+class HomeHeroResponse extends AHomePayloadResponse
+{
     /**
      * Summary of __construct
-     * @param mixed $title
-     * @param mixed $htmlTitle
-     * @param string $description
-     * @param list<HomeHeroActionButton> $actions
-     * @param list<HomeHeroCTA> $ctas
-     * @param string $image
-     * @param list<HomeHeroImageTag> $imageTags
-     * @param HomeHeroImageCTA $imageCTA
+     *
+     * @param  mixed  $title
+     * @param  mixed  $htmlTitle
+     * @param  list<HomeHeroActionButton>  $actions
+     * @param  list<HomeHeroCTA>  $ctas
+     * @param  list<HomeHeroImageTag>  $imageTags
      */
     public function __construct(
         public ?string $title,
@@ -25,12 +27,14 @@ class HomeHeroResponse extends AHomePayloadResponse {
     ) {}
 
     #[\Override]
-    public function type(): string {
+    public function type(): string
+    {
         return 'hero';
     }
 
     #[\Override]
-    public function data(): array {
+    public function data(): array
+    {
         return [
             'title' => $this->title,
             'html_title' => $this->htmlTitle,
@@ -53,14 +57,16 @@ class HomeHeroResponse extends AHomePayloadResponse {
     }
 }
 
-class HomeHeroActionButton {
+class HomeHeroActionButton
+{
     public function __construct(
         public string $title,
         public string $action,
         public string $type,
     ) {}
 
-    public function toArray(): array {
+    public function toArray(): array
+    {
         return [
             'title' => $this->title,
             'action' => $this->action,
@@ -69,13 +75,15 @@ class HomeHeroActionButton {
     }
 }
 
-class HomeHeroCTA {
+class HomeHeroCTA
+{
     public function __construct(
         public string $title,
         public string $description,
     ) {}
 
-    public function toArray(): array {
+    public function toArray(): array
+    {
         return [
             'title' => $this->title,
             'description' => $this->description,
@@ -83,14 +91,16 @@ class HomeHeroCTA {
     }
 }
 
-class HomeHeroImageTag {
+class HomeHeroImageTag
+{
     public function __construct(
         public string $text,
         public string $hexBgColor,
         public string $hexTextColor,
     ) {}
 
-    public function toArray(): array {
+    public function toArray(): array
+    {
         return [
             'text' => $this->text,
             'hex_bg_color' => $this->hexBgColor,
@@ -99,14 +109,16 @@ class HomeHeroImageTag {
     }
 }
 
-class HomeHeroImageCTA {
+class HomeHeroImageCTA
+{
     public function __construct(
         public string $icon,
         public string $title,
         public string $description,
     ) {}
 
-    public function toArray(): array {
+    public function toArray(): array
+    {
         return [
             'icon' => $this->icon,
             'title' => $this->title,

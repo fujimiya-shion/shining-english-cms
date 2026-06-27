@@ -21,6 +21,9 @@ test('contacts table registers record actions', function (): void {
 
     $actions = $table->getRecordActions();
 
-    expect(actionClassList($actions))->toEqual([EditAction::class]);
+    expect(actionClassList($actions))->toEqual([
+        EditAction::class,
+        \Filament\Actions\Action::class,
+        \Filament\Actions\DeleteAction::class,
+    ]);
 });
-

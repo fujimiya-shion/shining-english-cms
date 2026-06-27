@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\StarTransactionType;
 use App\Jobs\InitUserStarJob;
 use App\Services\Star\IStarService;
 use Illuminate\Support\Facades\Log;
@@ -27,7 +28,7 @@ it('logs success when stars are initialized', function (): void {
     $starService = Mockery::mock(IStarService::class);
     $starService->shouldReceive('addStarByUserId')
         ->once()
-        ->with(5, 2, Mockery::type('string'))
+        ->with(5, 2, Mockery::type('string'), StarTransactionType::RegistrationBonus)
         ->andReturnTrue();
     app()->instance(IStarService::class, $starService);
 

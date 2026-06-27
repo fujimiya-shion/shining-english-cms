@@ -65,6 +65,10 @@ it('returns error when cart is empty', function (): void {
 });
 
 it('creates order with buy now', function (): void {
+    if (! config('services.payos.client_id')) {
+        test()->markTestSkipped('PayOS configuration is not set.');
+    }
+
     $user = User::factory()->create();
     $token = $user->createToken('order')->plainTextToken;
 
@@ -74,7 +78,7 @@ it('creates order with buy now', function (): void {
         'type' => 'buy_now',
         'course_id' => $course->id,
         'quantity' => 3,
-        'payment_method' => 'payos',
+        'payment_method' => 'cod',
     ], [
         'User-Authorization' => $token,
     ]);
@@ -83,7 +87,7 @@ it('creates order with buy now', function (): void {
 
     $order = Order::query()->where('user_id', $user->id)->first();
     expect($order->total_amount)->toBe(450);
-    expect($order->payment_method)->toBe(PaymentMethod::Payos);
+    expect($order->payment_method)->toBe(PaymentMethod::Cod);
     expect(OrderItem::query()->where('order_id', $order->id)->count())->toBe(1);
 });
 

@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api\V1\Contact;
 
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Api\V1\Contact\ContactStoreRequest;
+use App\Services\Contact\IContactService;
 use App\Services\Security\Recaptcha\IRecaptchaVerifier;
 use App\Services\Security\Recaptcha\RecaptchaVerificationException;
-use App\Services\Contact\IContactService;
 use Illuminate\Http\JsonResponse;
 use Throwable;
 

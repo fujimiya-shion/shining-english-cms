@@ -3,11 +3,11 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Traits\Jsonable;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\PersonalAccessToken;
-use App\Traits\Jsonable;
 
 class VerifyUserToken
 {

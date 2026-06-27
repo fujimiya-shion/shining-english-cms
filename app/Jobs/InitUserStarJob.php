@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\StarTransactionType;
 use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -33,7 +34,8 @@ class InitUserStarJob implements ShouldQueue
             $success = app(\App\Services\Star\IStarService::class)->addStarByUserId(
                 $amount,
                 $this->userId,
-                __('Bạn được tặng sao khi đăng ký tài khoản')
+                __('Bạn được tặng sao khi đăng ký tài khoản'),
+                StarTransactionType::RegistrationBonus,
             );
 
             if ($success) {

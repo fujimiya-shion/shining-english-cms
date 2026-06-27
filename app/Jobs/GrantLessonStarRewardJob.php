@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\StarTransactionType;
 use App\Models\Lesson;
 use App\Services\Star\IStarService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -56,10 +57,15 @@ class GrantLessonStarRewardJob implements ShouldQueue
                 return;
             }
 
+            $type = $this->source === self::SOURCE_VIDEO
+                ? StarTransactionType::LessonRewardVideo
+                : StarTransactionType::LessonRewardQuiz;
+
             $success = $starService->addStarByUserId(
                 $amount,
                 $this->userId,
                 $this->buildTransactionMessage($lesson->name),
+                $type,
             );
 
             if (! $success) {

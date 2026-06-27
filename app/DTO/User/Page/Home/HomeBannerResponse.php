@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\DTO\User\Page\Home;
 
-class HomeBannerResponse extends AHomePayloadResponse {
+class HomeBannerResponse extends AHomePayloadResponse
+{
     /**
-     * @param list<HomeBannerActionButton> $bannerActionButtons
-     * @param list<HomeBannerHighlight> $bannerHighlights
+     * @param  list<HomeBannerActionButton>  $bannerActionButtons
+     * @param  list<HomeBannerHighlight>  $bannerHighlights
      */
     public function __construct(
         public string $bannerLogo,
@@ -19,7 +20,8 @@ class HomeBannerResponse extends AHomePayloadResponse {
     ) {}
 
     #[\Override]
-    public function type(): string {
+    public function type(): string
+    {
         return 'banner';
     }
 

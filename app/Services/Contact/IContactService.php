@@ -17,4 +17,3 @@ interface IContactService extends IService
 
     public function replyToContact(int $contactId, string $subject, string $message): Contact;
 }
-

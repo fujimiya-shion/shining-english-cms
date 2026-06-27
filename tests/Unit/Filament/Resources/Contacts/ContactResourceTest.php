@@ -39,4 +39,3 @@ test('contact resource resolves contact service', function (): void {
 
     expect($service)->toBeInstanceOf(IContactService::class);
 });
-

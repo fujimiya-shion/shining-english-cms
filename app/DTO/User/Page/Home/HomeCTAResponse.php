@@ -7,7 +7,7 @@ namespace App\DTO\User\Page\Home;
 class HomeCTAResponse extends AHomePayloadResponse
 {
     /**
-     * @param list<HomeCtaActionButton> $actionButtons
+     * @param  list<HomeCtaActionButton>  $actionButtons
      */
     public function __construct(
         public string $title,

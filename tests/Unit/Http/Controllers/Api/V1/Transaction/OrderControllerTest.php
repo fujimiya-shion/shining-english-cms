@@ -1,11 +1,13 @@
 <?php
 
+use App\DTO\Transaction\Checkout\CheckoutOrderResponse;
 use App\Enums\PaymentMethod;
 use App\Http\Controllers\Api\V1\Transaction\OrderController;
 use App\Http\Requests\Api\V1\Transaction\OrderStoreRequest;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\Order\IOrderService;
+use App\ValueObjects\CheckoutCustomerData;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -104,8 +106,8 @@ it('creates an order from cart or buy now payloads', function (): void {
     $buyNowOrder->id = 2;
 
     $service = \Mockery::mock(IOrderService::class);
-    $service->shouldReceive('createFromCart')->once()->with(4, PaymentMethod::Cod)->andReturn($cartOrder);
-    $service->shouldReceive('createBuyNow')->once()->with(4, 99, 2, PaymentMethod::Payos)->andReturn($buyNowOrder);
+    $service->shouldReceive('createFromCart')->once()->with(4, PaymentMethod::Cod, \Mockery::type(CheckoutCustomerData::class))->andReturn(new CheckoutOrderResponse($cartOrder));
+    $service->shouldReceive('createBuyNow')->once()->with(4, 99, 2, PaymentMethod::Payos, \Mockery::type(CheckoutCustomerData::class))->andReturn(new CheckoutOrderResponse($buyNowOrder));
     app()->instance(IOrderService::class, $service);
 
     $controller = app()->make(OrderController::class);
@@ -124,8 +126,10 @@ it('creates an order from cart or buy now payloads', function (): void {
         'status' => true,
         'status_code' => 201,
         'data' => [
-            'id' => 1,
-            'total_amount' => 100,
+            'order' => [
+                'id' => 1,
+                'total_amount' => 100,
+            ],
         ],
     ]);
 
@@ -146,8 +150,10 @@ it('creates an order from cart or buy now payloads', function (): void {
         'status' => true,
         'status_code' => 201,
         'data' => [
-            'id' => 2,
-            'total_amount' => 200,
+            'order' => [
+                'id' => 2,
+                'total_amount' => 200,
+            ],
         ],
     ]);
 });
@@ -157,7 +163,7 @@ it('returns an error payload when order creation fails', function (): void {
     $user->id = 4;
 
     $service = \Mockery::mock(IOrderService::class);
-    $service->shouldReceive('createFromCart')->once()->with(4, PaymentMethod::Cod)->andThrow(new RuntimeException('Cart is empty'));
+    $service->shouldReceive('createFromCart')->once()->with(4, PaymentMethod::Cod, \Mockery::type(CheckoutCustomerData::class))->andThrow(new RuntimeException('Cart is empty'));
     app()->instance(IOrderService::class, $service);
 
     $controller = app()->make(OrderController::class);

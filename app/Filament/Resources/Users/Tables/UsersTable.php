@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
@@ -63,6 +65,16 @@ class UsersTable
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('duplicate')
+                    ->label('Nhân bản')
+                    ->icon('heroicon-o-document-duplicate')
+                    ->action(function ($record): void {
+                        $clone = $record->replicate();
+                        $clone->name = $clone->name.' (Sao chép)';
+                        $clone->email = $clone->email.'-copy';
+                        $clone->save();
+                    }),
+                DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

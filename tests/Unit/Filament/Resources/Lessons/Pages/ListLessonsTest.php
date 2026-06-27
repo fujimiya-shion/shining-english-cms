@@ -1,7 +1,7 @@
 <?php
 
-use App\Filament\Resources\Lessons\Pages\ListLessons;
 use App\Filament\Resources\Lessons\LessonResource;
+use App\Filament\Resources\Lessons\Pages\ListLessons;
 use Filament\Actions\CreateAction;
 
 test('list lessons page defines header actions', function (): void {

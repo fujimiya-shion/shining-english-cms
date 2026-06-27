@@ -43,12 +43,16 @@ test('lessons table registers filters', function (): void {
     expect($filters[2])->toBeInstanceOf(TrashedFilter::class);
 });
 
-test('lessons table registers edit record action', function (): void {
+test('lessons table registers record actions', function (): void {
     $table = LessonsTable::configure(makeTable());
 
     $actions = $table->getRecordActions();
 
-    expect(actionClassList($actions))->toEqual([EditAction::class]);
+    expect(actionClassList($actions))->toEqual([
+        EditAction::class,
+        \Filament\Actions\Action::class,
+        \Filament\Actions\DeleteAction::class,
+    ]);
 });
 
 test('lessons table registers bulk action group', function (): void {

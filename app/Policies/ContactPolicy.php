@@ -65,4 +65,3 @@ class ContactPolicy
         return $authUser->can('Reorder:Contact');
     }
 }
-

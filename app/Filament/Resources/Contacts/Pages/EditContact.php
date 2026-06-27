@@ -56,4 +56,3 @@ class EditContact extends EditRecord
         ];
     }
 }
-

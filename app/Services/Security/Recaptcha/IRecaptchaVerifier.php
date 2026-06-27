@@ -6,4 +6,3 @@ interface IRecaptchaVerifier
 {
     public function verifyOrFail(string $token, string $expectedAction, ?string $ipAddress = null): void;
 }
-

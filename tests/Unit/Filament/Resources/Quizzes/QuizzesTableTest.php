@@ -31,12 +31,16 @@ test('quizzes table registers filters', function (): void {
     expect($filters[1])->toBeInstanceOf(TrashedFilter::class);
 });
 
-test('quizzes table registers edit record action', function (): void {
+test('quizzes table registers record actions', function (): void {
     $table = QuizzesTable::configure(makeTable());
 
     $actions = $table->getRecordActions();
 
-    expect(actionClassList($actions))->toEqual([EditAction::class]);
+    expect(actionClassList($actions))->toEqual([
+        EditAction::class,
+        \Filament\Actions\Action::class,
+        \Filament\Actions\DeleteAction::class,
+    ]);
 });
 
 test('quizzes table registers bulk action group', function (): void {

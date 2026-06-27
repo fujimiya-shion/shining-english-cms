@@ -28,5 +28,4 @@ class OrderRepository extends Repository implements IOrderRepository
             ->where('id', $orderId)
             ->first();
     }
-
 }

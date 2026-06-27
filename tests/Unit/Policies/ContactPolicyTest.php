@@ -23,4 +23,3 @@ test('contact policy checks the expected permission', function (string $method, 
 
     assertPolicyChecksPermission($policy, $method, $permission, $arguments);
 })->with('contactPolicyPermissions');
-

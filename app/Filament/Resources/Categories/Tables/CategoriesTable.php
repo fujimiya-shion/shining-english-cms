@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\Categories\Tables;
 
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
@@ -37,11 +40,23 @@ class CategoriesTable
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('duplicate')
+                    ->label('Nhân bản')
+                    ->icon('heroicon-o-document-duplicate')
+                    ->action(function ($record): void {
+                        $clone = $record->replicate();
+                        $clone->name = $clone->name.' (Sao chép)';
+                        $clone->slug = $clone->slug.'-copy';
+                        $clone->save();
+                    }),
+                DeleteAction::make(),
             ])
             ->toolbarActions([
-                DeleteBulkAction::make(),
-                ForceDeleteBulkAction::make(),
-                RestoreBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                    ForceDeleteBulkAction::make(),
+                    RestoreBulkAction::make(),
+                ]),
             ]);
     }
 }

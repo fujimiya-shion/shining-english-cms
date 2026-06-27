@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Lessons\Tables;
 
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
@@ -95,6 +97,16 @@ class LessonsTable
                 ->orderBy('id'))
             ->recordActions([
                 EditAction::make(),
+                Action::make('duplicate')
+                    ->label('Nhân bản')
+                    ->icon('heroicon-o-document-duplicate')
+                    ->action(function ($record): void {
+                        $clone = $record->replicate();
+                        $clone->name = $clone->name.' (Sao chép)';
+                        $clone->slug = $clone->slug.'-copy';
+                        $clone->save();
+                    }),
+                DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

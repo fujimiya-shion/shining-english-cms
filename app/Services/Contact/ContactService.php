@@ -50,4 +50,3 @@ class ContactService extends Service implements IContactService
         return $contact;
     }
 }
-

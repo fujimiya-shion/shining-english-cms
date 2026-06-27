@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1\Transaction;
 
+use App\Enums\PaymentMethod;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Api\V1\Transaction\OrderStoreRequest;
-use App\Enums\PaymentMethod;
 use App\Services\Order\IOrderService;
 use App\Traits\Jsonable;
 use App\ValueObjects\CheckoutCustomerData;

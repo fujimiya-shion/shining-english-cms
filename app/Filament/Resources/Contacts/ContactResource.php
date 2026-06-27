@@ -51,4 +51,3 @@ class ContactResource extends BaseResource
         ];
     }
 }
-

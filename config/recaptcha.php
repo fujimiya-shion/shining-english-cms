@@ -8,4 +8,3 @@ return [
     'verify_url' => 'https://www.google.com/recaptcha/api/siteverify',
     'timeout_seconds' => 8,
 ];
-
