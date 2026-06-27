@@ -34,10 +34,8 @@ class CourseService extends Service implements ICourseService
         return $this->courseRepository->getFilterProps();
     }
 
-    public function getFree(?int $perPage = null): LengthAwarePaginator
+    public function getFree(?QueryOption $options = null): LengthAwarePaginator
     {
-        $options = $perPage !== null ? new QueryOption(perPage: $perPage) : null;
-
         return $this->courseRepository->getFree($options);
     }
 }

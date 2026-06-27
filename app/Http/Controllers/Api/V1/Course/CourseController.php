@@ -15,6 +15,7 @@ use App\Services\Star\IStarService;
 use App\Traits\ApiBehaviour;
 use App\ValueObjects\CourseFilter;
 use App\ValueObjects\MetaPagination;
+use App\ValueObjects\QueryOption;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -35,11 +36,13 @@ class CourseController extends ApiController
         return $this->service;
     }
 
-    public function free(): JsonResponse
+    public function free(Request $request): JsonResponse
     {
-        $paginator = $this->service->getFree();
+        $options = QueryOption::fromArray($request->all(), true);
+        $paginator = $this->service->getFree($options);
         $collections = $paginator->getCollection();
-        $meta = MetaPagination::fromLengthAwarePaginator($paginator);
+        $total = $paginator->total();
+        $meta = MetaPagination::fromTotalAndQueryOption($total, $options);
 
         return $this->success(
             data: $collections,

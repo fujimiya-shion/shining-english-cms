@@ -5,6 +5,7 @@ namespace App\Services\Course;
 use App\Models\Course;
 use App\Services\IService;
 use App\ValueObjects\CourseFilter;
+use App\ValueObjects\QueryOption;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 interface ICourseService extends IService
@@ -15,5 +16,5 @@ interface ICourseService extends IService
 
     public function getFilterProps(): array;
 
-    public function getFree(?int $perPage = null): LengthAwarePaginator;
+    public function getFree(?QueryOption $options = null): LengthAwarePaginator;
 }

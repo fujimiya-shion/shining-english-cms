@@ -8,6 +8,7 @@ use App\Repositories\Course\ICourseRepository;
 use App\Services\Course\CourseService;
 use App\Services\Course\ICourseService;
 use App\ValueObjects\CourseFilter;
+use App\ValueObjects\QueryOption;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Mockery;
@@ -74,11 +75,12 @@ it('gets free courses via repository', function (): void {
     $repository = Mockery::mock(ICourseRepository::class);
     $repository->shouldReceive('getFree')
         ->once()
+        ->with(Mockery::type(QueryOption::class))
         ->andReturn($paginator);
 
     $service = new CourseService($repository);
 
-    $result = $service->getFree();
+    $result = $service->getFree(new QueryOption);
 
     expect($result)->toBe($paginator);
 });

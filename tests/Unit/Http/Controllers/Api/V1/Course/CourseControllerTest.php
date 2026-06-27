@@ -12,6 +12,7 @@ use App\Services\Course\ICourseService;
 use App\Services\CourseReview\ICourseReviewService;
 use App\Services\Enrollment\IEnrollmentService;
 use App\ValueObjects\CourseFilter;
+use App\ValueObjects\QueryOption;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -58,11 +59,14 @@ it('returns free courses paginated', function (): void {
     $paginator = new LengthAwarePaginator($items, 0, 15, 1);
 
     $service = \Mockery::mock(ICourseService::class);
-    $service->shouldReceive('getFree')->once()->withNoArgs()->andReturn($paginator);
+    $service->shouldReceive('getFree')
+        ->once()
+        ->with(\Mockery::type(QueryOption::class))
+        ->andReturn($paginator);
     app()->instance(ICourseService::class, $service);
 
     $controller = app()->make(CourseController::class);
-    $response = $controller->free();
+    $response = $controller->free(new Request);
 
     assertJsonResponsePayload($response, 200, [
         'message' => 'OK',
