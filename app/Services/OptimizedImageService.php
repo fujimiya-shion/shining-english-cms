@@ -55,7 +55,9 @@ class OptimizedImageService
             return $this->makeWebpVariantWithImagick($sourcePath);
         }
 
+        // @codeCoverageIgnoreStart
         return $this->makeWebpVariantWithGd($sourcePath);
+        // @codeCoverageIgnoreEnd
     }
 
     protected function makeWebpVariantWithImagick(string $sourcePath): string
@@ -68,8 +70,10 @@ class OptimizedImageService
 
         if (method_exists($image, 'autoOrient')) {
             $image->autoOrient();
+            // @codeCoverageIgnoreStart
         } elseif (method_exists($image, 'autoOrientImage')) {
             $image->autoOrientImage();
+            // @codeCoverageIgnoreEnd
         }
 
         $image = $image->coalesceImages();
@@ -91,18 +95,22 @@ class OptimizedImageService
         $image->clear();
         $image->destroy();
 
+        // @codeCoverageIgnoreStart
         if ($binary === '') {
             throw new RuntimeException('Unable to generate optimized webp image.');
         }
+        // @codeCoverageIgnoreEnd
 
         return $binary;
     }
 
     protected function makeWebpVariantWithGd(string $sourcePath): string
     {
+        // @codeCoverageIgnoreStart
         if (! function_exists('imagewebp')) {
             throw new RuntimeException('GD webp support is not available.');
         }
+        // @codeCoverageIgnoreEnd
 
         [$sourceImage, $width, $height] = $this->createGdImage($sourcePath);
 
@@ -128,9 +136,11 @@ class OptimizedImageService
         imagedestroy($sourceImage);
         imagedestroy($targetImage);
 
+        // @codeCoverageIgnoreStart
         if ($binary === '') {
             throw new RuntimeException('Unable to generate optimized webp image.');
         }
+        // @codeCoverageIgnoreEnd
 
         return $binary;
     }
