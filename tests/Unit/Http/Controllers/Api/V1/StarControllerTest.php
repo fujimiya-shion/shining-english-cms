@@ -107,10 +107,13 @@ it('returns error when course does not support star payment', function (): void 
     $courseService = Mockery::mock(ICourseService::class);
     $courseService->shouldReceive('getById')->with(10)->andReturn($course);
 
+    $enrollmentService = Mockery::mock(IEnrollmentService::class);
+    $enrollmentService->shouldReceive('isEnrolled')->never();
+
     $controller = new StarController(
         Mockery::mock(IStarService::class),
         Mockery::mock(IOrderService::class),
-        Mockery::mock(IEnrollmentService::class),
+        $enrollmentService,
         $courseService,
     );
 
@@ -141,10 +144,13 @@ it('returns error when user has insufficient stars', function (): void {
     $courseService = Mockery::mock(ICourseService::class);
     $courseService->shouldReceive('getById')->with(10)->andReturn($course);
 
+    $enrollmentService = Mockery::mock(IEnrollmentService::class);
+    $enrollmentService->shouldReceive('isEnrolled')->with(5, 10)->andReturnFalse();
+
     $controller = new StarController(
         $starService,
         Mockery::mock(IOrderService::class),
-        Mockery::mock(IEnrollmentService::class),
+        $enrollmentService,
         $courseService,
     );
 

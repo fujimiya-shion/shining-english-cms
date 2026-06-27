@@ -230,8 +230,7 @@ it('handles payos webhook with missing order', function (): void {
 
     $strategy = new PayosPaymentStrategy($repository);
 
-    expect(fn () => $strategy->handleWebhook(['data' => $data, 'signature' => $signature]))
-        ->toThrow(RuntimeException::class, 'payOS webhook order not found');
+    expect($strategy->handleWebhook(['data' => $data, 'signature' => $signature]))->toBeNull();
 });
 
 it('handles payos webhook with missing orderCode', function (): void {
