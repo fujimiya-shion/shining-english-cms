@@ -212,3 +212,41 @@ it('builds todo weekly plan when goals are invalid and no work is done', functio
     ]);
     expect(array_column($weeklyPlan, 'tone'))->toBe(['todo', 'todo', 'todo', 'todo']);
 });
+
+it('builds course with fallback category when course has no category', function (): void {
+    $course = new Course;
+    $course->setRawAttributes([
+        'id' => 20,
+        'name' => 'No Category Course',
+        'slug' => 'no-cat',
+        'thumbnail' => '',
+        'price' => 0,
+        'learned' => 0,
+    ], true);
+
+    $enrollment = new Enrollment([
+        'user_id' => 1,
+        'course_id' => 20,
+        'enrolled_at' => Carbon::parse('2026-06-26 08:00:00'),
+    ]);
+    $enrollment->setRelation('course', $course);
+
+    $repository = Mockery::mock(IDashboardRepository::class);
+    $repository->shouldReceive('getEnrollmentsByUserId')
+        ->once()
+        ->with(1)
+        ->andReturn(new Collection([$enrollment]));
+    $repository->shouldReceive('getLessonProgressByUserAndCourseIds')
+        ->once()
+        ->with(1, Mockery::on(fn (Collection $ids): bool => $ids->all() === [20]))
+        ->andReturn(new Collection);
+    $repository->shouldReceive('getRecentQuizAttemptsByUserId')
+        ->once()
+        ->with(1, 10)
+        ->andReturn(new Collection);
+
+    $service = new DashboardService($repository);
+    $array = $service->overview(1)->toArray();
+
+    expect($array['enrolled_courses'][0]['course']['category']['name'])->toBe('Tiếng Anh');
+});

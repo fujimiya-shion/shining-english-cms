@@ -1,9 +1,6 @@
 <?php
 
-use App\Models\Course;
-use App\Models\Lesson;
 use App\Models\LessonStarReward;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 it('defines fillable casts and relations', function (): void {

@@ -1,7 +1,6 @@
 <?php
 
 use App\Filament\Resources\Blogs\Tables\BlogsTable;
-use Illuminate\Database\Eloquent\Model;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -11,6 +10,7 @@ use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
+use Illuminate\Database\Eloquent\Model;
 
 test('blogs table defines expected columns and filters', function (): void {
     $table = BlogsTable::configure(makeTable());

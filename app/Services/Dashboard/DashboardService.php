@@ -35,13 +35,7 @@ class DashboardService implements IDashboardService
         $attempts = $this->dashboardRepository->getRecentQuizAttemptsByUserId($userId, 10);
 
         $hoursThisWeek = (float) $completedRows
-            ->filter(function (LessonProgress $row): bool {
-                if (! $row->completed_at) {
-                    return false;
-                }
-
-                return Carbon::parse($row->completed_at)->isCurrentWeek();
-            })
+            ->filter(fn (LessonProgress $row): bool => Carbon::parse($row->completed_at)->isCurrentWeek())
             ->sum(fn (LessonProgress $row): int => (int) ($row->lesson?->duration_minutes ?? 0)) / 60;
 
         $courses = $this->buildCourses($enrollments, $completedRows, $currentRows);
@@ -227,13 +221,7 @@ class DashboardService implements IDashboardService
         Collection $currentRows,
         int $streakDays,
     ): array {
-        $todayCompletedRows = $completedRows->filter(function (LessonProgress $row): bool {
-            if (! $row->completed_at) {
-                return false;
-            }
-
-            return Carbon::parse($row->completed_at)->isToday();
-        });
+        $todayCompletedRows = $completedRows->filter(fn (LessonProgress $row): bool => Carbon::parse($row->completed_at)->isToday());
 
         $completedLessonsToday = (int) $todayCompletedRows->count();
         $dailyLessonGoal = $this->goalInt('daily_lessons', 2);
