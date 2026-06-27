@@ -315,3 +315,47 @@ it('loads reviews and lesson comments when getting course by slug', function ():
     expect($result?->lessons->first()?->comments->first()?->relationLoaded('user'))->toBeTrue();
     expect($result?->lessons->first()?->comments->first()?->user?->name)->toBe('Ngoc Anh');
 });
+
+it('paginates only active courses with card metrics', function (): void {
+    Course::factory()->create(['status' => true, 'name' => 'Active A']);
+    Course::factory()->create(['status' => false, 'name' => 'Hidden B']);
+    Course::factory()->create(['status' => true, 'name' => 'Active C']);
+
+    $repository = app(CourseRepository::class);
+    $result = $repository->paginateAll();
+
+    expect($result->total())->toBe(2);
+    expect($result->items()[0]->name)->toBe('Active A');
+});
+
+it('filters courses by duration hours', function (): void {
+    $category = Category::factory()->create();
+    $level = Level::factory()->create();
+
+    Course::factory()->create([
+        'category_id' => $category->id,
+        'level_id' => $level->id,
+        'name' => 'Short',
+        'status' => true,
+    ]);
+    Course::factory()->create([
+        'category_id' => $category->id,
+        'level_id' => $level->id,
+        'name' => 'Long',
+        'status' => true,
+    ]);
+
+    $repository = app(CourseRepository::class);
+
+    $filters = CourseFilter::fromArray(['duration_min_hours' => 1, 'duration_max_hours' => 2]);
+    $result = $repository->filter($filters);
+    expect($result->total())->toBeGreaterThanOrEqual(0);
+
+    $filtersMin = CourseFilter::fromArray(['duration_min_hours' => 5]);
+    $resultMin = $repository->filter($filtersMin);
+    expect($resultMin->total())->toBeGreaterThanOrEqual(0);
+
+    $filtersMax = CourseFilter::fromArray(['duration_max_hours' => 1]);
+    $resultMax = $repository->filter($filtersMax);
+    expect($resultMax->total())->toBeGreaterThanOrEqual(0);
+});

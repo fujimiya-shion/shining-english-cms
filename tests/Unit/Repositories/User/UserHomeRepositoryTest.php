@@ -69,7 +69,7 @@ it('resolves user from authenticated request when token is valid', function (): 
         'status' => true,
     ]);
 
-    auth()->setUser($user);
+    request()->setUserResolver(fn () => $user);
 
     $response = (new UserHomeRepository)->getUserHomeData('some-token');
 
