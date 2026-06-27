@@ -248,3 +248,105 @@ it('cancels an existing order', function (): void {
     expect($service->cancelByUserId(10, 123))->toBeTrue();
     expect($order->getAttributes()['status'])->toBe(OrderStatus::Cancelled->value);
 });
+
+it('throws when creating star payment for missing course', function (): void {
+    $orders = Mockery::mock(IOrderRepository::class);
+    $orderItems = Mockery::mock(IOrderItemRepository::class);
+    $cart = Mockery::mock(ICartRepository::class);
+    $courses = Mockery::mock(ICourseRepository::class);
+    $enrollments = Mockery::mock(IEnrollmentService::class);
+
+    $courses->shouldReceive('getById')
+        ->once()
+        ->with(999)
+        ->andReturnNull();
+
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
+
+    expect(fn () => $service->createWithStarPayment(10, 999))
+        ->toThrow(RuntimeException::class, 'Course not found');
+});
+
+it('throws when creating star payment for course without star support', function (): void {
+    $orders = Mockery::mock(IOrderRepository::class);
+    $orderItems = Mockery::mock(IOrderItemRepository::class);
+    $cart = Mockery::mock(ICartRepository::class);
+    $courses = Mockery::mock(ICourseRepository::class);
+    $enrollments = Mockery::mock(IEnrollmentService::class);
+
+    $course = new \App\Models\Course;
+    $course->id = 55;
+    $course->allow_star_payment = false;
+
+    $courses->shouldReceive('getById')
+        ->once()
+        ->with(55)
+        ->andReturn($course);
+
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
+
+    expect(fn () => $service->createWithStarPayment(10, 55))
+        ->toThrow(RuntimeException::class, 'Course does not support star payment');
+});
+
+it('creates order with star payment and enrolls via afterCommit', function (): void {
+    $orders = Mockery::mock(IOrderRepository::class);
+    $orderItems = Mockery::mock(IOrderItemRepository::class);
+    $cart = Mockery::mock(ICartRepository::class);
+    $courses = Mockery::mock(ICourseRepository::class);
+    $enrollments = Mockery::mock(IEnrollmentService::class);
+
+    $course = new \App\Models\Course;
+    $course->id = 55;
+    $course->allow_star_payment = true;
+
+    $courses->shouldReceive('getById')
+        ->once()
+        ->with(55)
+        ->andReturn($course);
+
+    $order = new Order([
+        'user_id' => 10,
+        'total_amount' => 0,
+        'status' => OrderStatus::Paid,
+        'payment_method' => PaymentMethod::Star,
+    ]);
+    $order->id = 99;
+
+    $orders->shouldReceive('create')
+        ->once()
+        ->andReturn($order);
+
+    $orderItems->shouldReceive('create')
+        ->once()
+        ->with([
+            'order_id' => 99,
+            'course_id' => 55,
+            'quantity' => 1,
+            'price' => 0,
+        ])
+        ->andReturn(new \App\Models\OrderItem);
+
+    $enrollments->shouldReceive('enroll')
+        ->once()
+        ->with(10, 55, 99)
+        ->andReturn(Mockery::mock(\App\Models\Enrollment::class));
+
+    DB::shouldReceive('transaction')
+        ->once()
+        ->andReturnUsing(function (callable $callback) {
+            return $callback();
+        });
+
+    DB::shouldReceive('afterCommit')
+        ->once()
+        ->andReturnUsing(function (callable $callback) {
+            $callback();
+        });
+
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
+
+    $result = $service->createWithStarPayment(10, 55);
+
+    expect($result)->toBe($order);
+});
