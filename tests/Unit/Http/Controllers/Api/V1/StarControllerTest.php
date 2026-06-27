@@ -187,10 +187,13 @@ it('returns success when star payment is processed', function (): void {
     $courseService = Mockery::mock(ICourseService::class);
     $courseService->shouldReceive('getById')->with(10)->andReturn($course);
 
+    $enrollmentService = Mockery::mock(IEnrollmentService::class);
+    $enrollmentService->shouldReceive('isEnrolled')->with(5, 10)->andReturnFalse();
+
     $controller = new StarController(
         $starService,
         $orderService,
-        Mockery::mock(IEnrollmentService::class),
+        $enrollmentService,
         $courseService,
     );
 
