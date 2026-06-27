@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Repositories\Course\ICourseRepository;
 use App\Services\Service;
 use App\ValueObjects\CourseFilter;
+use App\ValueObjects\QueryOption;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class CourseService extends Service implements ICourseService
@@ -31,5 +32,10 @@ class CourseService extends Service implements ICourseService
     public function getFilterProps(): array
     {
         return $this->courseRepository->getFilterProps();
+    }
+
+    public function getFree(?QueryOption $options = null): LengthAwarePaginator
+    {
+        return $this->courseRepository->getFree($options);
     }
 }

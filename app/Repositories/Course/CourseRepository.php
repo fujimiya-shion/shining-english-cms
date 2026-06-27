@@ -153,6 +153,21 @@ class CourseRepository extends Repository implements ICourseRepository
         return $query->paginate(perPage: $options->perPage, page: $options->page);
     }
 
+    public function getFree(?QueryOption $options = null): LengthAwarePaginator
+    {
+        $options ??= new QueryOption;
+        $query = $this->applyQueryOption($this->model->newQuery(), $options)
+            ->where('status', true)
+            ->where('price', 0)
+            ->withCardMetrics();
+        $query = $this->applyDefaultOrderIfMissing($query, $options);
+
+        return $query->paginate(
+            perPage: $options->perPage,
+            page: $options->page
+        );
+    }
+
     public function getFilterProps(): array
     {
         $categories = $this->categoryRepository->getCourseFilterCategories();
