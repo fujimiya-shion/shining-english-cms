@@ -161,3 +161,142 @@ it('handles payos webhook status mapping', function (): void {
     expect($order->status)->toBe(OrderStatus::Paid);
     expect($order->payment_reference)->toBe('plink_123');
 });
+
+it('returns payos payment method', function (): void {
+    $strategy = new PayosPaymentStrategy(Mockery::mock(IOrderRepository::class));
+    expect($strategy->method())->toBe(PaymentMethod::Payos);
+});
+
+it('throws error when payos initialize response fails', function (): void {
+    config([
+        'payos.client_id' => 'client',
+        'payos.api_key' => 'api-key',
+        'payos.checksum_key' => 'checksum',
+        'payos.base_url' => 'https://payos.test',
+        'app.frontend_app_url' => 'https://frontend.test',
+    ]);
+
+    Http::fake(['https://payos.test/v2/payment-requests' => Http::response('', 500)]);
+
+    $order = new Order(['total_amount' => 250000]);
+    $order->id = 456;
+
+    $strategy = new PayosPaymentStrategy(Mockery::mock(IOrderRepository::class));
+
+    expect(fn () => $strategy->initialize($order, new CheckoutCustomerData))
+        ->toThrow(RuntimeException::class, 'Failed to create payOS payment link.');
+});
+
+it('throws error when payos initialize returns no checkout URL', function (): void {
+    config([
+        'payos.client_id' => 'client',
+        'payos.api_key' => 'api-key',
+        'payos.checksum_key' => 'checksum',
+        'payos.base_url' => 'https://payos.test',
+        'app.frontend_app_url' => 'https://frontend.test',
+    ]);
+
+    Http::fake(['https://payos.test/v2/payment-requests' => Http::response(['code' => '00', 'data' => null], 200)]);
+
+    $order = new Order(['total_amount' => 250000]);
+    $order->id = 456;
+
+    $strategy = new PayosPaymentStrategy(Mockery::mock(IOrderRepository::class));
+
+    expect(fn () => $strategy->initialize($order, new CheckoutCustomerData))
+        ->toThrow(RuntimeException::class, 'payOS did not return a checkout URL.');
+});
+
+it('handles payos webhook with invalid signature', function (): void {
+    $order = new Order(['total_amount' => 1000]);
+    $order->id = 999;
+
+    $repository = Mockery::mock(IOrderRepository::class);
+
+    $strategy = new PayosPaymentStrategy($repository);
+
+    expect(fn () => $strategy->handleWebhook(['data' => ['orderCode' => 999], 'signature' => 'bad']))
+        ->toThrow(RuntimeException::class, 'Invalid payOS webhook signature');
+});
+
+it('handles payos webhook with missing order', function (): void {
+    config(['payos.checksum_key' => 'checksum']);
+
+    $data = ['orderCode' => 888, 'code' => '00'];
+    $signature = PayosSignature::sign($data, 'checksum');
+
+    $repository = Mockery::mock(IOrderRepository::class);
+    $repository->shouldReceive('getById')->with(888, ['items.course'])->andReturnNull();
+
+    $strategy = new PayosPaymentStrategy($repository);
+
+    expect(fn () => $strategy->handleWebhook(['data' => $data, 'signature' => $signature]))
+        ->toThrow(RuntimeException::class, 'payOS webhook order not found');
+});
+
+it('handles payos webhook with missing orderCode', function (): void {
+    config(['payos.checksum_key' => 'checksum']);
+
+    $data = [];
+    $signature = PayosSignature::sign($data, 'checksum');
+
+    $strategy = new PayosPaymentStrategy(Mockery::mock(IOrderRepository::class));
+
+    expect($strategy->handleWebhook(['data' => $data, 'signature' => $signature]))->toBeNull();
+});
+
+it('handles payos webhook with cancelled status', function (): void {
+    config(['payos.checksum_key' => 'checksum']);
+
+    $order = new class extends Order
+    {
+        public bool $saved = false;
+
+        public function save(array $options = []): bool
+        {
+            $this->saved = true;
+
+            return true;
+        }
+
+        public function fresh($with = []): ?Order
+        {
+            return $this;
+        }
+    };
+    $order->id = 456;
+    $order->status = OrderStatus::Pending;
+    $order->payment_method = PaymentMethod::Payos;
+    $order->payment_metadata = [];
+
+    $repository = Mockery::mock(IOrderRepository::class);
+    $repository->shouldReceive('getById')->with(456, ['items.course'])->andReturn($order);
+
+    $data = ['orderCode' => 456, 'code' => '01', 'desc' => 'CANCEL'];
+    $signature = PayosSignature::sign($data, 'checksum');
+
+    $result = (new PayosPaymentStrategy($repository))->handleWebhook([
+        'data' => $data,
+        'signature' => $signature,
+    ]);
+
+    expect($result->status)->toBe(OrderStatus::Cancelled);
+});
+
+it('returns order when payos refresh has no payment reference', function (): void {
+    $order = new Order(['total_amount' => 1000]);
+    $order->payment_method = PaymentMethod::Cod;
+
+    $strategy = new PayosPaymentStrategy(Mockery::mock(IOrderRepository::class));
+
+    expect($strategy->refresh($order))->toBe($order);
+});
+
+it('returns order when payos cancel has no payment reference', function (): void {
+    $order = new Order(['total_amount' => 1000]);
+    $order->payment_method = PaymentMethod::Cod;
+
+    $strategy = new PayosPaymentStrategy(Mockery::mock(IOrderRepository::class));
+
+    expect($strategy->cancel($order, 'test'))->toBe($order);
+});

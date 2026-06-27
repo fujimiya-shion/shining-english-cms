@@ -69,7 +69,7 @@ it('resolves user from authenticated request when token is valid', function (): 
         'status' => true,
     ]);
 
-    $this->actingAs($user);
+    auth()->setUser($user);
 
     $response = (new UserHomeRepository)->getUserHomeData('some-token');
 

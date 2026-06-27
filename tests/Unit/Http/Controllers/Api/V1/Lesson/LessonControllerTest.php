@@ -332,11 +332,11 @@ it('returns unauthorized for protected lesson endpoints', function (): void {
     $lesson->id = 10;
 
     $service = \Mockery::mock(ILessonService::class);
-    $service->shouldReceive('getById')->twice()->with(10)->andReturn($lesson);
+    $service->shouldReceive('getById')->times(3)->with(10)->andReturn($lesson);
     app()->instance(ILessonService::class, $service);
 
     $accessService = \Mockery::mock(ILessonAccessService::class);
-    $accessService->shouldReceive('canAccessLessonProtectedContent')->once()->andReturnFalse();
+    $accessService->shouldReceive('canAccessLessonProtectedContent')->twice()->andReturnFalse();
     $accessService->shouldReceive('canWatchLessonVideo')->once()->andReturnFalse();
     app()->instance(ILessonAccessService::class, $accessService);
     app()->instance(ILessonCommentService::class, \Mockery::mock(ILessonCommentService::class));
@@ -348,6 +348,10 @@ it('returns unauthorized for protected lesson endpoints', function (): void {
         'status_code' => 401,
     ]);
     assertJsonResponsePayload($controller->video(makeUserLessonRequest(10), 10), 401, [
+        'status' => false,
+        'status_code' => 401,
+    ]);
+    assertJsonResponsePayload($controller->quiz(makeUserLessonRequest(10)), 401, [
         'status' => false,
         'status_code' => 401,
     ]);

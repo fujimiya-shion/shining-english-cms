@@ -103,6 +103,10 @@ it('normalizes thumbnail URLs and count attributes', function (): void {
     $courseWithRelations->setRelation('reviews', collect([new CourseReview]));
     expect($courseWithRelations->lessons_count)->toBe(2);
     expect($courseWithRelations->comments_count)->toBe(1);
+
+    $courseWithFallback = new Course;
+    $courseWithFallback->setRawAttributes(['lessons_count' => 7], true);
+    expect($courseWithFallback->getLessonsCountAttribute(null))->toBe(7);
 });
 
 it('applies active scope', function (): void {
