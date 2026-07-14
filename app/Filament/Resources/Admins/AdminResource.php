@@ -12,8 +12,8 @@ use App\Models\Admin;
 use App\Services\Admin\IAdminService;
 use App\Services\IService;
 use BackedEnum;
-use Filament\Support\Icons\Heroicon;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
 class AdminResource extends BaseResource

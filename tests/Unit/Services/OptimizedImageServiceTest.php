@@ -49,6 +49,18 @@ it('does not delete when path is empty', function (): void {
     expect(true)->toBeTrue();
 });
 
+it('falls back to gd when imagick fails on invalid image', function (): void {
+    $source = tempnam(sys_get_temp_dir(), 'optimized-image-').'.jpg';
+    file_put_contents($source, 'not an image');
+
+    $service = new OptimizedImageService;
+
+    expect(fn () => invokeProtectedMethod($service, 'makeWebpVariant', [$source]))
+        ->toThrow(\RuntimeException::class, 'Unable to read image metadata.');
+
+    @unlink($source);
+});
+
 it('resolves a unique optimized storage path', function (): void {
     $storage = Mockery::mock(Filesystem::class);
     $storage->shouldReceive('exists')
