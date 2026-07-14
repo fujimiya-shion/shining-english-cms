@@ -10,9 +10,6 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Tests\TestCase;
-
-uses(TestCase::class);
 
 it('admin form defines expected components', function (): void {
     $schema = AdminForm::configure(makeSchema());

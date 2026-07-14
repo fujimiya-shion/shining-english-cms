@@ -2,9 +2,6 @@
 
 use App\Models\Admin;
 use App\Policies\AdminPolicy;
-use Tests\TestCase;
-
-uses(TestCase::class);
 
 beforeEach(function (): void {
     $this->policy = new AdminPolicy;
