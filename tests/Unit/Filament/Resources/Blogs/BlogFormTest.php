@@ -20,11 +20,11 @@ test('blog form defines expected components', function (): void {
         'customize_slug',
         'tag_id',
         'short_description',
+        'description',
+        'content',
         'thumbnail_source',
         'thumbnail',
         'thumbnail_file',
-        'description',
-        'content',
     ]);
 
     expect($components['status'])->toBeInstanceOf(Toggle::class);
@@ -33,11 +33,11 @@ test('blog form defines expected components', function (): void {
     expect($components['customize_slug'])->toBeInstanceOf(Toggle::class);
     expect($components['tag_id'])->toBeInstanceOf(Select::class);
     expect($components['short_description'])->toBeInstanceOf(Textarea::class);
+    expect($components['description'])->toBeInstanceOf(Textarea::class);
+    expect($components['content'])->toBeInstanceOf(RichEditor::class);
     expect($components['thumbnail_source'])->toBeInstanceOf(Select::class);
     expect($components['thumbnail'])->toBeInstanceOf(Hidden::class);
     expect($components['thumbnail_file'])->toBeInstanceOf(OptimizeFileUpload::class);
-    expect($components['description'])->toBeInstanceOf(TextInput::class);
-    expect($components['content'])->toBeInstanceOf(RichEditor::class);
 });
 
 test('blog form marks required and dehydrated fields', function (): void {

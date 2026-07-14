@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Categories\Schemas;
 
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class CategoryForm
@@ -14,24 +14,29 @@ class CategoryForm
         return $schema
             ->columns(1)
             ->components([
-                Grid::make(12)
-                    ->columnSpanFull()
+                Section::make('Thông tin danh mục')
+                    ->compact()
+                    ->columns(12)
                     ->schema([
                         TextInput::make('name')
+                            ->label('Tên danh mục')
                             ->required()
                             ->maxLength(255)
                             ->columnSpan(6),
                         TextInput::make('slug')
+                            ->label('Slug')
                             ->maxLength(255)
                             ->unique(ignoreRecord: true)
-                            ->helperText('Leave empty to auto-generate from name.')
+                            ->helperText('Để trống để tự động tạo từ tên.')
+                            ->columnSpan(6),
+                        Select::make('parent_id')
+                            ->label('Danh mục cha')
+                            ->relationship('parent', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Không có danh mục cha')
                             ->columnSpan(6),
                     ]),
-                Select::make('parent_id')
-                    ->relationship('parent', 'name')
-                    ->searchable()
-                    ->preload()
-                    ->placeholder('No parent'),
             ]);
     }
 }
