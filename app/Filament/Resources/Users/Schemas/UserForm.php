@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Schemas;
 
 use App\Filament\Forms\Components\OptimizeFileUpload;
+use App\Util\Php\PhpUploadLimit;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -59,7 +60,7 @@ class UserForm
                             ->directory('users')
                             ->visibility('public')
                             ->imageEditor()
-                            ->maxSize(2048)
+                            ->maxSize(PhpUploadLimit::maxKilobytes())
                             ->columnSpan(6),
                         DateTimePicker::make('email_verified_at')
                             ->label('Email xác thực lúc')
