@@ -361,7 +361,7 @@ it('paginates only active courses with card metrics', function (): void {
     $result = $repository->paginateAll();
 
     expect($result->total())->toBe(2);
-    expect($result->items()[0]->name)->toBe('Active A');
+    expect(collect($result->items())->pluck('name')->sort()->values()->all())->toBe(['Active A', 'Active C']);
 });
 
 it('filters courses by duration hours', function (): void {
