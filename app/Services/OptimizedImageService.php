@@ -52,7 +52,14 @@ class OptimizedImageService
     protected function makeWebpVariant(string $sourcePath): string
     {
         if (extension_loaded('imagick') && class_exists(\Imagick::class)) {
-            return $this->makeWebpVariantWithImagick($sourcePath);
+            try {
+                return $this->makeWebpVariantWithImagick($sourcePath);
+            } catch (\ImagickException $e) {
+                logger()->warning('Imagick failed, falling back to GD', [
+                    'path' => $sourcePath,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         // @codeCoverageIgnoreStart
