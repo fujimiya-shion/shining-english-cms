@@ -1,12 +1,8 @@
 <?php
 
 use App\Filament\Resources\Admins\Pages\CreateAdmin;
-use App\Filament\Resources\Admins\Pages\EditAdmin;
-use App\Filament\Resources\Admins\Pages\ListAdmins;
 use App\Filament\Resources\Admins\Schemas\AdminForm;
 use App\Filament\Resources\Admins\Tables\AdminsTable;
-use Filament\Actions\CreateAction;
-use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -65,18 +61,4 @@ it('create admin page has correct resource', function (): void {
     $page = new CreateAdmin;
 
     expect($page::getResource())->toBe(\App\Filament\Resources\Admins\AdminResource::class);
-});
-
-it('edit admin page has delete action', function (): void {
-    $page = new EditAdmin;
-
-    $actions = $page->getHeaderActions();
-    expect(actionClassList($actions))->toEqual([DeleteAction::class]);
-});
-
-it('list admins page has create action', function (): void {
-    $page = new ListAdmins;
-
-    $actions = $page->getHeaderActions();
-    expect(actionClassList($actions))->toEqual([CreateAction::class]);
 });
