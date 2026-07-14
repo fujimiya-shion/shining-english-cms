@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Courses\Schemas;
 
 use App\Filament\Forms\Components\OptimizeFileUpload;
+use App\Util\Php\PhpUploadLimit;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
@@ -89,7 +90,7 @@ class CourseForm
                             ->directory('courses')
                             ->visibility('public')
                             ->imageEditor()
-                            ->maxSize(2048)
+                            ->maxSize(PhpUploadLimit::maxKilobytes())
                             ->visible(fn (Get $get): bool => $get('thumbnail_source') !== 'url')
                             ->dehydrated(true)
                             ->columnSpan(12),
