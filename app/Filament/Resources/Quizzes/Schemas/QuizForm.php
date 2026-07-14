@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Quizzes\Schemas;
 
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class QuizForm
@@ -14,10 +14,12 @@ class QuizForm
         return $schema
             ->columns(1)
             ->components([
-                Grid::make(12)
-                    ->columnSpanFull()
+                Section::make('Thông tin quiz')
+                    ->compact()
+                    ->columns(12)
                     ->schema([
                         Select::make('lesson_id')
+                            ->label('Bài học')
                             ->relationship('lesson', 'name')
                             ->searchable()
                             ->preload()
@@ -25,13 +27,14 @@ class QuizForm
                             ->unique(ignoreRecord: true)
                             ->columnSpan(12),
                         TextInput::make('pass_percent')
-                            ->label('Pass Percent')
+                            ->label('Điểm đạt (%)')
                             ->numeric()
                             ->minValue(0)
                             ->maxValue(100)
                             ->step(1)
                             ->default(80)
                             ->required()
+                            ->helperText('Học viên cần đạt tối thiểu % này để vượt qua quiz.')
                             ->columnSpan(4),
                     ]),
             ]);

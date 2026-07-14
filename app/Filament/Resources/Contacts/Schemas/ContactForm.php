@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Contacts\Schemas;
 
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class ContactForm
@@ -14,34 +14,47 @@ class ContactForm
         return $schema
             ->columns(1)
             ->components([
-                Grid::make(12)
-                    ->columnSpanFull()
+                Section::make('Thông tin người gửi')
+                    ->compact()
+                    ->columns(12)
                     ->schema([
                         TextInput::make('name')
+                            ->label('Tên')
                             ->disabled()
                             ->columnSpan(6),
                         TextInput::make('email')
+                            ->label('Email')
                             ->disabled()
                             ->columnSpan(6),
+                        Textarea::make('message')
+                            ->label('Nội dung')
+                            ->disabled()
+                            ->rows(6)
+                            ->columnSpan(12),
+                        TextInput::make('ip_address')
+                            ->label('IP')
+                            ->disabled()
+                            ->columnSpan(4),
+                        Textarea::make('user_agent')
+                            ->label('Trình duyệt')
+                            ->disabled()
+                            ->rows(3)
+                            ->columnSpan(8),
                     ]),
-                Textarea::make('message')
-                    ->disabled()
-                    ->rows(6)
-                    ->columnSpanFull(),
-                TextInput::make('ip_address')
-                    ->disabled()
-                    ->columnSpanFull(),
-                Textarea::make('user_agent')
-                    ->disabled()
-                    ->rows(3)
-                    ->columnSpanFull(),
-                TextInput::make('reply_subject')
-                    ->disabled()
-                    ->columnSpanFull(),
-                Textarea::make('reply_message')
-                    ->disabled()
-                    ->rows(4)
-                    ->columnSpanFull(),
+                Section::make('Phản hồi')
+                    ->compact()
+                    ->columns(12)
+                    ->schema([
+                        TextInput::make('reply_subject')
+                            ->label('Chủ đề phản hồi')
+                            ->disabled()
+                            ->columnSpan(6),
+                        Textarea::make('reply_message')
+                            ->label('Nội dung phản hồi')
+                            ->disabled()
+                            ->rows(4)
+                            ->columnSpan(12),
+                    ]),
             ]);
     }
 }
