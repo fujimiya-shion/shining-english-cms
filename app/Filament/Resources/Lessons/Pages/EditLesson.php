@@ -12,16 +12,20 @@ class EditLesson extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        $lesson = $this->record;
-        $courseSlug = $lesson?->course?->slug;
-        $lessonId = $lesson?->id;
+        $lesson = rescue(fn () => $this->record, null, false);
+
+        if (! $lesson) {
+            return [];
+        }
+
+        $courseSlug = $lesson->course?->slug;
 
         return [
             Action::make('viewOnWebsite')
                 ->label('Xem trên website')
                 ->icon('heroicon-o-eye')
-                ->url($courseSlug && $lessonId
-                    ? config('app.frontend_app_url')."/courses/{$courseSlug}?lessonId={$lessonId}"
+                ->url($courseSlug
+                    ? config('app.frontend_app_url')."/courses/{$courseSlug}?lessonId={$lesson->id}"
                     : null)
                 ->openUrlInNewTab()
                 ->visible((bool) $courseSlug),

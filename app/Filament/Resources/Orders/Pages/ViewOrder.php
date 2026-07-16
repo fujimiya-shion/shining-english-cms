@@ -13,16 +13,20 @@ class ViewOrder extends ViewRecord
 
     protected function getHeaderActions(): array
     {
-        $orderCode = $this->record?->order_code;
-
-        return [
+        $actions = [
             EditAction::make(),
-            Action::make('viewOnWebsite')
+        ];
+
+        $orderCode = rescue(fn () => $this->record?->order_code, null, false);
+
+        if ($orderCode) {
+            $actions[] = Action::make('viewOnWebsite')
                 ->label('Xem trên website')
                 ->icon('heroicon-o-eye')
-                ->url($orderCode ? config('app.frontend_app_url')."/orders/{$orderCode}" : null)
-                ->openUrlInNewTab()
-                ->visible((bool) $orderCode),
-        ];
+                ->url(config('app.frontend_app_url')."/orders/{$orderCode}")
+                ->openUrlInNewTab();
+        }
+
+        return $actions;
     }
 }

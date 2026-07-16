@@ -78,20 +78,23 @@ class EditBlog extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        $frontendUrl = config('app.frontend_app_url');
-        $slug = $this->record?->slug;
-
-        return [
-            Action::make('viewOnWebsite')
-                ->label('Xem trên website')
-                ->icon('heroicon-o-eye')
-                ->url($slug ? "{$frontendUrl}/blogs/{$slug}" : null)
-                ->openUrlInNewTab()
-                ->visible((bool) $slug),
+        $actions = [
             DeleteAction::make(),
             ForceDeleteAction::make(),
             RestoreAction::make(),
         ];
+
+        $slug = rescue(fn () => $this->record?->slug, null, false);
+
+        if ($slug) {
+            array_unshift($actions, Action::make('viewOnWebsite')
+                ->label('Xem trên website')
+                ->icon('heroicon-o-eye')
+                ->url(config('app.frontend_app_url')."/blogs/{$slug}")
+                ->openUrlInNewTab());
+        }
+
+        return $actions;
     }
 
     private function resolveThumbnailFilePath(string $thumbnail, string $normalizedStorageUrl): string
