@@ -1,5 +1,10 @@
 <?php
 
+use App\ValueObjects\QueryOption;
+use Tests\TestCase;
+
+uses(TestCase::class);
+
 class EmptyOrderByRepoCustomModel extends \Illuminate\Database\Eloquent\Model
 {
     protected $table = 'empty_order_test_custom';
@@ -22,7 +27,7 @@ it('skips ordering when default order by is empty', function (): void {
     $query = EmptyOrderByRepoCustomModel::query();
 
     $method = new ReflectionMethod(\App\Repositories\Repository::class, 'applyDefaultOrderIfMissing');
-    $result = $method->invoke(new EmptyOrderByRepo, $query, new \App\ValueObjects\QueryOption);
+    $result = $method->invoke(new EmptyOrderByRepo, $query, new QueryOption);
 
     expect($result->getQuery()->orders ?? [])->toBe([]);
 });
