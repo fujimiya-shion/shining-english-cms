@@ -247,28 +247,41 @@ class LessonForm
                             ->default(false)
                             ->live()
                             ->afterStateUpdated(function (Set $set, ?bool $state): void {
-                                if ($state) {
-                                    $set('quiz.pass_percent', 80);
-                                } else {
-                                    $set('quiz', null);
+                                if (! $state) {
+                                    $set('quiz_id', null);
                                 }
                             })
                             ->columnSpan(4),
-                    ]),
-                Section::make('Quiz')
-                    ->relationship('quiz')
-                    ->visible(fn (Get $get): bool => (bool) $get('has_quiz'))
-                    ->compact()
-                    ->columns(12)
-                    ->schema([
-                        TextInput::make('pass_percent')
-                            ->label('Điểm đạt (%)')
-                            ->numeric()
-                            ->minValue(0)
-                            ->maxValue(100)
-                            ->step(1)
-                            ->default(80)
-                            ->required()
+                        Select::make('quiz_id')
+                            ->label('Chọn quiz')
+                            ->relationship('quiz', 'id')
+                            ->searchable()
+                            ->preload()
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "Quiz #{$record->id} — {$record->lesson?->name}")
+                            ->visible(fn (Get $get): bool => (bool) $get('has_quiz'))
+                            ->createOptionForm([
+                                \Filament\Forms\Components\TextInput::make('pass_percent')
+                                    ->label('Điểm đạt (%)')
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->maxValue(100)
+                                    ->step(1)
+                                    ->default(80)
+                                    ->required(),
+                            ])
+                            ->createOptionUsing(function (array $data, Get $get, Set $set): int {
+                                $courseId = (int) ($get('course_id') ?? 0);
+                                $lessonId = (int) ($get('id') ?? 0);
+
+                                $quiz = \App\Models\Quiz::query()->create([
+                                    'lesson_id' => $lessonId > 0 ? $lessonId : null,
+                                    'pass_percent' => (int) ($data['pass_percent'] ?? 80),
+                                ]);
+
+                                $set('quiz_id', $quiz->id);
+
+                                return (int) $quiz->id;
+                            })
                             ->columnSpan(4),
                     ]),
             ]);

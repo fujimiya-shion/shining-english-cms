@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Lesson extends Model
@@ -39,10 +38,12 @@ class Lesson extends Model
         'star_reward_quiz',
         'has_quiz',
         'is_preview_free',
+        'quiz_id',
     ];
 
     protected $casts = [
         'has_quiz' => 'boolean',
+        'quiz_id' => 'integer',
         'lesson_group_id' => 'integer',
         'group_order' => 'integer',
         'lesson_order' => 'integer',
@@ -189,9 +190,9 @@ class Lesson extends Model
         return $this->belongsTo(LessonGroup::class);
     }
 
-    public function quiz(): HasOne
+    public function quiz(): BelongsTo
     {
-        return $this->hasOne(Quiz::class);
+        return $this->belongsTo(Quiz::class);
     }
 
     public function comments(): HasMany

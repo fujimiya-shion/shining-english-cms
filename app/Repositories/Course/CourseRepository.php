@@ -59,10 +59,12 @@ class CourseRepository extends Repository implements ICourseRepository
                         'description',
                         'duration_minutes',
                         'has_quiz',
+                        'quiz_id',
                         'is_preview_free',
                         'star_reward_video',
                         'star_reward_quiz',
                     ])
+                    ->with(['quiz:id,lesson_id,pass_percent'])
                     ->with([
                         'comments' => fn ($commentQuery) => $commentQuery
                             ->select(['id', 'lesson_id', 'user_id', 'content', 'created_at'])
