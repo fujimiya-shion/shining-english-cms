@@ -29,7 +29,7 @@ it('returns view on website action when record has course slug', function (): vo
 });
 
 it('returns empty actions when record has no course slug', function (): void {
-    $lesson = Lesson::factory()->create(['video_url' => 'https://example.com/video']);
+    $lesson = Lesson::factory()->create(['course_id' => null, 'video_url' => 'https://example.com/video']);
 
     $page = new EditLesson;
     $reflection = new ReflectionProperty($page, 'record');

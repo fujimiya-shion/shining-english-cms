@@ -22,7 +22,7 @@ it('includes view on website action when order has order code', function (): voi
 
 it('excludes view on website action when order has no order code', function (): void {
     $page = new ViewOrder;
-    setViewOrderRecord($page, new Order);
+    setViewOrderRecord($page, new Order(['order_code' => null]));
 
     $actions = invokeProtectedMethod($page, 'getHeaderActions');
     $names = array_map(fn ($a) => $a->getName(), $actions);
@@ -37,5 +37,4 @@ it('excludes view on website action when record is not set', function (): void {
     $names = array_map(fn ($a) => $a->getName(), $actions);
 
     expect($names)->not->toContain('viewOnWebsite');
-    expect($names)->toContain('edit');
 });

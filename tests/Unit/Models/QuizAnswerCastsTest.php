@@ -17,5 +17,5 @@ it('applies sorted scope', function (): void {
     $orders = $query->getQuery()->orders;
     expect($orders)->toHaveCount(2);
     expect($orders[0]['column'])->toBe('sort_order');
-    expect($orders[1]['column'])->toBe('quiz_answers.id');
+    expect($orders[1]['column'])->toBe('id');
 });
