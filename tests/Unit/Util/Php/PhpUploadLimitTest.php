@@ -1,9 +1,12 @@
 <?php
 
 use App\Util\Php\PhpUploadLimit;
+use Tests\TestCase;
+
+uses(TestCase::class);
 
 afterEach(function (): void {
-    config()->set('app.upload_max_mb', env('APP_UPLOAD_MAX_MB', 12));
+    \Illuminate\Support\Facades\Config::set('app.upload_max_mb', env('APP_UPLOAD_MAX_MB', 12));
 });
 
 test('php upload limit returns default 12MB when env is not set', function (): void {
