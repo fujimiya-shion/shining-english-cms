@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -86,7 +87,7 @@ class LessonController extends ApiController
         return Storage::disk('local')->download($path, $fileName);
     }
 
-    public function video(Request $request, int $id): JsonResponse|BinaryFileResponse
+    public function video(Request $request, int $id): JsonResponse|BinaryFileResponse|RedirectResponse
     {
         $lesson = $this->service->getById($id);
 
