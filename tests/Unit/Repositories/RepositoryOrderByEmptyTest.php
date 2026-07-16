@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-
 class EmptyOrderByRepository extends \App\Repositories\Repository
 {
     public function __construct(\Illuminate\Database\Eloquent\Model $model)
@@ -15,28 +13,9 @@ class EmptyOrderByRepository extends \App\Repositories\Repository
     }
 }
 
-class EmptyOrderModel extends \Illuminate\Database\Eloquent\Model
-{
-    protected $table = 'test_empty_order';
-
-    public $timestamps = false;
-}
-
-beforeEach(function (): void {
-    Schema::create('test_empty_order', function ($t): void {
-        $t->id();
-        $t->string('name');
-    });
-});
-
-afterEach(function (): void {
-    Schema::dropIfExists('test_empty_order');
-});
-
 it('skips ordering when default order by is empty', function (): void {
-    $model = new EmptyOrderModel;
-    $repo = new EmptyOrderByRepository($model);
-    $query = EmptyOrderModel::query();
+    $repo = new EmptyOrderByRepository(new \App\Models\Admin);
+    $query = \App\Models\Admin::query();
 
     $method = new ReflectionMethod(\App\Repositories\Repository::class, 'applyDefaultOrderIfMissing');
     $result = $method->invoke($repo, $query, new \App\ValueObjects\QueryOption);
