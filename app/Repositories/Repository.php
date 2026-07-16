@@ -53,9 +53,16 @@ abstract class Repository implements IRepository
             return $query;
         }
 
+        if ($orderBy === 'created_at' && ! $this->model->timestamps) {
+            return $query;
+        }
+
         $direction = $this->getDefaultOrderDirection();
         $query->orderBy($this->model->qualifyColumn($orderBy), $direction);
-        $query->orderBy($this->model->qualifyColumn('created_at'), 'desc');
+
+        if ($this->model->timestamps) {
+            $query->orderBy($this->model->qualifyColumn('created_at'), 'desc');
+        }
 
         return $query;
     }

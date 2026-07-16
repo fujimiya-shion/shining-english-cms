@@ -12,7 +12,7 @@ test('quiz resource extends base resource', function (): void {
 
 test('quiz resource uses quiz model and title attribute', function (): void {
     expect(QuizResource::getModel())->toBe(Quiz::class);
-    expect(QuizResource::getRecordTitleAttribute())->toBe('lesson_id');
+    expect(QuizResource::getRecordTitleAttribute())->toBe('name');
 });
 
 test('quiz resource defines expected pages', function (): void {
