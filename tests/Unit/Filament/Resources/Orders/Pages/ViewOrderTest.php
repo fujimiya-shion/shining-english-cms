@@ -3,10 +3,20 @@
 use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Models\Order;
 
-it('includes view on website action when order has order code', function (): void {
+function makeViewOrderWithOrderCode(?string $code): ViewOrder
+{
+    $order = new Order;
+    $order->order_code = $code;
+
     $page = new ViewOrder;
     $reflection = new ReflectionProperty($page, 'record');
-    $reflection->setValue($page, new Order(['order_code' => 'ORD-001']));
+    $reflection->setValue($page, $order);
+
+    return $page;
+}
+
+it('includes view on website action when order has order code', function (): void {
+    $page = makeViewOrderWithOrderCode('ORD-001');
 
     $actions = invokeProtectedMethod($page, 'getHeaderActions');
     $viewActions = array_filter($actions, fn ($a) => $a->getName() === 'viewOnWebsite');
@@ -15,9 +25,7 @@ it('includes view on website action when order has order code', function (): voi
 });
 
 it('excludes view on website action when order has no order code', function (): void {
-    $page = new ViewOrder;
-    $reflection = new ReflectionProperty($page, 'record');
-    $reflection->setValue($page, new Order(['order_code' => null]));
+    $page = makeViewOrderWithOrderCode(null);
 
     $actions = invokeProtectedMethod($page, 'getHeaderActions');
     $viewActions = array_filter($actions, fn ($a) => $a->getName() === 'viewOnWebsite');
