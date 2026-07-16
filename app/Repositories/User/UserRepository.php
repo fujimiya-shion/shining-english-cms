@@ -7,6 +7,16 @@ use App\Repositories\Repository;
 
 class UserRepository extends Repository implements IUserRepository
 {
+    protected function getDefaultOrderBy(): string
+    {
+        return 'order';
+    }
+
+    protected function getDefaultOrderDirection(): string
+    {
+        return 'asc';
+    }
+
     public function __construct(User $model)
     {
         parent::__construct($model);

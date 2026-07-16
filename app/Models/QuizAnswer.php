@@ -14,7 +14,18 @@ class QuizAnswer extends Model
         'quiz_question_id',
         'content',
         'is_correct',
+        'sort_order',
     ];
+
+    protected $casts = [
+        'is_correct' => 'boolean',
+        'sort_order' => 'integer',
+    ];
+
+    public function scopeSorted($query)
+    {
+        return $query->orderBy('sort_order')->orderBy('id');
+    }
 
     public function question(): BelongsTo
     {

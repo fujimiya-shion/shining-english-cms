@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 abstract class Repository implements IRepository
@@ -31,6 +30,16 @@ abstract class Repository implements IRepository
         return $query;
     }
 
+    protected function getDefaultOrderBy(): string
+    {
+        return 'created_at';
+    }
+
+    protected function getDefaultOrderDirection(): string
+    {
+        return 'desc';
+    }
+
     protected function applyDefaultOrderIfMissing(Builder $query, ?QueryOption $options = null): Builder
     {
         $options ??= new QueryOption;
@@ -39,12 +48,16 @@ abstract class Repository implements IRepository
             return $query;
         }
 
-        $orderBy = $options->getOrderBy();
-        if ($orderBy === '' || ! Schema::hasColumn($this->model->getTable(), $orderBy)) {
+        $orderBy = $options->getOrderBy() ?: $this->getDefaultOrderBy();
+        if ($orderBy === '') {
             return $query;
         }
 
-        return $query->orderBy($this->model->qualifyColumn($orderBy), $options->getOrderDirection());
+        $direction = $this->getDefaultOrderDirection();
+        $query->orderBy($this->model->qualifyColumn($orderBy), $direction);
+        $query->orderBy($this->model->qualifyColumn('created_at'), 'desc');
+
+        return $query;
     }
 
     protected function applyCriteria(Builder $query, array $criteria): Builder

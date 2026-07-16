@@ -12,6 +12,16 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class CourseRepository extends Repository implements ICourseRepository
 {
+    protected function getDefaultOrderBy(): string
+    {
+        return 'order';
+    }
+
+    protected function getDefaultOrderDirection(): string
+    {
+        return 'asc';
+    }
+
     public function __construct(
         Course $model,
         protected ICategoryRepository $categoryRepository
@@ -151,6 +161,7 @@ class CourseRepository extends Repository implements ICourseRepository
 
         $options = $filters->options ?? new QueryOption;
         $query = $this->applyQueryOption($query, $options);
+        $query = $this->applyDefaultOrderIfMissing($query, $options);
 
         return $query->paginate(perPage: $options->perPage, page: $options->page);
     }

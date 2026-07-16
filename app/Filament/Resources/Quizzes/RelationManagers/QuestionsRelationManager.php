@@ -2,21 +2,18 @@
 
 namespace App\Filament\Resources\Quizzes\RelationManagers;
 
-use Closure;
+use App\Filament\Forms\Components\QuizQuestionsInput;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class QuestionsRelationManager extends RelationManager
 {
@@ -27,35 +24,13 @@ class QuestionsRelationManager extends RelationManager
         return $schema
             ->columns(1)
             ->components([
-                Grid::make(12)
-                    ->columnSpanFull()
-                    ->schema([
-                        TextInput::make('content')
-                            ->required()
-                            ->maxLength(255)
-                            ->columnSpan(12),
-                        Repeater::make('answers')
-                            ->relationship()
-                            ->schema([
-                                TextInput::make('content')
-                                    ->required()
-                                    ->maxLength(255)
-                                    ->columnSpan(9),
-                                Toggle::make('is_correct')
-                                    ->label('Correct')
-                                    ->inline(false)
-                                    ->columnSpan(3),
-                            ])
-                            ->minItems(2)
-                            ->defaultItems(2)
-                            ->rule(function (string $attribute, $value, Closure $fail): void {
-                                $answers = collect($value ?? []);
-                                if (! $answers->contains(fn ($answer) => ($answer['is_correct'] ?? false) === true)) {
-                                    $fail('At least one answer must be marked correct.');
-                                }
-                            })
-                            ->columnSpan(12),
-                    ]),
+                QuizQuestionsInput::make('questions')
+                    ->label('Question')
+                    ->minQuestions(1)
+                    ->maxQuestions(1)
+                    ->minAnswers(2)
+                    ->reorderable()
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -66,6 +41,10 @@ class QuestionsRelationManager extends RelationManager
                 TextColumn::make('content')
                     ->searchable()
                     ->limit(80),
+                TextColumn::make('answers_count')
+                    ->label('Answers')
+                    ->counts('answers')
+                    ->sortable(),
                 TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()
@@ -83,10 +62,93 @@ class QuestionsRelationManager extends RelationManager
                 TrashedFilter::make(),
             ])
             ->headerActions([
-                CreateAction::make(),
+                CreateAction::make()
+                    ->mutateDataUsing(function (array $data): array {
+                        $questions = json_decode($data['questions'] ?? '[]', true);
+                        $questionData = $questions[0] ?? [];
+
+                        return [
+                            'content' => $questionData['content'] ?? '',
+                        ];
+                    })
+                    ->after(function (CreateAction $action): void {
+                        $record = $action->getRecord();
+                        if (! $record) {
+                            return;
+                        }
+
+                        $rawData = $action->getRawData();
+                        $questions = json_decode($rawData['questions'] ?? '[]', true);
+                        $questionData = $questions[0] ?? [];
+
+                        $maxSort = $record->quiz?->questions()->max('sort_order') ?? 0;
+                        $record->update(['sort_order' => $questionData['sort_order'] ?? $maxSort + 1]);
+
+                        foreach ($questionData['answers'] ?? [] as $aIndex => $answerData) {
+                            $record->answers()->create([
+                                'content' => $answerData['content'] ?? '',
+                                'is_correct' => (bool) ($answerData['is_correct'] ?? false),
+                                'sort_order' => $answerData['sort_order'] ?? $aIndex,
+                            ]);
+                        }
+                    }),
             ])
             ->actions([
-                EditAction::make(),
+                EditAction::make()
+                    ->mutateRecordDataUsing(function (array $data, Model $record): array {
+                        $answers = $record->answers()->sorted()->get()->toArray();
+
+                        $data['questions'] = json_encode([[
+                            'id' => $record->id,
+                            'content' => $record->content,
+                            'sort_order' => $record->sort_order ?? 0,
+                            'answers' => array_map(fn (array $a): array => [
+                                'id' => $a['id'],
+                                'content' => $a['content'],
+                                'is_correct' => (bool) ($a['is_correct'] ?? false),
+                                'sort_order' => $a['sort_order'] ?? 0,
+                            ], $answers),
+                        ]]);
+
+                        return $data;
+                    })
+                    ->mutateDataUsing(function (array $data): array {
+                        $questions = json_decode($data['questions'] ?? '[]', true);
+                        $questionData = $questions[0] ?? [];
+
+                        return [
+                            'content' => $questionData['content'] ?? '',
+                        ];
+                    })
+                    ->after(function (EditAction $action): void {
+                        $record = $action->getRecord();
+                        if (! $record) {
+                            return;
+                        }
+
+                        $rawData = $action->getRawData();
+                        $questions = json_decode($rawData['questions'] ?? '[]', true);
+                        $questionData = $questions[0] ?? [];
+
+                        $record->update([
+                            'sort_order' => $questionData['sort_order'] ?? 0,
+                        ]);
+
+                        $answerIds = [];
+                        foreach ($questionData['answers'] ?? [] as $aIndex => $answerData) {
+                            $answer = $record->answers()->updateOrCreate(
+                                ['id' => $answerData['id'] ?? null],
+                                [
+                                    'content' => $answerData['content'] ?? '',
+                                    'is_correct' => (bool) ($answerData['is_correct'] ?? false),
+                                    'sort_order' => $answerData['sort_order'] ?? $aIndex,
+                                ]
+                            );
+                            $answerIds[] = $answer->id;
+                        }
+
+                        $record->answers()->whereNotIn('id', $answerIds)->delete();
+                    }),
                 DeleteAction::make(),
                 RestoreAction::make(),
                 ForceDeleteAction::make(),

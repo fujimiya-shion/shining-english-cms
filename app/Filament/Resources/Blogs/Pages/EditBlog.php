@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Blogs\Pages;
 
 use App\Filament\Resources\Blogs\BlogResource;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
@@ -77,7 +78,16 @@ class EditBlog extends EditRecord
 
     protected function getHeaderActions(): array
     {
+        $frontendUrl = config('app.frontend_app_url');
+        $slug = $this->record?->slug;
+
         return [
+            Action::make('viewOnWebsite')
+                ->label('Xem trên website')
+                ->icon('heroicon-o-eye')
+                ->url($slug ? "{$frontendUrl}/blogs/{$slug}" : null)
+                ->openUrlInNewTab()
+                ->visible((bool) $slug),
             DeleteAction::make(),
             ForceDeleteAction::make(),
             RestoreAction::make(),

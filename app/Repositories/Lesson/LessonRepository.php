@@ -7,6 +7,16 @@ use App\Repositories\Repository;
 
 class LessonRepository extends Repository implements ILessonRepository
 {
+    protected function getDefaultOrderBy(): string
+    {
+        return 'order';
+    }
+
+    protected function getDefaultOrderDirection(): string
+    {
+        return 'asc';
+    }
+
     public function __construct(Lesson $model)
     {
         parent::__construct($model);

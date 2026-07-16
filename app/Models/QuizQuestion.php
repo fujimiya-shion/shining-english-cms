@@ -14,7 +14,17 @@ class QuizQuestion extends Model
     protected $fillable = [
         'quiz_id',
         'content',
+        'sort_order',
     ];
+
+    protected $casts = [
+        'sort_order' => 'integer',
+    ];
+
+    public function scopeSorted($query)
+    {
+        return $query->orderBy('sort_order')->orderBy('id');
+    }
 
     public function quiz(): BelongsTo
     {

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Courses\Pages;
 
 use App\Filament\Resources\Courses\CourseResource;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
@@ -83,7 +84,16 @@ class EditCourse extends EditRecord
 
     protected function getHeaderActions(): array
     {
+        $frontendUrl = config('app.frontend_app_url');
+        $slug = $this->record?->slug;
+
         return [
+            Action::make('viewOnWebsite')
+                ->label('Xem trên website')
+                ->icon('heroicon-o-eye')
+                ->url($slug ? "{$frontendUrl}/courses/{$slug}" : null)
+                ->openUrlInNewTab()
+                ->visible((bool) $slug),
             DeleteAction::make(),
             ForceDeleteAction::make(),
             RestoreAction::make(),

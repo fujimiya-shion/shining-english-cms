@@ -25,7 +25,7 @@ class QuizResource extends BaseResource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::ClipboardDocumentCheck;
 
-    protected static ?string $recordTitleAttribute = 'lesson_id';
+    protected static ?string $recordTitleAttribute = 'name';
 
     protected static function service(): IService
     {
