@@ -6,11 +6,13 @@ use App\Models\LessonGroup;
 use App\Util\Php\PhpUploadLimit;
 use App\Util\Video\VideoMetadataReader;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\KeyValue;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\Actions\Action;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -253,14 +255,14 @@ class LessonForm
                             })
                             ->columnSpan(4),
                         Select::make('quiz_id')
-                            ->label('Chọn quiz')
+                            ->label('Quiz')
                             ->relationship('quiz', 'id')
                             ->searchable()
                             ->preload()
                             ->getOptionLabelFromRecordUsing(fn ($record) => "Quiz #{$record->id} — {$record->lesson?->name}")
                             ->visible(fn (Get $get): bool => (bool) $get('has_quiz'))
                             ->createOptionForm([
-                                \Filament\Forms\Components\TextInput::make('pass_percent')
+                                TextInput::make('pass_percent')
                                     ->label('Điểm đạt (%)')
                                     ->numeric()
                                     ->minValue(0)
@@ -270,7 +272,6 @@ class LessonForm
                                     ->required(),
                             ])
                             ->createOptionUsing(function (array $data, Get $get, Set $set): int {
-                                $courseId = (int) ($get('course_id') ?? 0);
                                 $lessonId = (int) ($get('id') ?? 0);
 
                                 $quiz = \App\Models\Quiz::query()->create([
@@ -283,6 +284,108 @@ class LessonForm
                                 return (int) $quiz->id;
                             })
                             ->columnSpan(4),
+                        Actions::make([
+                            Action::make('manageQuestions')
+                                ->label('Quản lý câu hỏi')
+                                ->icon('heroicon-o-list-bullet')
+                                ->button()
+                                ->visible(fn (Get $get): bool => (bool) $get('has_quiz') && (bool) $get('quiz_id'))
+                                ->slideOver()
+                                ->mountUsing(function (Get $get, \Filament\Forms\Set $formSet): void {
+                                    $quizId = (int) ($get('quiz_id') ?? 0);
+                                    $questions = $quizId > 0
+                                        ? \App\Models\QuizQuestion::query()
+                                            ->where('quiz_id', $quizId)
+                                            ->with('answers')
+                                            ->orderBy('id')
+                                            ->get()
+                                            ->toArray()
+                                        : [];
+
+                                    $formSet('questions', $questions);
+                                })
+                                ->form([
+                                    TextInput::make('pass_percent')
+                                        ->label('Điểm đạt (%)')
+                                        ->default(fn (Get $get): int => (int) (\App\Models\Quiz::query()->find((int) ($get('quiz_id') ?? 0))?->pass_percent ?? 80))
+                                        ->numeric()
+                                        ->minValue(0)
+                                        ->maxValue(100)
+                                        ->step(1)
+                                        ->required(),
+                                    Repeater::make('questions')
+                                        ->label('Danh sách câu hỏi')
+                                        ->schema([
+                                            Textarea::make('content')
+                                                ->label('Nội dung câu hỏi')
+                                                ->rows(2)
+                                                ->required(),
+                                            Repeater::make('answers')
+                                                ->label('Đáp án')
+                                                ->simple(true)
+                                                ->columns(3)
+                                                ->schema([
+                                                    TextInput::make('content')
+                                                        ->label('')
+                                                        ->placeholder('Nội dung đáp án')
+                                                        ->required()
+                                                        ->columnSpan(2),
+                                                    Toggle::make('is_correct')
+                                                        ->label('Đúng')
+                                                        ->default(false),
+                                                ])
+                                                ->minItems(2)
+                                                ->defaultItems(4)
+                                                ->addActionLabel('Thêm đáp án'),
+                                        ])
+                                        ->addActionLabel('Thêm câu hỏi')
+                                        ->reorderable()
+                                        ->collapsible(),
+                                ])
+                                ->action(function (array $data, Get $get): void {
+                                    $quizId = (int) ($get('quiz_id') ?? 0);
+                                    if ($quizId <= 0) {
+                                        return;
+                                    }
+
+                                    \App\Models\Quiz::query()->where('id', $quizId)->update([
+                                        'pass_percent' => (int) ($data['pass_percent'] ?? 80),
+                                    ]);
+
+                                    $existingIds = [];
+                                    foreach ($data['questions'] ?? [] as $questionData) {
+                                        $question = \App\Models\QuizQuestion::query()->updateOrCreate(
+                                            ['id' => (int) ($questionData['id'] ?? 0), 'quiz_id' => $quizId],
+                                            ['content' => $questionData['content'] ?? ''],
+                                        );
+                                        $existingIds[] = (int) $question->id;
+
+                                        $answerIds = [];
+                                        foreach ($questionData['answers'] ?? [] as $answerData) {
+                                            $answer = \App\Models\QuizAnswer::query()->updateOrCreate(
+                                                ['id' => (int) ($answerData['id'] ?? 0), 'quiz_question_id' => (int) $question->id],
+                                                [
+                                                    'content' => $answerData['content'] ?? '',
+                                                    'is_correct' => (bool) ($answerData['is_correct'] ?? false),
+                                                ],
+                                            );
+                                            $answerIds[] = (int) $answer->id;
+                                        }
+
+                                        \App\Models\QuizAnswer::query()
+                                            ->where('quiz_question_id', (int) $question->id)
+                                            ->whereNotIn('id', $answerIds)
+                                            ->delete();
+                                    }
+
+                                    \App\Models\QuizQuestion::query()
+                                        ->where('quiz_id', $quizId)
+                                        ->whereNotIn('id', $existingIds)
+                                        ->delete();
+                                }),
+                        ])
+                            ->columnSpan(4)
+                            ->visible(fn (Get $get): bool => (bool) $get('has_quiz')),
                     ]),
             ]);
     }
