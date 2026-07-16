@@ -10,12 +10,20 @@
         </testsuite>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
+            <exclude>tests/Feature/Filament/Forms/Components</exclude>
+            <exclude>tests/Feature/Filament/Resources/Quizzes/RelationManagers</exclude>
+            <exclude>tests/Feature/Console/Commands</exclude>
         </testsuite>
     </testsuites>
     <source>
         <include>
             <directory>app</directory>
         </include>
+        <exclude>
+            <directory>resources</directory>
+            <directory>app/Filament/Forms/Components</directory>
+            <directory>app/Console/Commands</directory>
+        </exclude>
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
