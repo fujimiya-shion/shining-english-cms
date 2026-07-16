@@ -1,10 +1,15 @@
 <?php
 
-class EmptyOrderByRepository extends \App\Repositories\Repository
+class EmptyOrderByRepoCustomModel extends \Illuminate\Database\Eloquent\Model
 {
-    public function __construct(\Illuminate\Database\Eloquent\Model $model)
+    protected $table = 'empty_order_test_custom';
+}
+
+class EmptyOrderByRepo extends \App\Repositories\Repository
+{
+    public function __construct()
     {
-        $this->model = $model;
+        $this->model = new EmptyOrderByRepoCustomModel;
     }
 
     protected function getDefaultOrderBy(): string
@@ -14,11 +19,10 @@ class EmptyOrderByRepository extends \App\Repositories\Repository
 }
 
 it('skips ordering when default order by is empty', function (): void {
-    $repo = new EmptyOrderByRepository(new \App\Models\Admin);
-    $query = \App\Models\Admin::query();
+    $query = EmptyOrderByRepoCustomModel::query();
 
     $method = new ReflectionMethod(\App\Repositories\Repository::class, 'applyDefaultOrderIfMissing');
-    $result = $method->invoke($repo, $query, new \App\ValueObjects\QueryOption);
+    $result = $method->invoke(new EmptyOrderByRepo, $query, new \App\ValueObjects\QueryOption);
 
     expect($result->getQuery()->orders ?? [])->toBe([]);
 });
