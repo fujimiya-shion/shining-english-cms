@@ -59,7 +59,6 @@ if (! function_exists('invokeProtectedMethod')) {
     function invokeProtectedMethod(object $object, string $method, array $arguments = []): mixed
     {
         $reflection = new ReflectionMethod($object, $method);
-        $reflection->setAccessible(true);
 
         return $reflection->invokeArgs($object, $arguments);
     }
@@ -69,7 +68,6 @@ if (! function_exists('getProtectedPropertyValue')) {
     function getProtectedPropertyValue(object $object, string $property): mixed
     {
         $reflection = new ReflectionProperty($object, $property);
-        $reflection->setAccessible(true);
 
         return $reflection->getValue($object);
     }

@@ -17,7 +17,6 @@ it('returns view on website action when record has course slug', function (): vo
 
     $page = new EditLesson;
     $reflection = new ReflectionProperty($page, 'record');
-    $reflection->setAccessible(true);
     $reflection->setValue($page, $lesson);
 
     $actions = invokeProtectedMethod($page, 'getHeaderActions');
@@ -28,12 +27,11 @@ it('returns view on website action when record has course slug', function (): vo
     expect($viewAction->getUrl())->toContain('/courses/test-course?lessonId=');
 });
 
-it('returns empty actions when record has no course slug', function (): void {
+it('returns null url when record has no course', function (): void {
     $lesson = Lesson::factory()->create(['course_id' => null, 'video_url' => 'https://example.com/video']);
 
     $page = new EditLesson;
     $reflection = new ReflectionProperty($page, 'record');
-    $reflection->setAccessible(true);
     $reflection->setValue($page, $lesson);
 
     $actions = invokeProtectedMethod($page, 'getHeaderActions');

@@ -13,7 +13,6 @@ function setCoursePageRecord(EditCourse $page, ?string $thumbnail): void
     $record->setRawAttributes(['thumbnail' => $thumbnail], true);
 
     $reflection = new ReflectionProperty($page, 'record');
-    $reflection->setAccessible(true);
     $reflection->setValue($page, $record);
 }
 

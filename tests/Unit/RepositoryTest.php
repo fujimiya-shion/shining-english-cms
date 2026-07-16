@@ -386,7 +386,6 @@ test('nextPrefix returns null for empty string', function (): void {
     $repository = app()->make(TestRepository::class);
 
     $method = new ReflectionMethod(Repository::class, 'nextPrefix');
-    $method->setAccessible(true);
 
     $result = $method->invoke($repository, '   ');
 
@@ -397,7 +396,6 @@ test('nextPrefix returns null when no higher prefix exists', function (): void {
     $repository = app()->make(TestRepository::class);
 
     $method = new ReflectionMethod(Repository::class, 'nextPrefix');
-    $method->setAccessible(true);
 
     $result = $method->invoke($repository, chr(255));
 
@@ -408,7 +406,6 @@ test('nextPrefix increments the last byte', function (): void {
     $repository = app()->make(TestRepository::class);
 
     $method = new ReflectionMethod(Repository::class, 'nextPrefix');
-    $method->setAccessible(true);
 
     $result = $method->invoke($repository, 'ab');
 
@@ -421,7 +418,6 @@ test('applyPrefixMatch returns query unchanged for empty term', function (): voi
     $originalSql = $query->toSql();
 
     $method = new ReflectionMethod(Repository::class, 'applyPrefixMatch');
-    $method->setAccessible(true);
 
     /** @var \Illuminate\Database\Eloquent\Builder $result */
     $result = $method->invoke($repository, $query, 'name', '   ');
@@ -434,7 +430,6 @@ test('applyDefaultOrderIfMissing keeps existing order clauses', function (): voi
     $query = TestModel::query()->orderBy('name');
 
     $method = new ReflectionMethod(Repository::class, 'applyDefaultOrderIfMissing');
-    $method->setAccessible(true);
 
     /** @var \Illuminate\Database\Eloquent\Builder $result */
     $result = $method->invoke($repository, $query, new QueryOption);
@@ -448,7 +443,6 @@ test('applyDefaultOrderIfMissing skips ordering when model table has no created_
     $query = TestModelWithoutTimestamps::query();
 
     $method = new ReflectionMethod(Repository::class, 'applyDefaultOrderIfMissing');
-    $method->setAccessible(true);
 
     /** @var \Illuminate\Database\Eloquent\Builder $result */
     $result = $method->invoke($repository, $query, new QueryOption);

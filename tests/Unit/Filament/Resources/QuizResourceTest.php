@@ -37,7 +37,6 @@ test('quiz resource builds record route binding query', function (): void {
 
 test('quiz resource resolves the quiz service', function (): void {
     $method = new ReflectionMethod(QuizResource::class, 'service');
-    $method->setAccessible(true);
     $service = $method->invoke(null);
 
     expect($service)->toBeInstanceOf(IQuizService::class);

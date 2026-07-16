@@ -28,7 +28,6 @@ test('edit quiz page passes current record to widgets', function (): void {
     $quiz = new Quiz(['id' => 99]);
 
     $reflection = new ReflectionProperty($page, 'record');
-    $reflection->setAccessible(true);
     $reflection->setValue($page, $quiz);
 
     expect($page->getWidgetData())->toMatchArray([

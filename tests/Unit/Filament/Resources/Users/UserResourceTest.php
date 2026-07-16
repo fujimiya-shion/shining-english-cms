@@ -34,7 +34,6 @@ it('builds list query via user service', function (): void {
 
 it('resolves the user service', function (): void {
     $method = new ReflectionMethod(UserResource::class, 'service');
-    $method->setAccessible(true);
     $service = $method->invoke(null);
 
     expect($service)->toBeInstanceOf(IUserService::class);

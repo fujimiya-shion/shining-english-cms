@@ -34,7 +34,6 @@ test('contact resource builds query', function (): void {
 
 test('contact resource resolves contact service', function (): void {
     $method = new ReflectionMethod(ContactResource::class, 'service');
-    $method->setAccessible(true);
     $service = $method->invoke(null);
 
     expect($service)->toBeInstanceOf(IContactService::class);
