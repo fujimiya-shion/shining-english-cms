@@ -3,11 +3,11 @@
 use App\Util\Php\PhpUploadLimit;
 
 afterEach(function (): void {
-    putenv('APP_UPLOAD_MAX_MB');
+    putenv('APP_UPLOAD_MAX_MB=');
 });
 
 test('php upload limit returns default 12MB when env is not set', function (): void {
-    putenv('APP_UPLOAD_MAX_MB');
+    putenv('APP_UPLOAD_MAX_MB=');
 
     expect(PhpUploadLimit::maxKilobytes())->toBe(12288);
 });
