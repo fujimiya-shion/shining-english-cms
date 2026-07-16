@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\Schema;
+
 class EmptyOrderByRepository extends \App\Repositories\Repository
 {
     public function __construct(\Illuminate\Database\Eloquent\Model $model)
@@ -20,19 +22,15 @@ class EmptyOrderModel extends \Illuminate\Database\Eloquent\Model
     public $timestamps = false;
 }
 
-use Tests\TestCase;
-
-uses(TestCase::class);
-
 beforeEach(function (): void {
-    \Illuminate\Support\Facades\Schema::create('test_empty_order', function ($t): void {
+    Schema::create('test_empty_order', function ($t): void {
         $t->id();
         $t->string('name');
     });
 });
 
 afterEach(function (): void {
-    \Illuminate\Support\Facades\Schema::dropIfExists('test_empty_order');
+    Schema::dropIfExists('test_empty_order');
 });
 
 it('skips ordering when default order by is empty', function (): void {

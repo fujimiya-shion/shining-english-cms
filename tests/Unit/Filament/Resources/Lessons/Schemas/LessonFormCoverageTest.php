@@ -5,10 +5,10 @@ use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Quiz;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 it('create option using handles existing soft deleted quiz', function (): void {
     $course = Course::factory()->create();
