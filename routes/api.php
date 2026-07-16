@@ -72,7 +72,6 @@ Route::prefix('/v1')->group(function () {
             ->group(function () {
                 Route::get('/', 'index');
                 Route::get('/{id}', 'show');
-                Route::get('/{id}/quiz', 'quiz');
             });
 
         Route::controller(AuthController::class)
@@ -130,6 +129,7 @@ Route::prefix('/v1')->group(function () {
             ->group(function () {
                 Route::get('/{id}/video', 'video');
                 Route::get('/{id}/documents/{documentIndex}/download', 'downloadDocument');
+                Route::get('/{id}/quiz', 'quiz');
                 Route::post('/{id}/comments', 'storeComment');
             });
 
