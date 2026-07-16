@@ -5,7 +5,6 @@ use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Quiz;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
