@@ -152,6 +152,7 @@ class UserHomeRepository implements IUserHomeRepository
                 'level:id,name',
             ])
             ->withCardMetrics()
+            ->orderBy('order')
             ->orderByDesc('created_at')
             ->limit(4)
             ->get();

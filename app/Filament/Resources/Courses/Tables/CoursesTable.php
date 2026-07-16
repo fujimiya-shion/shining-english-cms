@@ -23,6 +23,8 @@ class CoursesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('order')
+            ->reorderable('order')
             ->columns([
                 ImageColumn::make('thumbnail')
                     ->square()

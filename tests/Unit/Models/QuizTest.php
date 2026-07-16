@@ -10,6 +10,8 @@ it('defines fillable attributes', function (): void {
     expect($model->getFillable())->toEqual([
         'lesson_id',
         'pass_percent',
+        'name',
+        'order',
     ]);
 });
 

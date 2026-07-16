@@ -1,5 +1,7 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
 
+@source '../../../views/';
+
 /* Only constrain the preview after a file is uploaded */
 .lesson-video-upload .filepond--root.filepond--has-items {
     max-height: 220px;

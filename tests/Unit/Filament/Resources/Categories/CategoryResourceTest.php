@@ -34,7 +34,6 @@ it('builds list query via category service', function (): void {
 
 it('resolves the category service', function (): void {
     $method = new ReflectionMethod(CategoryResource::class, 'service');
-    $method->setAccessible(true);
     $service = $method->invoke(null);
 
     expect($service)->toBeInstanceOf(ICategoryService::class);

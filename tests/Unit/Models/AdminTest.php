@@ -10,6 +10,7 @@ test('admin exposes expected fillable attributes', function (): void {
         'name',
         'email',
         'password',
+        'order',
     ]);
 });
 
@@ -18,7 +19,6 @@ test('admin hides sensitive attributes', function (): void {
 
     expect($admin->getHidden())->toEqual([
         'password',
-        'remember_token',
     ]);
 });
 

@@ -19,9 +19,11 @@ class QuizzesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('order')
+            ->reorderable('order')
             ->columns([
-                TextColumn::make('lesson.name')
-                    ->label('Lesson')
+                TextColumn::make('name')
+                    ->label('Tên bộ câu hỏi')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('pass_percent')
@@ -43,6 +45,7 @@ class QuizzesTable
             ])
             ->filters([
                 SelectFilter::make('lesson_id')
+                    ->label('Bài học')
                     ->relationship('lesson', 'name')
                     ->searchable()
                     ->preload(),

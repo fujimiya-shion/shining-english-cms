@@ -46,7 +46,6 @@ test('course resource builds record route binding query', function (): void {
 
 test('course resource resolves the course service', function (): void {
     $method = new ReflectionMethod(CourseResource::class, 'service');
-    $method->setAccessible(true);
     $service = $method->invoke(null);
 
     expect($service)->toBeInstanceOf(ICourseService::class);

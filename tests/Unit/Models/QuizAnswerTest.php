@@ -10,6 +10,7 @@ it('defines fillable attributes', function (): void {
         'quiz_question_id',
         'content',
         'is_correct',
+        'sort_order',
     ]);
 });
 

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Blogs\Pages;
 
 use App\Filament\Resources\Blogs\BlogResource;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
@@ -77,11 +78,23 @@ class EditBlog extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [
+        $actions = [
             DeleteAction::make(),
             ForceDeleteAction::make(),
             RestoreAction::make(),
         ];
+
+        $slug = rescue(fn () => $this->record?->slug, null, false);
+
+        if ($slug) {
+            array_unshift($actions, Action::make('viewOnWebsite')
+                ->label('Xem trên website')
+                ->icon('heroicon-o-eye')
+                ->url(config('app.frontend_app_url')."/blogs/{$slug}")
+                ->openUrlInNewTab());
+        }
+
+        return $actions;
     }
 
     private function resolveThumbnailFilePath(string $thumbnail, string $normalizedStorageUrl): string

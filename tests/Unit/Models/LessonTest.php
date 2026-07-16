@@ -3,7 +3,6 @@
 use App\Models\Lesson;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 test('lesson model defaults star rewards to zero', function (): void {
     $lesson = new Lesson;
@@ -33,6 +32,8 @@ it('defines fillable attributes', function (): void {
         'star_reward_quiz',
         'has_quiz',
         'is_preview_free',
+        'quiz_id',
+        'order',
     ]);
 });
 
@@ -46,8 +47,8 @@ it('defines course relation', function (): void {
 it('defines quiz relation', function (): void {
     $method = new ReflectionMethod(Lesson::class, 'quiz');
 
-    expect($method->getReturnType()?->getName())->toBe(HasOne::class);
-    expect((new Lesson)->quiz())->toBeInstanceOf(HasOne::class);
+    expect($method->getReturnType()?->getName())->toBe(BelongsTo::class);
+    expect((new Lesson)->quiz())->toBeInstanceOf(BelongsTo::class);
 });
 
 it('defines comments relation', function (): void {

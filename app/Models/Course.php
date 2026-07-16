@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\CanReorder;
 use App\Traits\Slugable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,7 +15,7 @@ use Illuminate\Support\Str;
 
 class Course extends Model
 {
-    use HasFactory, Slugable, SoftDeletes;
+    use CanReorder, HasFactory, Slugable, SoftDeletes;
 
     protected $appends = [
         'comments_count',
@@ -33,6 +34,7 @@ class Course extends Model
         'learned',
         'allow_star_payment',
         'star_price',
+        'order',
     ];
 
     #[Scope]

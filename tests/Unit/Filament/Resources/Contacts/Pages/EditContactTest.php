@@ -30,7 +30,6 @@ test('edit contact reply action delegates to contact service and refreshes field
     $contact->id = 123;
 
     $reflection = new ReflectionProperty($page, 'record');
-    $reflection->setAccessible(true);
     $reflection->setValue($page, $contact);
 
     $service = Mockery::mock(IContactService::class);

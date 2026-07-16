@@ -12,7 +12,7 @@ test('quiz resource extends base resource', function (): void {
 
 test('quiz resource uses quiz model and title attribute', function (): void {
     expect(QuizResource::getModel())->toBe(Quiz::class);
-    expect(QuizResource::getRecordTitleAttribute())->toBe('lesson_id');
+    expect(QuizResource::getRecordTitleAttribute())->toBe('name');
 });
 
 test('quiz resource defines expected pages', function (): void {
@@ -37,7 +37,6 @@ test('quiz resource builds record route binding query', function (): void {
 
 test('quiz resource resolves the quiz service', function (): void {
     $method = new ReflectionMethod(QuizResource::class, 'service');
-    $method->setAccessible(true);
     $service = $method->invoke(null);
 
     expect($service)->toBeInstanceOf(IQuizService::class);

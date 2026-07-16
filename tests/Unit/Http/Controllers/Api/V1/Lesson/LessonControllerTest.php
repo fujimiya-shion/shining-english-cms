@@ -6,7 +6,7 @@ use App\Models\Quiz;
 use App\Services\Lesson\ILessonService;
 use App\Services\LessonAccess\ILessonAccessService;
 use App\Services\LessonComment\ILessonCommentService;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -99,7 +99,7 @@ it('returns notfound when lesson quiz has no lesson record', function (): void {
 });
 
 it('returns notfound when lesson quiz has no quiz record', function (): void {
-    $relation = \Mockery::mock(HasOne::class);
+    $relation = \Mockery::mock(BelongsTo::class);
     $relation->shouldReceive('with')
         ->once()
         ->with(['questions.answers'])
@@ -135,7 +135,7 @@ it('returns quiz data for lesson quiz endpoint', function (): void {
     $quiz = new Quiz;
     $quiz->setAttribute('id', 1);
 
-    $relation = \Mockery::mock(HasOne::class);
+    $relation = \Mockery::mock(BelongsTo::class);
     $relation->shouldReceive('with')
         ->once()
         ->with(['questions.answers'])

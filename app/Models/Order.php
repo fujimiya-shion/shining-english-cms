@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Traits\CanReorder;
 use BackedEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
-    use HasFactory;
+    use CanReorder, HasFactory;
 
     /**
      * @var list<string>
@@ -27,6 +28,7 @@ class Order extends Model
         'payment_metadata',
         'paid_at',
         'placed_at',
+        'order',
     ];
 
     /**

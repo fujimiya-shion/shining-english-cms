@@ -36,7 +36,6 @@ test('lesson form defines expected components', function (): void {
         'star_reward_video',
         'star_reward_quiz',
         'has_quiz',
-        'pass_percent',
     ]);
 
     expect($components['name'])->toBeInstanceOf(TextInput::class);
@@ -58,7 +57,6 @@ test('lesson form marks required fields', function (): void {
     expect($components['name']->isRequired())->toBeTrue();
     expect($components['course_id']->isRequired())->toBeTrue();
     expect($components['video_url']->isRequired())->toBeTrue();
-    expect($components['pass_percent']->isRequired())->toBeTrue();
 });
 
 test('lesson form configures numeric star inputs', function (): void {
@@ -256,10 +254,10 @@ test('lesson form toggles quiz state when has_quiz changes', function (): void {
     };
 
     $hook($set, true);
-    expect($state['quiz.pass_percent'])->toBe(80);
+    expect($state)->not->toHaveKey('quiz_id');
 
     $hook($set, false);
-    expect($state['quiz'])->toBeNull();
+    expect($state['quiz_id'])->toBeNull();
 });
 
 test('lesson form resolves lesson group options and create option behavior', function (): void {

@@ -9,7 +9,6 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 function optimizeUploadCallback(OptimizeFileUpload $component, string $property): ?Closure
 {
     $reflection = new ReflectionProperty(BaseFileUpload::class, $property);
-    $reflection->setAccessible(true);
 
     return $reflection->getValue($component);
 }

@@ -15,6 +15,7 @@ class BlogController extends ApiController
         $blogs = Blog::query()
             ->with('tag:id,name,slug')
             ->where('status', true)
+            ->orderBy('order')
             ->latest()
             ->get();
 

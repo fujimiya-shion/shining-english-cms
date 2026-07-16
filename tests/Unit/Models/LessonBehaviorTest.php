@@ -117,7 +117,6 @@ it('compute next lesson order returns one when course id is missing', function (
     ]);
 
     $method = new ReflectionMethod(Lesson::class, 'computeNextLessonOrder');
-    $method->setAccessible(true);
 
     expect($method->invoke(null, $lesson))->toBe(1);
 });
@@ -148,7 +147,6 @@ it('compute next lesson order excludes current lesson when record exists', funct
     ]);
 
     $method = new ReflectionMethod(Lesson::class, 'computeNextLessonOrder');
-    $method->setAccessible(true);
 
     expect($method->invoke(null, $record->fresh()))->toBe(4);
 });

@@ -23,6 +23,7 @@ it('defines fillable attributes', function (): void {
         'password',
         'authenticated_by',
         'email_verified_at',
+        'order',
     ]);
 });
 

@@ -18,6 +18,7 @@ it('defines fillable attributes', function (): void {
         'slug',
         'status',
         'tag_id',
+        'order',
     ]);
 });
 

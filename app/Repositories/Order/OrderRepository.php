@@ -9,6 +9,16 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class OrderRepository extends Repository implements IOrderRepository
 {
+    protected function getDefaultOrderBy(): string
+    {
+        return 'order';
+    }
+
+    protected function getDefaultOrderDirection(): string
+    {
+        return 'asc';
+    }
+
     public function __construct(Order $model)
     {
         parent::__construct($model);

@@ -64,7 +64,6 @@ test('order resource builds query with eager loads', function (): void {
 
 test('order resource resolves the order service', function (): void {
     $method = new ReflectionMethod(OrderResource::class, 'service');
-    $method->setAccessible(true);
     $service = $method->invoke(null);
 
     expect($service)->toBeInstanceOf(IOrderService::class);

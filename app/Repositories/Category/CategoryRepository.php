@@ -7,6 +7,16 @@ use App\Repositories\Repository;
 
 class CategoryRepository extends Repository implements ICategoryRepository
 {
+    protected function getDefaultOrderBy(): string
+    {
+        return 'order';
+    }
+
+    protected function getDefaultOrderDirection(): string
+    {
+        return 'asc';
+    }
+
     public function __construct(Category $model)
     {
         $this->model = $model;

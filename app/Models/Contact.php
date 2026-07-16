@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\CanReorder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Contact extends Model
 {
-    use HasFactory;
+    use CanReorder, HasFactory;
 
     protected $fillable = [
         'name',
@@ -18,6 +19,7 @@ class Contact extends Model
         'reply_subject',
         'reply_message',
         'replied_at',
+        'order',
     ];
 
     protected function casts(): array

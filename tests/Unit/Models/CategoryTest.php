@@ -11,6 +11,7 @@ it('defines fillable attributes', function (): void {
         'name',
         'slug',
         'parent_id',
+        'order',
     ]);
 });
 

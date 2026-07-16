@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\CanReorder;
 use App\Traits\Slugable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use Illuminate\Support\Str;
 
 class Blog extends Model
 {
-    use HasFactory, Slugable, SoftDeletes;
+    use CanReorder, HasFactory, Slugable, SoftDeletes;
 
     /**
      * @var list<string>
@@ -25,6 +26,7 @@ class Blog extends Model
         'slug',
         'status',
         'tag_id',
+        'order',
     ];
 
     /**

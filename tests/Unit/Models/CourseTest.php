@@ -25,6 +25,7 @@ it('defines fillable attributes', function (): void {
         'learned',
         'allow_star_payment',
         'star_price',
+        'order',
     ]);
 });
 

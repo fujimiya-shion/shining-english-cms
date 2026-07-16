@@ -7,6 +7,16 @@ use App\Repositories\Repository;
 
 class QuizRepository extends Repository implements IQuizRepository
 {
+    protected function getDefaultOrderBy(): string
+    {
+        return 'order';
+    }
+
+    protected function getDefaultOrderDirection(): string
+    {
+        return 'asc';
+    }
+
     public function __construct(Quiz $model)
     {
         parent::__construct($model);

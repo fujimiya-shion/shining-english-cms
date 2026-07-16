@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\CanReorder;
 use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -13,7 +14,7 @@ use Spatie\Permission\Traits\HasRoles;
 class Admin extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\AdminFactory> */
-    use HasFactory, HasPanelShield, HasRoles, Notifiable;
+    use CanReorder, HasFactory, HasPanelShield, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -24,6 +25,7 @@ class Admin extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'order',
     ];
 
     /**
@@ -31,12 +33,11 @@ class Admin extends Authenticatable implements FilamentUser
      *
      * @var list<string>
      */
+    public string $guard_name = 'admin';
+
     protected $hidden = [
         'password',
-        'remember_token',
     ];
-
-    protected string $guard_name = 'admin';
 
     /**
      * Get the attributes that should be cast.

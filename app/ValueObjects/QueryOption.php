@@ -9,7 +9,7 @@ class QueryOption
         public int $perPage = 15,
         /** @var string[] */
         public array $with = [],
-        public string $orderBy = 'created_at',
+        public string $orderBy = '',
         public string $orderDirection = 'desc',
     ) {}
 
