@@ -1,9 +1,6 @@
 <?php
 
 use App\Filament\Forms\Components\QuizQuestionsInput;
-use Tests\TestCase;
-
-uses(TestCase::class);
 
 it('hydrates string state via schema', function (): void {
     $schema = makeSchema();
