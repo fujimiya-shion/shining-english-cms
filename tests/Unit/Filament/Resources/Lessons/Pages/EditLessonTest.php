@@ -27,8 +27,12 @@ it('returns view on website action when record has course slug', function (): vo
     expect($viewAction->getUrl())->toContain('/courses/test-course?lessonId=');
 });
 
-it('returns null url when record has no course', function (): void {
-    $lesson = Lesson::factory()->create(['course_id' => null, 'video_url' => 'https://example.com/video']);
+it('returns null url when course has no slug', function (): void {
+    $course = Course::factory()->create(['slug' => null]);
+    $lesson = Lesson::factory()->create([
+        'course_id' => $course->id,
+        'video_url' => 'https://example.com/video',
+    ]);
 
     $page = new EditLesson;
     $reflection = new ReflectionProperty($page, 'record');

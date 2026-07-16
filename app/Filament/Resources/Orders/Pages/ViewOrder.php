@@ -13,9 +13,7 @@ class ViewOrder extends ViewRecord
 
     protected function getHeaderActions(): array
     {
-        $actions = [
-            EditAction::make(),
-        ];
+        $actions = rescue(fn () => [EditAction::make()], [], false);
 
         $orderCode = rescue(fn () => $this->record?->order_code, null, false);
 
