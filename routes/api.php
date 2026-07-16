@@ -71,8 +71,6 @@ Route::prefix('/v1')->group(function () {
             ->prefix('/lessons')
             ->group(function () {
                 Route::get('/', 'index');
-                Route::get('/{id}/video', 'video');
-                Route::get('/{id}/documents/{documentIndex}/download', 'downloadDocument');
                 Route::get('/{id}', 'show');
                 Route::get('/{id}/quiz', 'quiz');
             });
@@ -130,6 +128,8 @@ Route::prefix('/v1')->group(function () {
             ->controller(LessonController::class)
             ->prefix('/lessons')
             ->group(function () {
+                Route::get('/{id}/video', 'video');
+                Route::get('/{id}/documents/{documentIndex}/download', 'downloadDocument');
                 Route::post('/{id}/comments', 'storeComment');
             });
 

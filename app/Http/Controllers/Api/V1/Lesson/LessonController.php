@@ -100,6 +100,11 @@ class LessonController extends ApiController
         }
 
         $path = is_string($lesson->video_url ?? null) ? trim($lesson->video_url) : '';
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return redirect()->away($path);
+        }
+
         if ($path === '' || ! Storage::disk('local')->exists($path)) {
             return $this->notfound();
         }
