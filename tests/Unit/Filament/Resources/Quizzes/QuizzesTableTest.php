@@ -14,7 +14,7 @@ test('quizzes table defines expected columns', function (): void {
     $table = QuizzesTable::configure(makeTable());
 
     expect(tableColumnNames($table))->toEqual([
-        'lesson.name',
+        'name',
         'pass_percent',
         'deleted_at',
         'created_at',

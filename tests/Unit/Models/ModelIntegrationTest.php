@@ -61,9 +61,10 @@ it('resolves model relations across category course lesson quiz question answer 
     ]);
 
     $quiz = Quiz::query()->create([
-        'lesson_id' => $lesson->id,
         'pass_percent' => 80,
     ]);
+
+    $lesson->update(['quiz_id' => $quiz->id]);
 
     $question = QuizQuestion::query()->create([
         'quiz_id' => $quiz->id,

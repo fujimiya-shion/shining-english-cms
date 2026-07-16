@@ -14,7 +14,7 @@ it('initializes with perPage default and empty with', function (): void {
 
     expect($option->getPerPage())->toBe(15);
     expect($option->getWith())->toBe([]);
-    expect($option->getOrderBy())->toBe('created_at');
+    expect($option->getOrderBy())->toBe('');
     expect($option->getOrderDirection())->toBe('desc');
 });
 

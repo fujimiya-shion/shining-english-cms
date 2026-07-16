@@ -10,6 +10,7 @@ it('defines fillable attributes', function (): void {
     expect($model->getFillable())->toEqual([
         'quiz_id',
         'content',
+        'sort_order',
     ]);
 });
 

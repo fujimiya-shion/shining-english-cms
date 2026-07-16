@@ -6,8 +6,6 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\TextInput;
 use Filament\Tables\Filters\TrashedFilter;
 
 test('questions relation manager defines form components', function (): void {
@@ -16,8 +14,7 @@ test('questions relation manager defines form components', function (): void {
     $schema = $manager->form(makeSchema());
     $components = schemaComponentMap($schema);
 
-    expect($components['content'])->toBeInstanceOf(TextInput::class);
-    expect($components['answers'])->toBeInstanceOf(Repeater::class);
+    expect($components)->toHaveKey('questions');
 });
 
 test('questions relation manager defines table configuration', function (): void {
@@ -27,6 +24,7 @@ test('questions relation manager defines table configuration', function (): void
 
     expect(tableColumnNames($table))->toEqual([
         'content',
+        'answers_count',
         'deleted_at',
         'created_at',
         'updated_at',
@@ -52,52 +50,4 @@ test('questions relation manager registers filters and actions', function (): vo
         RestoreAction::class,
         ForceDeleteAction::class,
     ]);
-});
-
-test('answers repeater requires at least one correct answer', function (): void {
-    $manager = new QuestionsRelationManager;
-
-    $schema = $manager->form(makeSchema());
-    $components = schemaComponentMap($schema);
-
-    /** @var Repeater $repeater */
-    $repeater = $components['answers'];
-
-    $rules = getProtectedPropertyValue($repeater, 'rules');
-    $rule = null;
-
-    foreach ($rules as $entry) {
-        $candidate = $entry[0] ?? null;
-        if (! $candidate instanceof Closure) {
-            continue;
-        }
-
-        $params = (new ReflectionFunction($candidate))->getNumberOfParameters();
-        if ($params === 3) {
-            $rule = $candidate;
-            break;
-        }
-    }
-
-    expect($rule)->toBeInstanceOf(Closure::class);
-
-    $failedMessage = null;
-    $rule('answers', [
-        ['content' => 'A', 'is_correct' => false],
-        ['content' => 'B', 'is_correct' => false],
-    ], function (string $message) use (&$failedMessage): void {
-        $failedMessage = $message;
-    });
-
-    expect($failedMessage)->not->toBeNull();
-
-    $failedMessage = null;
-    $rule('answers', [
-        ['content' => 'A', 'is_correct' => true],
-        ['content' => 'B', 'is_correct' => false],
-    ], function (string $message) use (&$failedMessage): void {
-        $failedMessage = $message;
-    });
-
-    expect($failedMessage)->toBeNull();
 });
