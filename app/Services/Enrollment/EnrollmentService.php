@@ -9,7 +9,11 @@ use App\Models\CourseReview;
 use App\Models\Enrollment;
 use App\Models\Lesson;
 use App\Models\LessonProgress;
+use App\Notifications\EnrollmentNotification;
+use App\Notifications\LessonCompletedNotification;
+use App\Repositories\Course\ICourseRepository;
 use App\Repositories\Enrollment\IEnrollmentRepository;
+use App\Repositories\User\IUserRepository;
 use App\Services\Service;
 use App\Services\Star\IStarService;
 use Illuminate\Database\QueryException;
@@ -20,10 +24,19 @@ class EnrollmentService extends Service implements IEnrollmentService
 {
     protected IEnrollmentRepository $enrollmentRepository;
 
-    public function __construct(IEnrollmentRepository $repository)
-    {
+    protected ICourseRepository $courseRepository;
+
+    protected IUserRepository $userRepository;
+
+    public function __construct(
+        IEnrollmentRepository $repository,
+        ICourseRepository $courseRepository,
+        IUserRepository $userRepository,
+    ) {
         parent::__construct($repository);
         $this->enrollmentRepository = $repository;
+        $this->courseRepository = $courseRepository;
+        $this->userRepository = $userRepository;
     }
 
     public function enroll(int $userId, int $courseId, ?int $orderId = null): Enrollment
@@ -45,7 +58,7 @@ class EnrollmentService extends Service implements IEnrollmentService
             return $existing;
         }
 
-        return DB::transaction(function () use ($userId, $courseId, $orderId): Enrollment {
+        $enrollment = DB::transaction(function () use ($userId, $courseId, $orderId): Enrollment {
             try {
                 return $this->enrollmentRepository->create([
                     'user_id' => $userId,
@@ -63,6 +76,22 @@ class EnrollmentService extends Service implements IEnrollmentService
                 throw $exception;
             }
         });
+
+        DB::afterCommit(function () use ($userId, $courseId): void {
+            $course = $this->courseRepository->getById($courseId);
+            if ($course) {
+                $user = $this->userRepository->getById($userId);
+                if ($user) {
+                    $user->notify(new EnrollmentNotification(
+                        courseId: (int) $course->id,
+                        courseName: (string) $course->name,
+                        courseThumbnail: $course->thumbnail,
+                    ));
+                }
+            }
+        });
+
+        return $enrollment;
     }
 
     public function isEnrolled(int $userId, int $courseId): bool
@@ -166,13 +195,28 @@ class EnrollmentService extends Service implements IEnrollmentService
             );
         }
 
-        if ($completedLesson && (int) $completedLesson->star_reward_video > 0) {
-            dispatch(new GrantLessonStarRewardJob(
-                userId: $userId,
-                courseId: $courseId,
-                lessonId: $lessonId,
-                source: GrantLessonStarRewardJob::SOURCE_VIDEO,
-            ));
+        if ($completedLesson) {
+            $course = $this->courseRepository->getById($courseId);
+            if ($course) {
+                $user = $this->userRepository->getById($userId);
+                if ($user) {
+                    $user->notify(new LessonCompletedNotification(
+                        courseId: (int) $course->id,
+                        courseName: (string) $course->name,
+                        lessonId: (int) $completedLesson->id,
+                        lessonName: (string) $completedLesson->name,
+                    ));
+                }
+            }
+
+            if ((int) $completedLesson->star_reward_video > 0) {
+                dispatch(new GrantLessonStarRewardJob(
+                    userId: $userId,
+                    courseId: $courseId,
+                    lessonId: $lessonId,
+                    source: GrantLessonStarRewardJob::SOURCE_VIDEO,
+                ));
+            }
         }
 
         $isLastLesson = count($orderedLessonIds) > 0

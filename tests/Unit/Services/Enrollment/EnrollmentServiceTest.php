@@ -11,14 +11,20 @@ use App\Models\Lesson;
 use App\Models\LessonProgress;
 use App\Models\Order;
 use App\Models\User;
+use App\Notifications\LessonCompletedNotification;
+use App\Repositories\Course\CourseRepository;
+use App\Repositories\Course\ICourseRepository;
 use App\Repositories\Enrollment\EnrollmentRepository;
 use App\Repositories\Enrollment\IEnrollmentRepository;
+use App\Repositories\User\IUserRepository;
+use App\Repositories\User\UserRepository;
 use App\Services\Enrollment\EnrollmentService;
 use App\Services\Enrollment\IEnrollmentService;
 use App\Services\Star\IStarService;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Notification;
 use Mockery;
 use RuntimeException;
 use Tests\TestCase;
@@ -29,7 +35,11 @@ uses(RefreshDatabase::class);
 it('implements shared service contract', function (): void {
     $model = new Enrollment;
     $repository = new EnrollmentRepository($model);
-    $service = new EnrollmentService($repository);
+    $courseRepository = Mockery::mock(ICourseRepository::class);
+    $courseRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $userRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $service = new EnrollmentService($repository, $courseRepository, $userRepository);
 
     assertServiceContract($service, IEnrollmentService::class, $repository);
 });
@@ -52,7 +62,11 @@ it('enrolls a user when missing', function (): void {
         }))
         ->andReturn($enrollment);
 
-    $service = new EnrollmentService($repository);
+    $courseRepository = Mockery::mock(ICourseRepository::class);
+    $courseRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $userRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $service = new EnrollmentService($repository, $courseRepository, $userRepository);
 
     $result = $service->enroll(10, 20, 30);
 
@@ -69,7 +83,11 @@ it('returns existing enrollment', function (): void {
         ->andReturn($enrollment);
     $repository->shouldReceive('create')->never();
 
-    $service = new EnrollmentService($repository);
+    $courseRepository = Mockery::mock(ICourseRepository::class);
+    $courseRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $userRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $service = new EnrollmentService($repository, $courseRepository, $userRepository);
 
     $result = $service->enroll(10, 20);
 
@@ -97,7 +115,11 @@ it('returns existing enrollment when create hits a duplicate', function (): void
         ->with(10, 20)
         ->andReturn($enrollment);
 
-    $service = new EnrollmentService($repository);
+    $courseRepository = Mockery::mock(ICourseRepository::class);
+    $courseRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $userRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $service = new EnrollmentService($repository, $courseRepository, $userRepository);
 
     $result = $service->enroll(10, 20);
 
@@ -123,7 +145,11 @@ it('throws when duplicate occurs without existing enrollment', function (): void
         ->with(10, 20)
         ->andReturnNull();
 
-    $service = new EnrollmentService($repository);
+    $courseRepository = Mockery::mock(ICourseRepository::class);
+    $courseRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $userRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $service = new EnrollmentService($repository, $courseRepository, $userRepository);
 
     expect(fn () => $service->enroll(10, 20))->toThrow(QueryException::class);
 });
@@ -143,7 +169,11 @@ it('restores a soft deleted enrollment', function (): void {
     $enrollment->delete();
 
     $repository = new EnrollmentRepository(new Enrollment);
-    $service = new EnrollmentService($repository);
+    $courseRepository = Mockery::mock(ICourseRepository::class);
+    $courseRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $userRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $service = new EnrollmentService($repository, $courseRepository, $userRepository);
 
     $result = $service->enroll($user->id, $course->id, 123);
 
@@ -161,7 +191,11 @@ it('checks enrollment status', function (): void {
         ->with(10, 20)
         ->andReturn($enrollment);
 
-    $service = new EnrollmentService($repository);
+    $courseRepository = Mockery::mock(ICourseRepository::class);
+    $courseRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $userRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $service = new EnrollmentService($repository, $courseRepository, $userRepository);
 
     expect($service->isEnrolled(10, 20))->toBeTrue();
 });
@@ -173,7 +207,11 @@ it('returns false when enrollment does not exist', function (): void {
         ->with(10, 20)
         ->andReturnNull();
 
-    $service = new EnrollmentService($repository);
+    $courseRepository = Mockery::mock(ICourseRepository::class);
+    $courseRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $userRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $service = new EnrollmentService($repository, $courseRepository, $userRepository);
 
     expect($service->isEnrolled(10, 20))->toBeFalse();
 });
@@ -191,7 +229,11 @@ it('returns false when enrollment order is not paid', function (): void {
         ->with(10, 20)
         ->andReturn($enrollment);
 
-    $service = new EnrollmentService($repository);
+    $courseRepository = Mockery::mock(ICourseRepository::class);
+    $courseRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $userRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $service = new EnrollmentService($repository, $courseRepository, $userRepository);
 
     expect($service->isEnrolled(10, 20))->toBeFalse();
 });
@@ -209,7 +251,11 @@ it('returns true when enrollment order is paid', function (): void {
         ->with(10, 20)
         ->andReturn($enrollment);
 
-    $service = new EnrollmentService($repository);
+    $courseRepository = Mockery::mock(ICourseRepository::class);
+    $courseRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $userRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $service = new EnrollmentService($repository, $courseRepository, $userRepository);
 
     expect($service->isEnrolled(10, 20))->toBeTrue();
 });
@@ -227,7 +273,11 @@ it('returns true when enrollment order is pending approval', function (): void {
         ->with(10, 20)
         ->andReturn($enrollment);
 
-    $service = new EnrollmentService($repository);
+    $courseRepository = Mockery::mock(ICourseRepository::class);
+    $courseRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $userRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $service = new EnrollmentService($repository, $courseRepository, $userRepository);
 
     expect($service->hasPendingEnrollment(10, 20))->toBeTrue();
 });
@@ -239,7 +289,11 @@ it('returns false when enrollment does not exist while checking pending approval
         ->with(10, 20)
         ->andReturnNull();
 
-    $service = new EnrollmentService($repository);
+    $courseRepository = Mockery::mock(ICourseRepository::class);
+    $courseRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $userRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $service = new EnrollmentService($repository, $courseRepository, $userRepository);
 
     expect($service->hasPendingEnrollment(10, 20))->toBeFalse();
 });
@@ -254,7 +308,11 @@ it('returns false when enrollment has no order while checking pending approval',
         ->with(10, 20)
         ->andReturn($enrollment);
 
-    $service = new EnrollmentService($repository);
+    $courseRepository = Mockery::mock(ICourseRepository::class);
+    $courseRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $userRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $service = new EnrollmentService($repository, $courseRepository, $userRepository);
 
     expect($service->hasPendingEnrollment(10, 20))->toBeFalse();
 });
@@ -272,7 +330,11 @@ it('returns false when enrollment order is already paid while checking pending a
         ->with(10, 20)
         ->andReturn($enrollment);
 
-    $service = new EnrollmentService($repository);
+    $courseRepository = Mockery::mock(ICourseRepository::class);
+    $courseRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $userRepository->shouldReceive('getById')->zeroOrMoreTimes()->andReturnNull();
+    $service = new EnrollmentService($repository, $courseRepository, $userRepository);
 
     expect($service->hasPendingEnrollment(10, 20))->toBeFalse();
 });
@@ -319,7 +381,7 @@ it('returns persisted learning progress payload for enrollment', function (): vo
         'is_current' => true,
     ]);
 
-    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $service = new EnrollmentService(app(EnrollmentRepository::class), app(CourseRepository::class), app(UserRepository::class));
     $result = $service->getLearningProgress($user->id, $course->id);
 
     expect($result)->not->toBeNull();
@@ -331,6 +393,7 @@ it('returns persisted learning progress payload for enrollment', function (): vo
 
 it('completes a lesson, moves to next lesson and returns next quiz hint', function (): void {
     Bus::fake();
+    Notification::fake();
 
     $user = User::factory()->create();
     $course = Course::factory()->create();
@@ -367,7 +430,7 @@ it('completes a lesson, moves to next lesson and returns next quiz hint', functi
         'is_current' => true,
     ]);
 
-    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $service = new EnrollmentService(app(EnrollmentRepository::class), app(CourseRepository::class), app(UserRepository::class));
     $result = $service->completeLesson($user->id, $course->id, $lessonA->id);
 
     expect($result)->not->toBeNull();
@@ -384,16 +447,18 @@ it('completes a lesson, moves to next lesson and returns next quiz hint', functi
             && $job->lessonId === $lessonA->id
             && $job->source === GrantLessonStarRewardJob::SOURCE_VIDEO;
     });
+
+    Notification::assertSentTo($user, LessonCompletedNotification::class);
 });
 
 it('returns null progress payload when enrollment is missing', function (): void {
-    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $service = new EnrollmentService(app(EnrollmentRepository::class), app(CourseRepository::class), app(UserRepository::class));
 
     expect($service->getLearningProgress(999, 999))->toBeNull();
 });
 
 it('returns null when completing lesson without enrollment', function (): void {
-    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $service = new EnrollmentService(app(EnrollmentRepository::class), app(CourseRepository::class), app(UserRepository::class));
 
     expect($service->completeLesson(999, 999, 1))->toBeNull();
 });
@@ -412,13 +477,13 @@ it('returns null when completing lesson that is not in course', function (): voi
         'enrolled_at' => now(),
     ]);
 
-    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $service = new EnrollmentService(app(EnrollmentRepository::class), app(CourseRepository::class), app(UserRepository::class));
 
     expect($service->completeLesson($user->id, $course->id, $foreignLesson->id))->toBeNull();
 });
 
 it('returns null when setting current lesson without enrollment', function (): void {
-    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $service = new EnrollmentService(app(EnrollmentRepository::class), app(CourseRepository::class), app(UserRepository::class));
 
     expect($service->setCurrentLesson(999, 999, 1))->toBeNull();
 });
@@ -437,7 +502,7 @@ it('returns null when setting current lesson that is not in course', function ()
         'enrolled_at' => now(),
     ]);
 
-    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $service = new EnrollmentService(app(EnrollmentRepository::class), app(CourseRepository::class), app(UserRepository::class));
 
     expect($service->setCurrentLesson($user->id, $course->id, $foreignLesson->id))->toBeNull();
 });
@@ -451,7 +516,7 @@ it('returns zero progress when enrolled course has no lessons', function (): voi
         'enrolled_at' => now(),
     ]);
 
-    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $service = new EnrollmentService(app(EnrollmentRepository::class), app(CourseRepository::class), app(UserRepository::class));
     $progress = $service->getLearningProgress($user->id, $course->id);
 
     expect($progress)->toBe([
@@ -484,7 +549,7 @@ it('sets current lesson and clears previous current flags', function (): void {
         'is_current' => true,
     ]);
 
-    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $service = new EnrollmentService(app(EnrollmentRepository::class), app(CourseRepository::class), app(UserRepository::class));
     $result = $service->setCurrentLesson($user->id, $course->id, $lessonB->id);
 
     expect($result)->not->toBeNull();
@@ -502,6 +567,7 @@ it('sets current lesson and clears previous current flags', function (): void {
 
 it('awards course completion stars when completing the last lesson', function (): void {
     config(['const.star.course_complete' => 10]);
+    Notification::fake();
 
     $starService = Mockery::mock(IStarService::class);
     $starService->shouldReceive('addStarByUserId')
@@ -535,7 +601,7 @@ it('awards course completion stars when completing the last lesson', function ()
         'is_current' => true,
     ]);
 
-    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $service = new EnrollmentService(app(EnrollmentRepository::class), app(CourseRepository::class), app(UserRepository::class));
     $result = $service->completeLesson($user->id, $course->id, $lesson->id);
 
     expect($result)->not->toBeNull();
@@ -548,10 +614,13 @@ it('awards course completion stars when completing the last lesson', function ()
         ->first();
     expect($reward)->not->toBeNull();
     expect((int) $reward->amount)->toBe(10);
+
+    Notification::assertSentTo($user, LessonCompletedNotification::class);
 });
 
 it('does not award course completion stars again on duplicate completion', function (): void {
     config(['const.star.course_complete' => 10]);
+    Notification::fake();
 
     $starService = Mockery::mock(IStarService::class);
     $starService->shouldReceive('addStarByUserId')
@@ -585,7 +654,7 @@ it('does not award course completion stars again on duplicate completion', funct
         'is_current' => true,
     ]);
 
-    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $service = new EnrollmentService(app(EnrollmentRepository::class), app(CourseRepository::class), app(UserRepository::class));
 
     // first completion awards stars
     $service->completeLesson($user->id, $course->id, $lesson->id);
@@ -599,10 +668,13 @@ it('does not award course completion stars again on duplicate completion', funct
         ->get();
     expect($rewards)->toHaveCount(1);
     expect((int) $rewards[0]->amount)->toBe(10);
+
+    Notification::assertSentToTimes($user, LessonCompletedNotification::class, 2);
 });
 
 it('skips course completion reward when config amount is zero', function (): void {
     config(['const.star.course_complete' => 0]);
+    Notification::fake();
 
     $starService = Mockery::mock(IStarService::class);
     $starService->shouldReceive('addStarByUserId')->never();
@@ -633,11 +705,13 @@ it('skips course completion reward when config amount is zero', function (): voi
         'is_current' => true,
     ]);
 
-    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $service = new EnrollmentService(app(EnrollmentRepository::class), app(CourseRepository::class), app(UserRepository::class));
     $result = $service->completeLesson($user->id, $course->id, $lesson->id);
 
     expect($result)->not->toBeNull();
     expect($result['completed_lesson_ids'])->toBe([$lesson->id]);
+
+    Notification::assertSentTo($user, LessonCompletedNotification::class);
 });
 
 it('ignores progress rows for soft deleted lessons when building progress payload', function (): void {
@@ -661,7 +735,7 @@ it('ignores progress rows for soft deleted lessons when building progress payloa
         'is_current' => true,
     ]);
 
-    $service = new EnrollmentService(new EnrollmentRepository(new Enrollment));
+    $service = new EnrollmentService(app(EnrollmentRepository::class), app(CourseRepository::class), app(UserRepository::class));
     $result = $service->getLearningProgress($user->id, $course->id);
 
     expect($result['completed_lesson_ids'])->toBe([]);

@@ -7,10 +7,12 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Integrations\Payments\Factories\PaymentStrategyFactory;
 use App\Models\Order;
+use App\Notifications\PaymentSuccessNotification;
 use App\Repositories\Cart\ICartRepository;
 use App\Repositories\Course\ICourseRepository;
 use App\Repositories\Order\IOrderRepository;
 use App\Repositories\OrderItem\IOrderItemRepository;
+use App\Repositories\User\IUserRepository;
 use App\Services\Enrollment\IEnrollmentService;
 use App\Services\Service;
 use App\ValueObjects\CheckoutCustomerData;
@@ -31,12 +33,15 @@ class OrderService extends Service implements IOrderService
 
     protected IEnrollmentService $enrollmentService;
 
+    protected IUserRepository $userRepository;
+
     public function __construct(
         IOrderRepository $repository,
         IOrderItemRepository $orderItemRepository,
         ICartRepository $cartRepository,
         ICourseRepository $courseRepository,
         IEnrollmentService $enrollmentService,
+        IUserRepository $userRepository,
     ) {
         parent::__construct($repository);
         $this->orderRepository = $repository;
@@ -44,6 +49,7 @@ class OrderService extends Service implements IOrderService
         $this->cartRepository = $cartRepository;
         $this->courseRepository = $courseRepository;
         $this->enrollmentService = $enrollmentService;
+        $this->userRepository = $userRepository;
     }
 
     public function listByUserId(int $userId, QueryOption $options): LengthAwarePaginator
@@ -170,6 +176,16 @@ class OrderService extends Service implements IOrderService
 
             DB::afterCommit(function () use ($userId, $course, $order): void {
                 $this->enrollmentService->enroll($userId, $course->id, $order->id);
+
+                $user = $this->userRepository->getById($userId);
+                if ($user) {
+                    $user->notify(new PaymentSuccessNotification(
+                        orderId: (int) $order->id,
+                        orderCode: (string) $order->id,
+                        totalAmount: 0,
+                        courseNames: (string) $course->name,
+                    ));
+                }
             });
 
             return $order;

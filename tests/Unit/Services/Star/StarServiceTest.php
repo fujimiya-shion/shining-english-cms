@@ -2,8 +2,11 @@
 
 use App\Enums\StarTransactionType;
 use App\Models\Star;
+use App\Models\User;
+use App\Notifications\StarWalletNotification;
 use App\Repositories\Star\IStarRepository;
 use App\Repositories\StarTransaction\IStarTransactionRepository;
+use App\Repositories\User\IUserRepository;
 use App\Services\Star\IStarService;
 use App\Services\Star\StarService;
 use Illuminate\Database\QueryException;
@@ -15,7 +18,8 @@ uses(TestCase::class);
 it('implements star service contract', function (): void {
     $repository = Mockery::mock(IStarRepository::class);
     $transactionRepository = Mockery::mock(IStarTransactionRepository::class);
-    $service = new StarService($repository, $transactionRepository);
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $service = new StarService($repository, $transactionRepository, $userRepository);
 
     assertServiceContract($service, IStarService::class, $repository);
 });
@@ -44,6 +48,10 @@ it('creates star and logs transaction when none exists', function (): void {
             'amount' => $amount,
         ])
         ->andReturn($createdStar);
+    $repository->shouldReceive('getBalanceByUserId')
+        ->once()
+        ->with($userId)
+        ->andReturn(5);
 
     $transactionRepository = Mockery::mock(IStarTransactionRepository::class);
     $transactionRepository->shouldReceive('create')
@@ -55,7 +63,17 @@ it('creates star and logs transaction when none exists', function (): void {
             'description' => $message,
         ]);
 
-    $service = new StarService($repository, $transactionRepository);
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $mockUser = Mockery::mock(User::class)->makePartial();
+    $mockUser->shouldReceive('notify')
+        ->once()
+        ->with(Mockery::type(StarWalletNotification::class));
+    $userRepository->shouldReceive('getById')
+        ->once()
+        ->with($userId)
+        ->andReturn($mockUser);
+
+    $service = new StarService($repository, $transactionRepository, $userRepository);
 
     expect($service->addStarByUserId($amount, $userId, $message))->toBeTrue();
 });
@@ -82,6 +100,10 @@ it('increments star and logs transaction when record exists', function (): void 
         ->once()
         ->with($userId)
         ->andReturn($record);
+    $repository->shouldReceive('getBalanceByUserId')
+        ->once()
+        ->with($userId)
+        ->andReturn(42);
 
     $transactionRepository = Mockery::mock(IStarTransactionRepository::class);
     $transactionRepository->shouldReceive('create')
@@ -93,7 +115,17 @@ it('increments star and logs transaction when record exists', function (): void 
             'description' => $message,
         ]);
 
-    $service = new StarService($repository, $transactionRepository);
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $mockUser = Mockery::mock(User::class)->makePartial();
+    $mockUser->shouldReceive('notify')
+        ->once()
+        ->with(Mockery::type(StarWalletNotification::class));
+    $userRepository->shouldReceive('getById')
+        ->once()
+        ->with($userId)
+        ->andReturn($mockUser);
+
+    $service = new StarService($repository, $transactionRepository, $userRepository);
 
     expect($service->addStarByUserId($amount, $userId, $message))->toBeTrue();
 });
@@ -131,6 +163,10 @@ it('retries when create hits unique constraint and then increments', function ()
         ->once()
         ->with($userId)
         ->andReturn($record);
+    $repository->shouldReceive('getBalanceByUserId')
+        ->once()
+        ->with($userId)
+        ->andReturn(8);
 
     $transactionRepository = Mockery::mock(IStarTransactionRepository::class);
     $transactionRepository->shouldReceive('create')
@@ -142,7 +178,17 @@ it('retries when create hits unique constraint and then increments', function ()
             'description' => $message,
         ]);
 
-    $service = new StarService($repository, $transactionRepository);
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $mockUser = Mockery::mock(User::class)->makePartial();
+    $mockUser->shouldReceive('notify')
+        ->once()
+        ->with(Mockery::type(StarWalletNotification::class));
+    $userRepository->shouldReceive('getById')
+        ->once()
+        ->with($userId)
+        ->andReturn($mockUser);
+
+    $service = new StarService($repository, $transactionRepository, $userRepository);
 
     expect($service->addStarByUserId($amount, $userId, $message))->toBeTrue();
 });
@@ -176,7 +222,9 @@ it('throws when create fails and record is still missing', function (): void {
 
     $transactionRepository = Mockery::mock(IStarTransactionRepository::class);
 
-    $service = new StarService($repository, $transactionRepository);
+    $userRepository = Mockery::mock(IUserRepository::class);
+
+    $service = new StarService($repository, $transactionRepository, $userRepository);
 
     expect(fn () => $service->addStarByUserId($amount, $userId, null))
         ->toThrow(QueryException::class);
@@ -191,7 +239,9 @@ it('returns balance from repository', function (): void {
 
     $transactionRepository = Mockery::mock(IStarTransactionRepository::class);
 
-    $service = new StarService($repository, $transactionRepository);
+    $userRepository = Mockery::mock(IUserRepository::class);
+
+    $service = new StarService($repository, $transactionRepository, $userRepository);
 
     expect($service->getBalance(7))->toBe(42);
 });
@@ -219,6 +269,10 @@ it('spends star successfully when sufficient balance exists', function (): void 
         ->once()
         ->with($userId)
         ->andReturn($record);
+    $repository->shouldReceive('getBalanceByUserId')
+        ->once()
+        ->with($userId)
+        ->andReturn(5);
 
     $transactionRepository = Mockery::mock(IStarTransactionRepository::class);
     $transactionRepository->shouldReceive('create')
@@ -230,7 +284,17 @@ it('spends star successfully when sufficient balance exists', function (): void 
             'description' => $message,
         ]);
 
-    $service = new StarService($repository, $transactionRepository);
+    $userRepository = Mockery::mock(IUserRepository::class);
+    $mockUser = Mockery::mock(User::class)->makePartial();
+    $mockUser->shouldReceive('notify')
+        ->once()
+        ->with(Mockery::type(StarWalletNotification::class));
+    $userRepository->shouldReceive('getById')
+        ->once()
+        ->with($userId)
+        ->andReturn($mockUser);
+
+    $service = new StarService($repository, $transactionRepository, $userRepository);
 
     expect($service->spendStarByUserId($amount, $userId, $message, StarTransactionType::StarPayment))->toBeTrue();
 });
@@ -257,7 +321,9 @@ it('returns false when insufficient balance to spend', function (): void {
 
     $transactionRepository = Mockery::mock(IStarTransactionRepository::class);
 
-    $service = new StarService($repository, $transactionRepository);
+    $userRepository = Mockery::mock(IUserRepository::class);
+
+    $service = new StarService($repository, $transactionRepository, $userRepository);
 
     expect($service->spendStarByUserId($amount, $userId))->toBeFalse();
 });
@@ -265,8 +331,9 @@ it('returns false when insufficient balance to spend', function (): void {
 it('returns true when spending amount is zero or less', function (): void {
     $repository = Mockery::mock(IStarRepository::class);
     $transactionRepository = Mockery::mock(IStarTransactionRepository::class);
+    $userRepository = Mockery::mock(IUserRepository::class);
 
-    $service = new StarService($repository, $transactionRepository);
+    $service = new StarService($repository, $transactionRepository, $userRepository);
 
     expect($service->spendStarByUserId(0, 1))->toBeTrue();
     expect($service->spendStarByUserId(-5, 1))->toBeTrue();
@@ -287,7 +354,9 @@ it('returns false when no star record exists', function (): void {
 
     $transactionRepository = Mockery::mock(IStarTransactionRepository::class);
 
-    $service = new StarService($repository, $transactionRepository);
+    $userRepository = Mockery::mock(IUserRepository::class);
+
+    $service = new StarService($repository, $transactionRepository, $userRepository);
 
     expect($service->spendStarByUserId(10, 4))->toBeFalse();
 });
