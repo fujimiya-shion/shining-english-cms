@@ -26,7 +26,15 @@ class OrderRepository extends Repository implements IOrderRepository
 
     public function paginateByUserId(int $userId, QueryOption $options): LengthAwarePaginator
     {
-        return $this->paginateBy(['user_id' => $userId], $options);
+        return $this->model
+            ->newQuery()
+            ->with(['items.course'])
+            ->where('user_id', $userId)
+            ->orderBy('placed_at', 'desc')
+            ->paginate(
+                perPage: $options->perPage,
+                page: $options->page,
+            );
     }
 
     public function findByUserId(int $userId, int $orderId): ?Order

@@ -152,6 +152,40 @@ class OrderService extends Service implements IOrderService
         return true;
     }
 
+    public function repayByUserId(int $userId, int $orderId): CheckoutOrderResponse
+    {
+        $order = $this->orderRepository->findByUserId($userId, $orderId);
+
+        if (! $order) {
+            throw new RuntimeException('Order not found');
+        }
+
+        $strategy = $this->resolveStrategy($order->payment_method);
+        $order = $strategy->refresh($order);
+
+        if ($order->status === OrderStatus::Paid) {
+            throw new RuntimeException('Order has already been paid');
+        }
+
+        if ($order->status !== OrderStatus::Pending) {
+            throw new RuntimeException('Only pending orders can be retried');
+        }
+
+        if ($order->payment_method !== PaymentMethod::Payos) {
+            throw new RuntimeException('Only online payment orders can be retried');
+        }
+
+        $paymentResult = $strategy->initialize(
+            $order->load(['items.course']),
+            new CheckoutCustomerData,
+        );
+
+        return new CheckoutOrderResponse(
+            order: $order->fresh(['items.course']) ?? $order,
+            paymentAction: $paymentResult->toCheckoutAction(),
+        );
+    }
+
     public function createWithStarPayment(int $userId, int $courseId): Order
     {
         $course = $this->courseRepository->getById($courseId);

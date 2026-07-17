@@ -32,5 +32,7 @@ interface IOrderService extends IService
 
     public function cancelByUserId(int $userId, int $orderId): bool;
 
+    public function repayByUserId(int $userId, int $orderId): CheckoutOrderResponse;
+
     public function createWithStarPayment(int $userId, int $courseId): Order;
 }
