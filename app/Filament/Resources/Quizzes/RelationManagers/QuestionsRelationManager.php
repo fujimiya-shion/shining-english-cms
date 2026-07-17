@@ -136,8 +136,9 @@ class QuestionsRelationManager extends RelationManager
 
                         $answerIds = [];
                         foreach ($questionData['answers'] ?? [] as $aIndex => $answerData) {
+                            $answerId = ! empty($answerData['id']) ? (int) $answerData['id'] : null;
                             $answer = $record->answers()->updateOrCreate(
-                                ['id' => $answerData['id'] ?? null],
+                                $answerId ? ['id' => $answerId] : ['id' => null],
                                 [
                                     'content' => $answerData['content'] ?? '',
                                     'is_correct' => (bool) ($answerData['is_correct'] ?? false),

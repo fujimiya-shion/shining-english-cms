@@ -6,7 +6,6 @@ use App\Filament\Resources\BaseResource;
 use App\Filament\Resources\Quizzes\Pages\CreateQuiz;
 use App\Filament\Resources\Quizzes\Pages\EditQuiz;
 use App\Filament\Resources\Quizzes\Pages\ListQuizzes;
-use App\Filament\Resources\Quizzes\RelationManagers\QuestionsRelationManager;
 use App\Filament\Resources\Quizzes\Schemas\QuizForm;
 use App\Filament\Resources\Quizzes\Tables\QuizzesTable;
 use App\Models\Quiz;
@@ -40,13 +39,6 @@ class QuizResource extends BaseResource
     public static function table(Table $table): Table
     {
         return QuizzesTable::configure($table);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            QuestionsRelationManager::class,
-        ];
     }
 
     public static function getPages(): array

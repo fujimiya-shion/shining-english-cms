@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Quizzes\Schemas;
 
+use App\Filament\Forms\Components\QuizQuestionsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -32,6 +33,15 @@ class QuizForm
                             ->required()
                             ->helperText('Học viên cần đạt tối thiểu % này để vượt qua quiz.')
                             ->columnSpan(12),
+                    ]),
+                Section::make('Câu hỏi')
+                    ->compact()
+                    ->schema([
+                        QuizQuestionsInput::make('questions')
+                            ->label('Chi tiết câu hỏi')
+                            ->minAnswers(2)
+                            ->reorderable()
+                            ->columnSpanFull(),
                     ]),
             ]);
     }

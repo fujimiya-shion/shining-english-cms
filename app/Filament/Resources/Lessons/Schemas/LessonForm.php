@@ -401,8 +401,9 @@ class LessonForm
 
                                         $existingIds = [];
                                         foreach ($questions as $qIndex => $questionData) {
+                                            $questionId = ! empty($questionData['id']) ? (int) $questionData['id'] : null;
                                             $question = \App\Models\QuizQuestion::query()->updateOrCreate(
-                                                ['id' => (int) ($questionData['id'] ?? 0), 'quiz_id' => $quizId],
+                                                $questionId ? ['id' => $questionId, 'quiz_id' => $quizId] : ['id' => null, 'quiz_id' => $quizId],
                                                 [
                                                     'content' => $questionData['content'] ?? '',
                                                     'sort_order' => $questionData['sort_order'] ?? $qIndex,
@@ -412,8 +413,9 @@ class LessonForm
 
                                             $answerIds = [];
                                             foreach ($questionData['answers'] ?? [] as $aIndex => $answerData) {
+                                                $answerId = ! empty($answerData['id']) ? (int) $answerData['id'] : null;
                                                 $answer = \App\Models\QuizAnswer::query()->updateOrCreate(
-                                                    ['id' => (int) ($answerData['id'] ?? 0), 'quiz_question_id' => (int) $question->id],
+                                                    $answerId ? ['id' => $answerId, 'quiz_question_id' => (int) $question->id] : ['id' => null, 'quiz_question_id' => (int) $question->id],
                                                     [
                                                         'content' => $answerData['content'] ?? '',
                                                         'is_correct' => (bool) ($answerData['is_correct'] ?? false),
