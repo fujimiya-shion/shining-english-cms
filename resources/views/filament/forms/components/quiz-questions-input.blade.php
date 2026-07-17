@@ -123,13 +123,20 @@
                 this.initQuestionSortable();
                 this.initAllAnswerSortables();
                 this.initAnswerSortable(newUid);
-                this.sync();
+                this.$nextTick(() => this.sync());
             });
             if (focusNew && this._root) {
                 setTimeout(() => {
                     let el = this._root.querySelector(`[data-uid='${newUid}']`);
                     if (!el) el = this._root.querySelector('textarea');
                     if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); var p=el.parentElement;while(p){var s=window.getComputedStyle(p);if(s.overflowY==='auto'||s.overflowY==='scroll'){p.scrollTop=el.offsetTop-p.offsetTop-p.clientHeight/2;break;}p=p.parentElement;} el.focus(); }
+                    setTimeout(() => {
+                        let lastQ = this.questions[this.questions.length - 1];
+                        if (lastQ) {
+                            let el2 = this._root.querySelector(`[data-uid='${lastQ._uid}']`);
+                            if (el2) { el2.scrollIntoView({ behavior: 'smooth', block: 'center' }); el2.focus(); }
+                        }
+                    }, 200);
                 }, 100);
             }
         },
@@ -157,10 +164,10 @@
             this._tick++;
             this.$nextTick(() => {
                 this.initAnswerSortable(questionUid);
-                this.sync();
+                this.$nextTick(() => this.sync());
             });
             if (shouldFocus && this._root) {
-                this.$nextTick(() => {
+                setTimeout(() => {
                     let el = this._root.querySelector(`[data-uid='${newUid}']`);
                     if (!el) {
                         let qEl = this._root.querySelector(`[data-uid='${questionUid}']`);
@@ -173,7 +180,17 @@
                         }
                     }
                     if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); var p=el.parentElement;while(p){var s=window.getComputedStyle(p);if(s.overflowY==='auto'||s.overflowY==='scroll'){p.scrollTop=el.offsetTop-p.offsetTop-p.clientHeight/2;break;}p=p.parentElement;} el.focus(); }
-                });
+                    setTimeout(() => {
+                        let foundQ = this.questions.find(item => item._uid === questionUid);
+                        if (foundQ) {
+                            let lastA = foundQ.answers[foundQ.answers.length - 1];
+                            if (lastA) {
+                                let el2 = this._root.querySelector(`[data-uid='${lastA._uid}']`);
+                                if (el2) { el2.scrollIntoView({ behavior: 'smooth', block: 'center' }); el2.focus(); }
+                            }
+                        }
+                    }, 200);
+                }, 100);
             }
         },
 
