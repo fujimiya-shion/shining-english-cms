@@ -92,17 +92,17 @@ test('mutateFormDataBeforeFill loads questions with answers in order', function 
     expect($questions[0]['answers'][0]['content'])->toBe('Correct A');
 });
 
-test('mutateFormDataBeforeFill defaults sort_order to 0', function (): void {
+test('mutateFormDataBeforeFill carries sort_order through', function (): void {
     QuizQuestion::query()->create([
         'quiz_id' => $this->quiz->id,
-        'content' => 'No order',
-        'sort_order' => null,
+        'content' => 'Ordered',
+        'sort_order' => 3,
     ]);
 
     $data = invokeProtectedMethod($this->page, 'mutateFormDataBeforeFill', [['name' => 'Test Quiz']]);
 
     $questions = json_decode($data['questions'], true);
-    expect($questions[0]['sort_order'])->toBe(0);
+    expect($questions[0]['sort_order'])->toBe(3);
 });
 
 test('mutateFormDataBeforeFill casts is_correct to boolean', function (): void {
