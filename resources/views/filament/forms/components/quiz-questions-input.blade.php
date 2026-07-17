@@ -16,147 +16,206 @@
         questions: [],
         uidCounter: 0,
         statePath: '',
+        _tick: 0,
+        _keylock: 0,
+
         init() {
-            this.questions = JSON.parse(this.$el.getAttribute('data-questions') || '[]');
+            this._root = this.$el;
+            let raw = this._root.getAttribute('data-questions');
+            this.questions.splice(0, this.questions.length, ...(raw ? JSON.parse(raw) : []));
             this.uidCounter = 0;
-            this.questions.forEach((q) => {
+            this.questions.forEach(q => {
                 this.uidCounter++;
                 q._uid = q._uid || 'q_' + this.uidCounter;
-                (q.answers || []).forEach((a) => {
+                (q.answers || []).forEach(a => {
                     this.uidCounter++;
                     a._uid = a._uid || 'a_' + this.uidCounter;
                 });
             });
-            this.statePath = this.$el.getAttribute('data-path') || '';
-            this.$nextTick(() => this.initSortable());
+            this.statePath = this._root.getAttribute('data-path') || '';
+            setTimeout(() => this.initSortable(), 500);
         },
+
         initSortable() {
-            const questionsEl = this.$el.querySelector('[data-sortable-questions]');
-            if (questionsEl) {
-                window.Sortable.create(questionsEl, {
-                    handle: '[data-drag-handle]',
-                    animation: 150,
-                    onEnd: (evt) => {
-                        const item = this.questions.splice(evt.oldIndex, 1)[0];
-                        this.questions.splice(evt.newIndex, 0, item);
-                        this.updateSortOrders();
-                        this.sync();
-                    },
-                });
+            this.initQuestionSortable();
+            this.initAllAnswerSortables();
+        },
+
+        revertSortableMove(evt) {
+            let itemEl = evt.item;
+            if (evt.oldIndex !== evt.newIndex) {
+                let parent = itemEl.parentNode;
+                let sibling = parent.children[evt.oldIndex > evt.newIndex ? evt.oldIndex + 1 : evt.oldIndex];
+                parent.insertBefore(itemEl, sibling);
             }
-            this.$el.querySelectorAll('[data-sortable-answers]').forEach((el) => {
-                const questionUid = el.dataset.questionUid;
-                if (!questionUid) return;
-                window.Sortable.create(el, {
-                    handle: '[data-drag-handle-answer]',
-                    animation: 150,
-                    onEnd: (evt) => {
-                        const q = this.questions.find((q) => q._uid === questionUid);
-                        if (!q) return;
-                        const item = q.answers.splice(evt.oldIndex, 1)[0];
-                        q.answers.splice(evt.newIndex, 0, item);
-                        this.updateAnswerSortOrders(q);
-                        this.sync();
-                    },
-                });
+        },
+
+        initQuestionSortable() {
+            let questionsEl = this._root.querySelector('[data-sortable-questions]');
+            if (!questionsEl) return;
+            if (questionsEl.sortable) questionsEl.sortable.destroy();
+            window.Sortable.create(questionsEl, {
+                handle: '[data-drag-handle]',
+                animation: 150,
+                onEnd: (evt) => {
+                    let raw = Alpine.raw(this.questions);
+                    let [moved] = raw.splice(evt.oldIndex, 1);
+                    raw.splice(evt.newIndex, 0, moved);
+                    raw.forEach((q, i) => q.sort_order = i);
+                    this.$nextTick(() => this.sync());
+                },
             });
         },
-        addQuestion(focusNew) {
+
+        initAnswerSortable(questionUid) {
+            let container = this._root.querySelector(`[data-sortable-answers][data-question-uid='${questionUid}']`);
+            if (!container) {
+                let qEl = this._root.querySelector(`[data-uid='${questionUid}']`);
+                if (qEl) container = qEl.closest('.rounded-lg')?.querySelector('[data-sortable-answers]');
+            }
+            if (!container) return;
+            if (container.sortable) container.sortable.destroy();
+            window.Sortable.create(container, {
+                handle: '[data-drag-handle-answer]',
+                animation: 150,
+                onEnd: (evt) => {
+                    let foundQ = this.questions.find(item => item._uid === questionUid);
+                    if (!foundQ) return;
+                    let raw = Alpine.raw(foundQ.answers);
+                    let [moved] = raw.splice(evt.oldIndex, 1);
+                    raw.splice(evt.newIndex, 0, moved);
+                    raw.forEach((a, i) => a.sort_order = i);
+                    this.$nextTick(() => this.sync());
+                },
+            });
+        },
+
+        initAllAnswerSortables() {
+            this._root.querySelectorAll('[data-sortable-answers]').forEach(el => {
+                let questionUid = el.getAttribute('data-question-uid');
+                if (!questionUid) {
+                    let qEl = el.closest('.rounded-lg');
+                    if (qEl) questionUid = qEl.querySelector('textarea')?.getAttribute('data-uid');
+                }
+                if (!questionUid) return;
+                this.initAnswerSortable(questionUid);
+            });
+        },
+
+        addQuestion(focusNew, event) {
+            if (event && event.shiftKey) {
+                this._keylock = 0;
+                let qUid = event.target.getAttribute('data-uid');
+                if (qUid) { this.addAnswer(qUid, true); return; }
+            }
+            if (Date.now() - this._keylock < 300) return;
+            this._keylock = Date.now();
             this.uidCounter++;
-            this.questions.push({
-                _uid: 'q_' + this.uidCounter,
+            let newUid = 'q_' + this.uidCounter;
+            this.questions.splice(this.questions.length, 0, {
+                _uid: newUid,
                 id: null,
                 content: '',
                 sort_order: this.questions.length,
                 answers: [],
             });
-            this.updateSortOrders();
-            this.sync();
-            if (focusNew) {
+            this.$nextTick(() => {
+                this.initQuestionSortable();
+                this.initAllAnswerSortables();
+                this.initAnswerSortable(newUid);
+                this.sync();
+            });
+            if (focusNew && this._root) {
                 setTimeout(() => {
-                    const el = this.$el.querySelector('[data-sortable-questions]');
-                    if (!el) return;
-                    const textareas = el.querySelectorAll('textarea');
-                    const last = textareas[textareas.length - 1];
-                    if (last) last.focus();
-                }, 50);
+                    let el = this._root.querySelector(`[data-uid='${newUid}']`);
+                    if (!el) el = this._root.querySelector('textarea');
+                    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
+                }, 100);
             }
         },
+
         removeQuestion(uid) {
-            this.questions = this.questions.filter((q) => q._uid !== uid);
+            this.questions = this.questions.filter(q => q._uid !== uid);
             this.updateSortOrders();
             this.sync();
         },
+
         addAnswer(questionUid, shouldFocus) {
+            if (Date.now() - this._keylock < 300) return;
+            this._keylock = Date.now();
             this.uidCounter++;
-            const q = this.questions.find((q) => q._uid === questionUid);
+            let newUid = 'a_' + this.uidCounter;
+            let q = this.questions.find(item => item._uid === questionUid);
             if (!q) return;
-            q.answers.push({
-                _uid: 'a_' + this.uidCounter,
+            q.answers.splice(q.answers.length, 0, {
+                _uid: newUid,
                 id: null,
                 content: '',
                 is_correct: false,
                 sort_order: q.answers.length,
             });
-            this.updateAnswerSortOrders(q);
+            this._tick++;
             this.$nextTick(() => {
-                const container = this.$el.querySelector(`[data-sortable-answers][data-question-uid='${questionUid}']`);
-                if (container) {
-                    if (container.sortable) container.sortable.destroy();
-                    window.Sortable.create(container, {
-                        handle: '[data-drag-handle-answer]',
-                        animation: 150,
-                        onEnd: (evt) => {
-                            const qq = this.questions.find((qq) => qq._uid === questionUid);
-                            if (!qq) return;
-                            const item = qq.answers.splice(evt.oldIndex, 1)[0];
-                            qq.answers.splice(evt.newIndex, 0, item);
-                            this.updateAnswerSortOrders(qq);
-                            this.sync();
-                        },
-                    });
-                    if (shouldFocus) {
-                        setTimeout(() => {
-                            const inputs = container.querySelectorAll(`input[type='text']`);
-                            const last = inputs[inputs.length - 1];
-                            if (last) last.focus();
-                        }, 50);
+                this.initAnswerSortable(questionUid);
+                this.sync();
+            });
+            if (shouldFocus && this._root) {
+                this.$nextTick(() => {
+                    let el = this._root.querySelector(`[data-uid='${newUid}']`);
+                    if (!el) {
+                        let qEl = this._root.querySelector(`[data-uid='${questionUid}']`);
+                        if (qEl) {
+                            let container = qEl.closest('.rounded-lg')?.querySelector('[data-sortable-answers]');
+                            if (container) {
+                                let inputs = container.querySelectorAll('input');
+                                el = inputs[inputs.length - 1];
+                            }
+                        }
                     }
-                }
-            });
-            this.sync();
+                    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
+                });
+            }
         },
+
         removeAnswer(questionUid, answerUid) {
-            const q = this.questions.find((q) => q._uid === questionUid);
+            let q = this.questions.find(item => item._uid === questionUid);
             if (!q) return;
-            q.answers = q.answers.filter((a) => a._uid !== answerUid);
-            this.updateAnswerSortOrders(q);
-            this.sync();
+            let filtered = q.answers.filter(a => a._uid !== answerUid);
+            filtered.forEach((a, i) => a.sort_order = i);
+            this.questions = this.questions.map(item =>
+                item._uid === questionUid ? {...item, answers: filtered} : item
+            );
+            this.$nextTick(() => this.sync());
         },
+
         setCorrectAnswer(questionUid, answerUid) {
-            const q = this.questions.find((q) => q._uid === questionUid);
+            let q = this.questions.find(item => item._uid === questionUid);
             if (!q) return;
-            q.answers.forEach((a) => {
-                a.is_correct = a._uid === answerUid;
-            });
-            this.sync();
+            let updated = q.answers.map(a => ({...a, is_correct: a._uid === answerUid}));
+            this.questions = this.questions.map(item =>
+                item._uid === questionUid ? {...item, answers: updated} : item
+            );
+            this.$nextTick(() => this.sync());
         },
+
         updateSortOrders() {
             this.questions.forEach((q, i) => {
                 q.sort_order = i;
             });
         },
+
         updateAnswerSortOrders(q) {
             q.answers.forEach((a, i) => {
                 a.sort_order = i;
             });
         },
+
         sync() {
-            const payload = this.questions.map((q) => ({
+            let payload = this.questions.map(q => ({
                 id: q.id,
                 content: q.content,
                 sort_order: q.sort_order,
-                answers: q.answers.map((a) => ({
+                answers: (q.answers || []).map(a => ({
                     id: a.id,
                     content: a.content,
                     is_correct: a.is_correct,
@@ -188,7 +247,7 @@
         </div>
         <button
             type="button"
-            @click="addQuestion()"
+            @click="addQuestion(true)"
             class="fi-btn fi-btn-sm fi-btn-primary"
         >
             + Add Question
@@ -212,13 +271,14 @@
                             <div class="flex-1">
                                 <textarea
                                     x-model="question.content"
+                                    :data-uid="question._uid"
                                     @blur="sync()"
-                                    @keydown.enter.ctrl.prevent="addQuestion(true)"
+                                    @keydown.enter.ctrl.prevent="addQuestion(true, $event)"
                                     rows="2"
                                     placeholder="Enter question content..."
                                     class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                                 ></textarea>
-                                <p class="text-[10px] text-gray-400 mt-0.5">Ctrl+Enter to add question</p>
+                                <p class="text-[10px] text-gray-400 mt-0.5">Ctrl+Enter: add question | Ctrl+Shift+Enter: add answer to this question</p>
                             </div>
                             <button
                                 type="button"
@@ -257,6 +317,7 @@
                                         <input
                                             type="text"
                                             x-model="answer.content"
+                                            :data-uid="answer._uid"
                                             @blur="sync()"
                                             @keydown.enter.prevent="addAnswer(question._uid, true)"
                                             placeholder="Answer option... (Enter to add)"
