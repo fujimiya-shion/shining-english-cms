@@ -5,15 +5,15 @@ namespace App\Services\Enrollment;
 use App\Enums\OrderStatus;
 use App\Enums\StarTransactionType;
 use App\Jobs\GrantLessonStarRewardJob;
-use App\Models\Course;
 use App\Models\CourseReview;
 use App\Models\Enrollment;
 use App\Models\Lesson;
 use App\Models\LessonProgress;
-use App\Models\User;
 use App\Notifications\EnrollmentNotification;
 use App\Notifications\LessonCompletedNotification;
+use App\Repositories\Course\ICourseRepository;
 use App\Repositories\Enrollment\IEnrollmentRepository;
+use App\Repositories\User\IUserRepository;
 use App\Services\Service;
 use App\Services\Star\IStarService;
 use Illuminate\Database\QueryException;
@@ -24,10 +24,19 @@ class EnrollmentService extends Service implements IEnrollmentService
 {
     protected IEnrollmentRepository $enrollmentRepository;
 
-    public function __construct(IEnrollmentRepository $repository)
-    {
+    protected ICourseRepository $courseRepository;
+
+    protected IUserRepository $userRepository;
+
+    public function __construct(
+        IEnrollmentRepository $repository,
+        ICourseRepository $courseRepository,
+        IUserRepository $userRepository,
+    ) {
         parent::__construct($repository);
         $this->enrollmentRepository = $repository;
+        $this->courseRepository = $courseRepository;
+        $this->userRepository = $userRepository;
     }
 
     public function enroll(int $userId, int $courseId, ?int $orderId = null): Enrollment
@@ -69,9 +78,9 @@ class EnrollmentService extends Service implements IEnrollmentService
         });
 
         DB::afterCommit(function () use ($userId, $courseId): void {
-            $course = Course::query()->find($courseId, ['id', 'name', 'thumbnail']);
+            $course = $this->courseRepository->getById($courseId);
             if ($course) {
-                $user = User::query()->find($userId);
+                $user = $this->userRepository->getById($userId);
                 if ($user) {
                     $user->notify(new EnrollmentNotification(
                         courseId: (int) $course->id,
@@ -187,9 +196,9 @@ class EnrollmentService extends Service implements IEnrollmentService
         }
 
         if ($completedLesson) {
-            $course = Course::query()->find($courseId, ['id', 'name']);
+            $course = $this->courseRepository->getById($courseId);
             if ($course) {
-                $user = User::query()->find($userId);
+                $user = $this->userRepository->getById($userId);
                 if ($user) {
                     $user->notify(new LessonCompletedNotification(
                         courseId: (int) $course->id,

@@ -3,10 +3,10 @@
 namespace App\Services\Star;
 
 use App\Enums\StarTransactionType;
-use App\Models\User;
 use App\Notifications\StarWalletNotification;
 use App\Repositories\Star\IStarRepository;
 use App\Repositories\StarTransaction\IStarTransactionRepository;
+use App\Repositories\User\IUserRepository;
 use App\Services\Service;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -17,13 +17,17 @@ class StarService extends Service implements IStarService
 
     protected IStarTransactionRepository $starTransactionRepository;
 
+    protected IUserRepository $userRepository;
+
     public function __construct(
         IStarRepository $repository,
-        IStarTransactionRepository $starTransactionRepository
+        IStarTransactionRepository $starTransactionRepository,
+        IUserRepository $userRepository,
     ) {
         parent::__construct($repository);
         $this->starRepository = $repository;
         $this->starTransactionRepository = $starTransactionRepository;
+        $this->userRepository = $userRepository;
     }
 
     public function addStarByUserId(int $amount, int $userId, ?string $message = null, ?StarTransactionType $type = null): bool
@@ -62,7 +66,7 @@ class StarService extends Service implements IStarService
 
         if ($result) {
             $balance = $this->getBalance($userId);
-            $user = User::query()->find($userId);
+            $user = $this->userRepository->getById($userId);
             if ($user) {
                 $user->notify(new StarWalletNotification(
                     amount: $amount,
@@ -108,7 +112,7 @@ class StarService extends Service implements IStarService
 
         if ($result) {
             $balance = $this->getBalance($userId);
-            $user = User::query()->find($userId);
+            $user = $this->userRepository->getById($userId);
             if ($user) {
                 $user->notify(new StarWalletNotification(
                     amount: -$amount,

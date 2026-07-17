@@ -6,12 +6,14 @@ use App\DTO\Transaction\Checkout\CheckoutOrderResponse;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Models\Order;
+use App\Models\User;
 use App\Notifications\PaymentSuccessNotification;
 use App\Repositories\Cart\ICartRepository;
 use App\Repositories\Course\ICourseRepository;
 use App\Repositories\Order\IOrderRepository;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\OrderItem\IOrderItemRepository;
+use App\Repositories\User\IUserRepository;
 use App\Services\Enrollment\IEnrollmentService;
 use App\Services\Order\IOrderService;
 use App\Services\Order\OrderService;
@@ -34,7 +36,7 @@ it('implements shared service contract', function (): void {
     $cart = Mockery::mock(ICartRepository::class);
     $courses = Mockery::mock(ICourseRepository::class);
     $enrollments = Mockery::mock(IEnrollmentService::class);
-    $service = new OrderService($repository, $orderItems, $cart, $courses, $enrollments);
+    $service = new OrderService($repository, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
 
     assertServiceContract($service, IOrderService::class, $repository);
 });
@@ -51,7 +53,7 @@ it('throws when creating order from empty cart', function (): void {
         ->with(10)
         ->andReturn(new Collection);
 
-    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
 
     expect(fn () => $service->createFromCart(10, PaymentMethod::Cod, new CheckoutCustomerData))
         ->toThrow(RuntimeException::class, 'Cart is empty');
@@ -69,7 +71,7 @@ it('throws when buying now with missing course', function (): void {
         ->with(99)
         ->andReturnNull();
 
-    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
 
     expect(fn () => $service->createBuyNow(10, 99, 1, PaymentMethod::Cod, new CheckoutCustomerData))
         ->toThrow(RuntimeException::class, 'Course not found');
@@ -87,7 +89,7 @@ it('returns false when cancelling missing order', function (): void {
         ->with(10, 999)
         ->andReturnNull();
 
-    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
 
     expect($service->cancelByUserId(10, 999))->toBeFalse();
 });
@@ -105,7 +107,7 @@ it('delegates order list and detail lookups to the repository', function (): voi
     $orders->shouldReceive('paginateByUserId')->once()->with(10, $options)->andReturn($paginator);
     $orders->shouldReceive('findByUserId')->once()->with(10, 99)->andReturn($order);
 
-    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
 
     expect($service->listByUserId(10, $options))->toBe($paginator);
     expect($service->detailByUserId(10, 99))->toBe($order);
@@ -161,7 +163,7 @@ it('creates an order from cart items and clears the cart after commit enrollment
         $callback();
     });
 
-    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
 
     $result = $service->createFromCart(10, PaymentMethod::Cod, new CheckoutCustomerData);
     expect($result)->toBeInstanceOf(CheckoutOrderResponse::class);
@@ -224,7 +226,7 @@ it('enrolls user after creating buy now order', function (): void {
             $callback();
         });
 
-    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
 
     $result = $service->createBuyNow(10, 55, 1, PaymentMethod::Cod, new CheckoutCustomerData);
 
@@ -245,7 +247,7 @@ it('cancels an existing order', function (): void {
 
     $orders->shouldReceive('findByUserId')->once()->with(10, 123)->andReturn($order);
 
-    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
 
     expect($service->cancelByUserId(10, 123))->toBeTrue();
     expect($order->getAttributes()['status'])->toBe(OrderStatus::Cancelled->value);
@@ -263,7 +265,7 @@ it('throws when creating star payment for missing course', function (): void {
         ->with(999)
         ->andReturnNull();
 
-    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
 
     expect(fn () => $service->createWithStarPayment(10, 999))
         ->toThrow(RuntimeException::class, 'Course not found');
@@ -285,7 +287,7 @@ it('throws when creating star payment for course without star support', function
         ->with(55)
         ->andReturn($course);
 
-    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
 
     expect(fn () => $service->createWithStarPayment(10, 55))
         ->toThrow(RuntimeException::class, 'Course does not support star payment');
@@ -294,13 +296,14 @@ it('throws when creating star payment for course without star support', function
 it('creates order with star payment and enrolls via afterCommit', function (): void {
     Notification::fake();
 
-    $user = App\Models\User::factory()->create();
+    $user = User::factory()->create();
 
     $orders = Mockery::mock(IOrderRepository::class);
     $orderItems = Mockery::mock(IOrderItemRepository::class);
     $cart = Mockery::mock(ICartRepository::class);
     $courses = Mockery::mock(ICourseRepository::class);
     $enrollments = Mockery::mock(IEnrollmentService::class);
+    $userRepository = Mockery::mock(IUserRepository::class);
 
     $course = new \App\Models\Course;
     $course->id = 55;
@@ -350,7 +353,12 @@ it('creates order with star payment and enrolls via afterCommit', function (): v
             $callback();
         });
 
-    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
+    $userRepository->shouldReceive('getById')
+        ->once()
+        ->with($user->id)
+        ->andReturn($user);
+
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, $userRepository);
 
     $result = $service->createWithStarPayment($user->id, 55);
 
