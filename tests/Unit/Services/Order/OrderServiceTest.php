@@ -6,6 +6,7 @@ use App\DTO\Transaction\Checkout\CheckoutOrderResponse;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Models\Order;
+use App\Notifications\PaymentSuccessNotification;
 use App\Repositories\Cart\ICartRepository;
 use App\Repositories\Course\ICourseRepository;
 use App\Repositories\Order\IOrderRepository;
@@ -18,6 +19,7 @@ use App\ValueObjects\CheckoutCustomerData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Mockery;
 use RuntimeException;
 use Tests\TestCase;
@@ -290,6 +292,10 @@ it('throws when creating star payment for course without star support', function
 });
 
 it('creates order with star payment and enrolls via afterCommit', function (): void {
+    Notification::fake();
+
+    $user = App\Models\User::factory()->create();
+
     $orders = Mockery::mock(IOrderRepository::class);
     $orderItems = Mockery::mock(IOrderItemRepository::class);
     $cart = Mockery::mock(ICartRepository::class);
@@ -306,7 +312,7 @@ it('creates order with star payment and enrolls via afterCommit', function (): v
         ->andReturn($course);
 
     $order = new Order([
-        'user_id' => 10,
+        'user_id' => $user->id,
         'total_amount' => 0,
         'status' => OrderStatus::Paid,
         'payment_method' => PaymentMethod::Star,
@@ -329,7 +335,7 @@ it('creates order with star payment and enrolls via afterCommit', function (): v
 
     $enrollments->shouldReceive('enroll')
         ->once()
-        ->with(10, 55, 99)
+        ->with($user->id, 55, 99)
         ->andReturn(Mockery::mock(\App\Models\Enrollment::class));
 
     DB::shouldReceive('transaction')
@@ -346,7 +352,8 @@ it('creates order with star payment and enrolls via afterCommit', function (): v
 
     $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments);
 
-    $result = $service->createWithStarPayment(10, 55);
+    $result = $service->createWithStarPayment($user->id, 55);
 
     expect($result)->toBe($order);
+    Notification::assertSentTo($user, PaymentSuccessNotification::class);
 });

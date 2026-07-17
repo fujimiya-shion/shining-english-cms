@@ -8,26 +8,26 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class NotificationService implements INotificationService
 {
     public function __construct(
-        protected INotificationRepository $notificationRepository,
+        protected INotificationRepository $repository,
     ) {}
 
     public function listByUserId(int $userId, int $perPage = 15, int $page = 1): LengthAwarePaginator
     {
-        return $this->notificationRepository->listByUserId($userId, $perPage, $page);
+        return $this->repository->listByUserId($userId, $perPage, $page);
     }
 
     public function unreadCount(int $userId): int
     {
-        return $this->notificationRepository->unreadCount($userId);
+        return $this->repository->unreadCount($userId);
     }
 
     public function markAsRead(string $notificationId, int $userId): bool
     {
-        return $this->notificationRepository->markAsRead($notificationId, $userId);
+        return $this->repository->markAsRead($notificationId, $userId);
     }
 
     public function markAllAsRead(int $userId): int
     {
-        return $this->notificationRepository->markAllAsRead($userId);
+        return $this->repository->markAllAsRead($userId);
     }
 }

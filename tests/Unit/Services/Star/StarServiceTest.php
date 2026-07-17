@@ -44,6 +44,10 @@ it('creates star and logs transaction when none exists', function (): void {
             'amount' => $amount,
         ])
         ->andReturn($createdStar);
+    $repository->shouldReceive('getBalanceByUserId')
+        ->once()
+        ->with($userId)
+        ->andReturn(5);
 
     $transactionRepository = Mockery::mock(IStarTransactionRepository::class);
     $transactionRepository->shouldReceive('create')
@@ -82,6 +86,10 @@ it('increments star and logs transaction when record exists', function (): void 
         ->once()
         ->with($userId)
         ->andReturn($record);
+    $repository->shouldReceive('getBalanceByUserId')
+        ->once()
+        ->with($userId)
+        ->andReturn(42);
 
     $transactionRepository = Mockery::mock(IStarTransactionRepository::class);
     $transactionRepository->shouldReceive('create')
@@ -131,6 +139,10 @@ it('retries when create hits unique constraint and then increments', function ()
         ->once()
         ->with($userId)
         ->andReturn($record);
+    $repository->shouldReceive('getBalanceByUserId')
+        ->once()
+        ->with($userId)
+        ->andReturn(8);
 
     $transactionRepository = Mockery::mock(IStarTransactionRepository::class);
     $transactionRepository->shouldReceive('create')
@@ -219,6 +231,10 @@ it('spends star successfully when sufficient balance exists', function (): void 
         ->once()
         ->with($userId)
         ->andReturn($record);
+    $repository->shouldReceive('getBalanceByUserId')
+        ->once()
+        ->with($userId)
+        ->andReturn(5);
 
     $transactionRepository = Mockery::mock(IStarTransactionRepository::class);
     $transactionRepository->shouldReceive('create')

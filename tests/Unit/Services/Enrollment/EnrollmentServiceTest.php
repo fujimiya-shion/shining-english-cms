@@ -11,6 +11,7 @@ use App\Models\Lesson;
 use App\Models\LessonProgress;
 use App\Models\Order;
 use App\Models\User;
+use App\Notifications\LessonCompletedNotification;
 use App\Repositories\Enrollment\EnrollmentRepository;
 use App\Repositories\Enrollment\IEnrollmentRepository;
 use App\Services\Enrollment\EnrollmentService;
@@ -19,6 +20,7 @@ use App\Services\Star\IStarService;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Notification;
 use Mockery;
 use RuntimeException;
 use Tests\TestCase;
@@ -331,6 +333,7 @@ it('returns persisted learning progress payload for enrollment', function (): vo
 
 it('completes a lesson, moves to next lesson and returns next quiz hint', function (): void {
     Bus::fake();
+    Notification::fake();
 
     $user = User::factory()->create();
     $course = Course::factory()->create();
@@ -384,6 +387,8 @@ it('completes a lesson, moves to next lesson and returns next quiz hint', functi
             && $job->lessonId === $lessonA->id
             && $job->source === GrantLessonStarRewardJob::SOURCE_VIDEO;
     });
+
+    Notification::assertSentTo($user, LessonCompletedNotification::class);
 });
 
 it('returns null progress payload when enrollment is missing', function (): void {
@@ -502,6 +507,7 @@ it('sets current lesson and clears previous current flags', function (): void {
 
 it('awards course completion stars when completing the last lesson', function (): void {
     config(['const.star.course_complete' => 10]);
+    Notification::fake();
 
     $starService = Mockery::mock(IStarService::class);
     $starService->shouldReceive('addStarByUserId')
@@ -548,10 +554,13 @@ it('awards course completion stars when completing the last lesson', function ()
         ->first();
     expect($reward)->not->toBeNull();
     expect((int) $reward->amount)->toBe(10);
+
+    Notification::assertSentTo($user, LessonCompletedNotification::class);
 });
 
 it('does not award course completion stars again on duplicate completion', function (): void {
     config(['const.star.course_complete' => 10]);
+    Notification::fake();
 
     $starService = Mockery::mock(IStarService::class);
     $starService->shouldReceive('addStarByUserId')
@@ -599,10 +608,13 @@ it('does not award course completion stars again on duplicate completion', funct
         ->get();
     expect($rewards)->toHaveCount(1);
     expect((int) $rewards[0]->amount)->toBe(10);
+
+    Notification::assertSentToTimes($user, LessonCompletedNotification::class, 2);
 });
 
 it('skips course completion reward when config amount is zero', function (): void {
     config(['const.star.course_complete' => 0]);
+    Notification::fake();
 
     $starService = Mockery::mock(IStarService::class);
     $starService->shouldReceive('addStarByUserId')->never();
@@ -638,6 +650,8 @@ it('skips course completion reward when config amount is zero', function (): voi
 
     expect($result)->not->toBeNull();
     expect($result['completed_lesson_ids'])->toBe([$lesson->id]);
+
+    Notification::assertSentTo($user, LessonCompletedNotification::class);
 });
 
 it('ignores progress rows for soft deleted lessons when building progress payload', function (): void {
