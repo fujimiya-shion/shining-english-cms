@@ -87,4 +87,17 @@ class OrderController extends ApiController
 
         return $this->success('Order cancelled');
     }
+
+    public function repay(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+
+        try {
+            $checkout = $this->service->repayByUserId($user->id, $id);
+
+            return $this->created($checkout->toArray(), 'Payment link regenerated');
+        } catch (RuntimeException $e) {
+            return $this->error($e->getMessage(), 422);
+        }
+    }
 }

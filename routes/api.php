@@ -177,6 +177,7 @@ Route::prefix('/v1')->group(function () {
                 Route::post('/', 'store');
                 Route::get('/{id}', 'show');
                 Route::post('/{id}/cancel', 'cancel');
+                Route::post('/{id}/repay', 'repay');
             });
 
         Route::middleware(VerifyUserToken::class)

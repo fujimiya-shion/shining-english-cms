@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
 
@@ -185,5 +186,131 @@ it('returns not found when cancelling missing order', function (): void {
         'message' => 'Order not found',
         'status' => false,
         'status_code' => 404,
+    ]);
+});
+
+it('regenerates payment link for pending PayOS order', function (): void {
+    $user = User::factory()->create();
+    $token = $user->createToken('order')->plainTextToken;
+    $course = Course::factory()->create(['price' => 200]);
+
+    $order = Order::query()->create([
+        'user_id' => $user->id,
+        'total_amount' => 200,
+        'status' => OrderStatus::Pending,
+        'payment_method' => PaymentMethod::Payos,
+        'payment_reference' => 'plink_repay_test',
+        'placed_at' => now(),
+    ]);
+    OrderItem::query()->create([
+        'order_id' => $order->id,
+        'course_id' => $course->id,
+        'quantity' => 1,
+        'price' => 200,
+    ]);
+
+    config([
+        'payos.client_id' => 'client',
+        'payos.api_key' => 'key',
+        'payos.checksum_key' => 'checksum',
+        'payos.base_url' => 'https://payos.test',
+        'app.frontend_app_url' => 'https://frontend.test',
+    ]);
+
+    Http::fake([
+        'https://payos.test/v2/payment-requests/plink_repay_test' => Http::response([
+            'code' => '00',
+            'data' => ['status' => 'PENDING'],
+        ]),
+        'https://payos.test/v2/payment-requests' => Http::response([
+            'code' => '00',
+            'data' => [
+                'checkoutUrl' => 'https://checkout.test/new-link',
+                'paymentLinkId' => 'plink_new',
+                'status' => 'PENDING',
+            ],
+        ]),
+    ]);
+
+    $response = $this->postJson("/api/v1/orders/{$order->id}/repay", [], [
+        'User-Authorization' => $token,
+    ]);
+
+    $response->assertStatus(201);
+    $response->assertJsonPath('data.payment_action.type', 'redirect');
+    $response->assertJsonPath('data.payment_action.url', 'https://checkout.test/new-link');
+});
+
+it('returns error when repaying non-existent order', function (): void {
+    $user = User::factory()->create();
+    $token = $user->createToken('order')->plainTextToken;
+
+    $response = $this->postJson('/api/v1/orders/999999/repay', [], [
+        'User-Authorization' => $token,
+    ]);
+
+    $response->assertStatus(422);
+    $response->assertJsonFragment([
+        'message' => 'Order not found',
+    ]);
+});
+
+it('returns error when repaying already paid order', function (): void {
+    $user = User::factory()->create();
+    $token = $user->createToken('order')->plainTextToken;
+
+    $order = Order::query()->create([
+        'user_id' => $user->id,
+        'total_amount' => 100,
+        'status' => OrderStatus::Paid,
+        'payment_method' => PaymentMethod::Payos,
+        'payment_reference' => 'plink_paid',
+        'placed_at' => now(),
+        'paid_at' => now(),
+    ]);
+
+    config([
+        'payos.client_id' => 'client',
+        'payos.api_key' => 'key',
+        'payos.checksum_key' => 'checksum',
+        'payos.base_url' => 'https://payos.test',
+    ]);
+
+    Http::fake([
+        'https://payos.test/v2/payment-requests/plink_paid' => Http::response([
+            'code' => '00',
+            'data' => ['status' => 'PAID'],
+        ]),
+    ]);
+
+    $response = $this->postJson("/api/v1/orders/{$order->id}/repay", [], [
+        'User-Authorization' => $token,
+    ]);
+
+    $response->assertStatus(422);
+    $response->assertJsonFragment([
+        'message' => 'Order has already been paid',
+    ]);
+});
+
+it('returns error when repaying non-PayOS order', function (): void {
+    $user = User::factory()->create();
+    $token = $user->createToken('order')->plainTextToken;
+
+    $order = Order::query()->create([
+        'user_id' => $user->id,
+        'total_amount' => 100,
+        'status' => OrderStatus::Pending,
+        'payment_method' => PaymentMethod::Cod,
+        'placed_at' => now(),
+    ]);
+
+    $response = $this->postJson("/api/v1/orders/{$order->id}/repay", [], [
+        'User-Authorization' => $token,
+    ]);
+
+    $response->assertStatus(422);
+    $response->assertJsonFragment([
+        'message' => 'Only online payment orders can be retried',
     ]);
 });

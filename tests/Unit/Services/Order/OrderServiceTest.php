@@ -253,6 +253,175 @@ it('cancels an existing order', function (): void {
     expect($order->getAttributes()['status'])->toBe(OrderStatus::Cancelled->value);
 });
 
+it('throws when repaying a non-existent order', function (): void {
+    $orders = Mockery::mock(IOrderRepository::class);
+    $orderItems = Mockery::mock(IOrderItemRepository::class);
+    $cart = Mockery::mock(ICartRepository::class);
+    $courses = Mockery::mock(ICourseRepository::class);
+    $enrollments = Mockery::mock(IEnrollmentService::class);
+
+    $orders->shouldReceive('findByUserId')
+        ->once()
+        ->with(10, 999)
+        ->andReturnNull();
+
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
+
+    expect(fn () => $service->repayByUserId(10, 999))
+        ->toThrow(RuntimeException::class, 'Order not found');
+});
+
+it('throws when repaying an already-paid order', function (): void {
+    $orders = Mockery::mock(IOrderRepository::class);
+    $orderItems = Mockery::mock(IOrderItemRepository::class);
+    $cart = Mockery::mock(ICartRepository::class);
+    $courses = Mockery::mock(ICourseRepository::class);
+    $enrollments = Mockery::mock(IEnrollmentService::class);
+
+    $order = new Order([
+        'status' => OrderStatus::Pending,
+        'payment_method' => PaymentMethod::Payos,
+    ]);
+    $order->id = 1;
+
+    $orders->shouldReceive('findByUserId')
+        ->once()
+        ->with(10, 1)
+        ->andReturn($order);
+
+    $strategy = Mockery::mock(\App\Integrations\Payments\Contracts\PaymentStrategy::class);
+    $strategy->shouldReceive('refresh')
+        ->once()
+        ->with($order)
+        ->andReturnUsing(function (Order $o): Order {
+            $o->status = OrderStatus::Paid;
+
+            return $o;
+        });
+    app()->instance(\App\Integrations\Payments\Strategies\PayosPaymentStrategy::class, $strategy);
+
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
+
+    expect(fn () => $service->repayByUserId(10, 1))
+        ->toThrow(RuntimeException::class, 'Order has already been paid');
+});
+
+it('throws when repaying a cancelled order', function (): void {
+    $orders = Mockery::mock(IOrderRepository::class);
+    $orderItems = Mockery::mock(IOrderItemRepository::class);
+    $cart = Mockery::mock(ICartRepository::class);
+    $courses = Mockery::mock(ICourseRepository::class);
+    $enrollments = Mockery::mock(IEnrollmentService::class);
+
+    $order = new Order([
+        'status' => OrderStatus::Pending,
+        'payment_method' => PaymentMethod::Payos,
+    ]);
+    $order->id = 1;
+
+    $orders->shouldReceive('findByUserId')
+        ->once()
+        ->with(10, 1)
+        ->andReturn($order);
+
+    $strategy = Mockery::mock(\App\Integrations\Payments\Contracts\PaymentStrategy::class);
+    $strategy->shouldReceive('refresh')
+        ->once()
+        ->with($order)
+        ->andReturnUsing(function (Order $o): Order {
+            $o->status = OrderStatus::Cancelled;
+
+            return $o;
+        });
+    app()->instance(\App\Integrations\Payments\Strategies\PayosPaymentStrategy::class, $strategy);
+
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
+
+    expect(fn () => $service->repayByUserId(10, 1))
+        ->toThrow(RuntimeException::class, 'Only pending orders can be retried');
+});
+
+it('throws when repaying a non-PayOS order', function (): void {
+    $orders = Mockery::mock(IOrderRepository::class);
+    $orderItems = Mockery::mock(IOrderItemRepository::class);
+    $cart = Mockery::mock(ICartRepository::class);
+    $courses = Mockery::mock(ICourseRepository::class);
+    $enrollments = Mockery::mock(IEnrollmentService::class);
+
+    $order = new Order([
+        'status' => OrderStatus::Pending,
+        'payment_method' => PaymentMethod::Cod,
+    ]);
+    $order->id = 1;
+
+    $orders->shouldReceive('findByUserId')
+        ->once()
+        ->with(10, 1)
+        ->andReturn($order);
+
+    // COD strategy refresh is a no-op, so order status stays Pending
+    // PaymentStrategyFactory resolves to CodPaymentStrategy which is safe to instantiate
+
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
+
+    expect(fn () => $service->repayByUserId(10, 1))
+        ->toThrow(RuntimeException::class, 'Only online payment orders can be retried');
+});
+
+it('repays a pending PayOS order successfully', function (): void {
+    $orders = Mockery::mock(IOrderRepository::class);
+    $orderItems = Mockery::mock(IOrderItemRepository::class);
+    $cart = Mockery::mock(ICartRepository::class);
+    $courses = Mockery::mock(ICourseRepository::class);
+    $enrollments = Mockery::mock(IEnrollmentService::class);
+
+    $course = new \App\Models\Course(['name' => 'Test Course']);
+    $course->id = 55;
+    $item = new \App\Models\OrderItem([
+        'course_id' => 55,
+        'quantity' => 1,
+        'price' => 200,
+    ]);
+    $item->setRelation('course', $course);
+
+    $order = new Order([
+        'status' => OrderStatus::Pending,
+        'payment_method' => PaymentMethod::Payos,
+        'total_amount' => 200,
+    ]);
+    $order->id = 1;
+    $order->setRelation('items', collect([$item]));
+
+    $orders->shouldReceive('findByUserId')
+        ->once()
+        ->with(10, 1)
+        ->andReturn($order);
+
+    $strategy = Mockery::mock(\App\Integrations\Payments\Contracts\PaymentStrategy::class);
+    $strategy->shouldReceive('refresh')
+        ->once()
+        ->with($order)
+        ->andReturn($order);
+    $strategy->shouldReceive('initialize')
+        ->once()
+        ->andReturn(
+            \App\Integrations\Payments\DTO\PaymentInitializationResult::redirect(
+                'https://checkout.test/new-link',
+                ['provider' => 'payos'],
+            ),
+        );
+    app()->instance(\App\Integrations\Payments\Strategies\PayosPaymentStrategy::class, $strategy);
+
+    $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
+
+    $result = $service->repayByUserId(10, 1);
+
+    expect($result)->toBeInstanceOf(CheckoutOrderResponse::class);
+    expect($result->paymentAction)->not->toBeNull();
+    expect($result->paymentAction->type)->toBe('redirect');
+    expect($result->paymentAction->url)->toBe('https://checkout.test/new-link');
+});
+
 it('throws when creating star payment for missing course', function (): void {
     $orders = Mockery::mock(IOrderRepository::class);
     $orderItems = Mockery::mock(IOrderItemRepository::class);
