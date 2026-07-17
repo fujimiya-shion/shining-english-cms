@@ -11,10 +11,12 @@ test('quiz form defines expected components', function (): void {
     expect(array_keys($components))->toEqual([
         'name',
         'pass_percent',
+        'questions',
     ]);
 
     expect($components['name'])->toBeInstanceOf(TextInput::class);
     expect($components['pass_percent'])->toBeInstanceOf(TextInput::class);
+    expect($components['questions'])->toBeInstanceOf(\App\Filament\Forms\Components\QuizQuestionsInput::class);
 });
 
 test('quiz form marks required fields', function (): void {

@@ -129,7 +129,7 @@
                 setTimeout(() => {
                     let el = this._root.querySelector(`[data-uid='${newUid}']`);
                     if (!el) el = this._root.querySelector('textarea');
-                    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
+                    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); var p=el.parentElement;while(p){var s=window.getComputedStyle(p);if(s.overflowY==='auto'||s.overflowY==='scroll'){p.scrollTop=el.offsetTop-p.offsetTop-p.clientHeight/2;break;}p=p.parentElement;} el.focus(); }
                 }, 100);
             }
         },
@@ -172,7 +172,7 @@
                             }
                         }
                     }
-                    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
+                    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); var p=el.parentElement;while(p){var s=window.getComputedStyle(p);if(s.overflowY==='auto'||s.overflowY==='scroll'){p.scrollTop=el.offsetTop-p.offsetTop-p.clientHeight/2;break;}p=p.parentElement;} el.focus(); }
                 });
             }
         },
