@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\Dashboard\DashboardController;
 use App\Http\Controllers\Api\V1\Developer\DeveloperController;
 use App\Http\Controllers\Api\V1\Lesson\LessonController;
 use App\Http\Controllers\Api\V1\Lesson\LessonNoteController;
+use App\Http\Controllers\Api\V1\Notification\NotificationController;
 use App\Http\Controllers\Api\V1\QuizAttempt\QuizAttemptController;
 use App\Http\Controllers\Api\V1\StarController;
 use App\Http\Controllers\Api\V1\Transaction\OrderController;
@@ -185,6 +186,16 @@ Route::prefix('/v1')->group(function () {
                 Route::get('/balance', 'balance');
                 Route::post('/check-in', 'checkIn');
                 Route::post('/courses/{courseId}/pay', 'payForCourse');
+            });
+
+        Route::middleware(VerifyUserToken::class)
+            ->controller(NotificationController::class)
+            ->prefix('/notifications')
+            ->group(function () {
+                Route::get('/', 'index');
+                Route::get('/unread-count', 'unreadCount');
+                Route::patch('/{id}/read', 'markAsRead')->whereUuid('id');
+                Route::patch('/read-all', 'markAllAsRead');
             });
     });
 });

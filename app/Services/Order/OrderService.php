@@ -7,6 +7,8 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Integrations\Payments\Factories\PaymentStrategyFactory;
 use App\Models\Order;
+use App\Models\User;
+use App\Notifications\PaymentSuccessNotification;
 use App\Repositories\Cart\ICartRepository;
 use App\Repositories\Course\ICourseRepository;
 use App\Repositories\Order\IOrderRepository;
@@ -170,6 +172,16 @@ class OrderService extends Service implements IOrderService
 
             DB::afterCommit(function () use ($userId, $course, $order): void {
                 $this->enrollmentService->enroll($userId, $course->id, $order->id);
+
+                $user = User::query()->find($userId);
+                if ($user) {
+                    $user->notify(new PaymentSuccessNotification(
+                        orderId: (int) $order->id,
+                        orderCode: (string) $order->id,
+                        totalAmount: 0,
+                        courseNames: (string) $course->name,
+                    ));
+                }
             });
 
             return $order;

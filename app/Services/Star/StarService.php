@@ -3,6 +3,8 @@
 namespace App\Services\Star;
 
 use App\Enums\StarTransactionType;
+use App\Models\User;
+use App\Notifications\StarWalletNotification;
 use App\Repositories\Star\IStarRepository;
 use App\Repositories\StarTransaction\IStarTransactionRepository;
 use App\Services\Service;
@@ -26,7 +28,7 @@ class StarService extends Service implements IStarService
 
     public function addStarByUserId(int $amount, int $userId, ?string $message = null, ?StarTransactionType $type = null): bool
     {
-        return DB::transaction(function () use ($amount, $userId, $message, $type): bool {
+        $result = DB::transaction(function () use ($amount, $userId, $message, $type): bool {
             $record = $this->starRepository->findForUpdateByUserId($userId);
 
             if ($record === null) {
@@ -57,6 +59,21 @@ class StarService extends Service implements IStarService
 
             return true;
         });
+
+        if ($result) {
+            $balance = $this->getBalance($userId);
+            $user = User::query()->find($userId);
+            if ($user) {
+                $user->notify(new StarWalletNotification(
+                    amount: $amount,
+                    balanceAfter: $balance,
+                    transactionType: $type?->value ?? StarTransactionType::Increase->value,
+                    description: $message ?? ($amount >= 0 ? 'Nhận sao' : 'Sao đã được sử dụng'),
+                ));
+            }
+        }
+
+        return $result;
     }
 
     public function getBalance(int $userId): int
@@ -70,7 +87,7 @@ class StarService extends Service implements IStarService
             return true;
         }
 
-        return DB::transaction(function () use ($amount, $userId, $message, $type): bool {
+        $result = DB::transaction(function () use ($amount, $userId, $message, $type): bool {
             $record = $this->starRepository->findForUpdateByUserId($userId);
 
             if ($record === null || (int) $record->amount < $amount) {
@@ -88,5 +105,20 @@ class StarService extends Service implements IStarService
 
             return true;
         });
+
+        if ($result) {
+            $balance = $this->getBalance($userId);
+            $user = User::query()->find($userId);
+            if ($user) {
+                $user->notify(new StarWalletNotification(
+                    amount: -$amount,
+                    balanceAfter: $balance,
+                    transactionType: $type?->value ?? StarTransactionType::Decrease->value,
+                    description: $message ?? 'Sao đã được sử dụng',
+                ));
+            }
+        }
+
+        return $result;
     }
 }

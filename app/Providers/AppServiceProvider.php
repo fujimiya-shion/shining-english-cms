@@ -29,6 +29,8 @@ use App\Repositories\LessonComment\ILessonCommentRepository;
 use App\Repositories\LessonComment\LessonCommentRepository;
 use App\Repositories\LessonNote\ILessonNoteRepository;
 use App\Repositories\LessonNote\LessonNoteRepository;
+use App\Repositories\Notification\INotificationRepository;
+use App\Repositories\Notification\NotificationRepository;
 use App\Repositories\Order\IOrderRepository;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\OrderItem\IOrderItemRepository;
@@ -73,6 +75,8 @@ use App\Services\LessonComment\ILessonCommentService;
 use App\Services\LessonComment\LessonCommentService;
 use App\Services\LessonNote\ILessonNoteService;
 use App\Services\LessonNote\LessonNoteService;
+use App\Services\Notification\INotificationService;
+use App\Services\Notification\NotificationService;
 use App\Services\Order\IOrderService;
 use App\Services\Order\OrderService;
 use App\Services\OrderItem\IOrderItemService;
@@ -127,6 +131,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IDeveloperRepository::class, DeveloperRepository::class);
         $this->app->bind(IDashboardRepository::class, DashboardRepository::class);
         $this->app->bind(IUserHomeRepository::class, UserHomeRepository::class);
+        $this->app->bind(INotificationRepository::class, NotificationRepository::class);
 
         $this->app->bind(ICartService::class, CartService::class);
         $this->app->bind(ICategoryService::class, CategoryService::class);
@@ -151,6 +156,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IDeveloperService::class, DeveloperService::class);
         $this->app->bind(IDashboardService::class, DashboardService::class);
         $this->app->bind(IUserHomeService::class, UserHomeService::class);
+        $this->app->bind(INotificationService::class, NotificationService::class);
 
         $this->app->instance(GoogleAuthStrategy::class, new GoogleAuthStrategy);
     }

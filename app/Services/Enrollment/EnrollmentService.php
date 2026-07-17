@@ -5,10 +5,14 @@ namespace App\Services\Enrollment;
 use App\Enums\OrderStatus;
 use App\Enums\StarTransactionType;
 use App\Jobs\GrantLessonStarRewardJob;
+use App\Models\Course;
 use App\Models\CourseReview;
 use App\Models\Enrollment;
 use App\Models\Lesson;
 use App\Models\LessonProgress;
+use App\Models\User;
+use App\Notifications\EnrollmentNotification;
+use App\Notifications\LessonCompletedNotification;
 use App\Repositories\Enrollment\IEnrollmentRepository;
 use App\Services\Service;
 use App\Services\Star\IStarService;
@@ -45,7 +49,7 @@ class EnrollmentService extends Service implements IEnrollmentService
             return $existing;
         }
 
-        return DB::transaction(function () use ($userId, $courseId, $orderId): Enrollment {
+        $enrollment = DB::transaction(function () use ($userId, $courseId, $orderId): Enrollment {
             try {
                 return $this->enrollmentRepository->create([
                     'user_id' => $userId,
@@ -63,6 +67,22 @@ class EnrollmentService extends Service implements IEnrollmentService
                 throw $exception;
             }
         });
+
+        DB::afterCommit(function () use ($userId, $courseId): void {
+            $course = Course::query()->find($courseId, ['id', 'name', 'thumbnail']);
+            if ($course) {
+                $user = User::query()->find($userId);
+                if ($user) {
+                    $user->notify(new EnrollmentNotification(
+                        courseId: (int) $course->id,
+                        courseName: (string) $course->name,
+                        courseThumbnail: $course->thumbnail,
+                    ));
+                }
+            }
+        });
+
+        return $enrollment;
     }
 
     public function isEnrolled(int $userId, int $courseId): bool
@@ -166,13 +186,28 @@ class EnrollmentService extends Service implements IEnrollmentService
             );
         }
 
-        if ($completedLesson && (int) $completedLesson->star_reward_video > 0) {
-            dispatch(new GrantLessonStarRewardJob(
-                userId: $userId,
-                courseId: $courseId,
-                lessonId: $lessonId,
-                source: GrantLessonStarRewardJob::SOURCE_VIDEO,
-            ));
+        if ($completedLesson) {
+            $course = Course::query()->find($courseId, ['id', 'name']);
+            if ($course) {
+                $user = User::query()->find($userId);
+                if ($user) {
+                    $user->notify(new LessonCompletedNotification(
+                        courseId: (int) $course->id,
+                        courseName: (string) $course->name,
+                        lessonId: (int) $completedLesson->id,
+                        lessonName: (string) $completedLesson->name,
+                    ));
+                }
+            }
+
+            if ((int) $completedLesson->star_reward_video > 0) {
+                dispatch(new GrantLessonStarRewardJob(
+                    userId: $userId,
+                    courseId: $courseId,
+                    lessonId: $lessonId,
+                    source: GrantLessonStarRewardJob::SOURCE_VIDEO,
+                ));
+            }
         }
 
         $isLastLesson = count($orderedLessonIds) > 0

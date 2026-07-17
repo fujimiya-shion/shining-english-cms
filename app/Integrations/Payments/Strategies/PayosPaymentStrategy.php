@@ -10,6 +10,7 @@ use App\Integrations\Payments\Contracts\PaymentStrategy;
 use App\Integrations\Payments\DTO\PaymentInitializationResult;
 use App\Integrations\Payments\Support\PayosSignature;
 use App\Models\Order;
+use App\Notifications\PaymentSuccessNotification;
 use App\Repositories\Order\IOrderRepository;
 use App\ValueObjects\CheckoutCustomerData;
 use Illuminate\Http\Client\Response;
@@ -131,13 +132,34 @@ class PayosPaymentStrategy implements PaymentStrategy
         $metadata['provider_status'] = $providerStatus;
         $metadata['raw_get_link_response'] = $data;
 
+        $previousStatus = $order->status;
+
         $order->forceFill([
             'status' => $nextStatus,
             'paid_at' => $nextStatus === OrderStatus::Paid ? ($order->paid_at ?? now()) : $order->paid_at,
             'payment_metadata' => $metadata,
         ])->save();
 
-        return $order->fresh(['items.course']) ?? $order;
+        $fresh = $order->fresh(['items.course', 'user']) ?? $order;
+
+        if ($previousStatus !== OrderStatus::Paid && $nextStatus === OrderStatus::Paid) {
+            $user = $fresh->relationLoaded('user') ? $fresh->user : $fresh->user()->first();
+            if ($user) {
+                $courseNames = $fresh->items
+                    ->pluck('course.name')
+                    ->filter()
+                    ->implode(', ');
+
+                $user->notify(new PaymentSuccessNotification(
+                    orderId: (int) $fresh->id,
+                    orderCode: (string) ($fresh->payment_reference ?? $fresh->id),
+                    totalAmount: (int) $fresh->total_amount,
+                    courseNames: $courseNames,
+                ));
+            }
+        }
+
+        return $fresh;
     }
 
     public function cancel(Order $order, string $reason): Order
@@ -193,10 +215,12 @@ class PayosPaymentStrategy implements PaymentStrategy
             return null;
         }
 
-        $order = $this->orderRepository->getById($orderCode, ['items.course']);
+        $order = $this->orderRepository->getById($orderCode, ['items.course', 'user']);
         if (! $order instanceof Order) {
             return null;
         }
+
+        $previousStatus = $order->status;
 
         $providerStatus = $this->resolveWebhookStatus($data);
         $nextStatus = $this->mapProviderStatus($providerStatus);
@@ -212,7 +236,23 @@ class PayosPaymentStrategy implements PaymentStrategy
             'payment_metadata' => $metadata,
         ])->save();
 
-        return $order->fresh(['items.course']);
+        $fresh = $order->fresh(['items.course', 'user']);
+
+        if ($fresh && $previousStatus !== OrderStatus::Paid && $nextStatus === OrderStatus::Paid && $fresh->user) {
+            $courseNames = $fresh->items
+                ->pluck('course.name')
+                ->filter()
+                ->implode(', ');
+
+            $fresh->user->notify(new PaymentSuccessNotification(
+                orderId: (int) $fresh->id,
+                orderCode: (string) ($fresh->payment_reference ?? $fresh->id),
+                totalAmount: (int) $fresh->total_amount,
+                courseNames: $courseNames,
+            ));
+        }
+
+        return $fresh;
     }
 
     /**
