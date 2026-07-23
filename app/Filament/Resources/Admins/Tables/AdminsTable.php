@@ -15,7 +15,7 @@ class AdminsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->defaultSort('order')
+            ->defaultSort('order', 'desc')
             ->reorderable('order')
             ->columns([
                 TextColumn::make('name')
