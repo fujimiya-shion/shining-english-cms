@@ -14,7 +14,7 @@ class UserRepository extends Repository implements IUserRepository
 
     protected function getDefaultOrderDirection(): string
     {
-        return 'asc';
+        return 'desc';
     }
 
     public function __construct(User $model)

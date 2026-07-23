@@ -14,7 +14,7 @@ class LessonRepository extends Repository implements ILessonRepository
 
     protected function getDefaultOrderDirection(): string
     {
-        return 'asc';
+        return 'desc';
     }
 
     public function __construct(Lesson $model)

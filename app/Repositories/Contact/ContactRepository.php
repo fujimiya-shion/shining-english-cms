@@ -14,7 +14,7 @@ class ContactRepository extends Repository implements IContactRepository
 
     protected function getDefaultOrderDirection(): string
     {
-        return 'asc';
+        return 'desc';
     }
 
     public function __construct(Contact $model)
