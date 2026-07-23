@@ -19,9 +19,9 @@ it('defaults order by to order column', function (): void {
     expect(invokeProtectedMethod($repository, 'getDefaultOrderBy'))->toBe('order');
 });
 
-it('defaults order direction to asc', function (): void {
+it('defaults order direction to desc', function (): void {
     $model = new Admin;
     $repository = new AdminRepository($model);
 
-    expect(invokeProtectedMethod($repository, 'getDefaultOrderDirection'))->toBe('asc');
+    expect(invokeProtectedMethod($repository, 'getDefaultOrderDirection'))->toBe('desc');
 });
