@@ -12,7 +12,7 @@ class ResetOrderValues extends Command
                             {--table= : Only process a specific table}
                             {--dry-run : Preview changes without updating}';
 
-    protected $description = 'Reset order column values for tables that have an order column. Records with null/0 order get sequential values: newest created_at gets order = 1.';
+    protected $description = 'Reset order column values for tables that have an order column. Sets order = id for all records.';
 
     public function handle(): int
     {
@@ -29,56 +29,41 @@ class ResetOrderValues extends Command
                 continue;
             }
 
-            if (! Schema::hasColumn($table, 'order') || ! Schema::hasColumn($table, 'created_at')) {
+            if (! Schema::hasColumn($table, 'order')) {
                 continue;
             }
 
             $this->components->task($table, function () use ($table, $isDryRun): void {
-                $nullCount = DB::table($table)
-                    ->whereNull('order')
-                    ->orWhere('order', 0)
-                    ->count();
-
-                if ($nullCount === 0) {
-                    $this->components->twoColumnDetail('No records to fix', '<fg=green>✓</>');
+                if (! Schema::hasColumn($table, 'id')) {
+                    $this->components->twoColumnDetail('No id column', '<fg=yellow>Skipped</>');
 
                     return;
                 }
 
-                $rows = DB::table($table)
-                    ->whereNull('order')
-                    ->orWhere('order', 0)
-                    ->orderByDesc('created_at')
-                    ->orderByDesc('id')
-                    ->get(['id', 'created_at']);
+                $totalCount = DB::table($table)->count();
 
-                $caseStmts = [];
-                $ids = [];
+                if ($totalCount === 0) {
+                    $this->components->twoColumnDetail('No records', '<fg=green>✓</>');
 
-                foreach ($rows as $index => $row) {
-                    $order = $index + 1;
-                    $caseStmts[] = "WHEN {$row->id} THEN {$order}";
-                    $ids[] = $row->id;
+                    return;
                 }
 
                 if ($isDryRun) {
-                    $this->components->twoColumnDetail("Found {$nullCount} records", 'DRY RUN');
+                    $this->components->twoColumnDetail("Found {$totalCount} records", 'DRY RUN');
                     $this->table(
-                        ['New Order', 'ID', 'Created At'],
-                        collect($rows)->map(fn ($row, $i) => [$i + 1, $row->id, $row->created_at])
+                        ['ID', 'New Order'],
+                        DB::table($table)->select('id')->get()->map(fn ($row) => [$row->id, $row->id])
                     );
 
                     return;
                 }
 
-                $idsList = implode(',', $ids);
-                $cases = implode(' ', $caseStmts);
-
                 DB::statement("
                     UPDATE {$table}
-                    SET `order` = CASE `id` {$cases} END
-                    WHERE `id` IN ({$idsList})
+                    SET `order` = `id`
                 ");
+
+                $this->components->twoColumnDetail("Updated {$totalCount} records", '<fg=green>✓</>');
             });
         }
 

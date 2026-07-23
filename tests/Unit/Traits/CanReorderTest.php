@@ -30,19 +30,18 @@ afterEach(function (): void {
     Schema::dropIfExists('can_reorder_test');
 });
 
-it('sets order to max plus one on creation', function (): void {
-    CanReorderTestModel::query()->create(['name' => 'First', 'order' => 5]);
-    CanReorderTestModel::query()->create(['name' => 'Second']);
+it('sets order to id on creation', function (): void {
+    $first = CanReorderTestModel::query()->create(['name' => 'First']);
+    $second = CanReorderTestModel::query()->create(['name' => 'Second']);
 
-    $second = CanReorderTestModel::query()->where('name', 'Second')->first();
-
-    expect($second->order)->toBe(6);
+    expect($first->order)->toBe($first->id);
+    expect($second->order)->toBe($second->id);
 });
 
-it('sets order to 1 when no records exist', function (): void {
+it('sets order to id when no records exist', function (): void {
     $model = CanReorderTestModel::query()->create(['name' => 'First']);
 
-    expect($model->order)->toBe(1);
+    expect($model->order)->toBe($model->id);
 });
 
 it('does not override existing non-zero order', function (): void {
