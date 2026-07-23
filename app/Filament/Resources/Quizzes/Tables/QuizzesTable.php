@@ -20,7 +20,7 @@ class QuizzesTable
     {
         return $table
             ->defaultSort('order', 'desc')
-            ->reorderable('order')
+            ->reorderable('order', direction: 'desc')
             ->columns([
                 TextColumn::make('name')
                     ->label('Tên bộ câu hỏi')

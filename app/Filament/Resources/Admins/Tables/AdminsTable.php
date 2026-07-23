@@ -16,7 +16,7 @@ class AdminsTable
     {
         return $table
             ->defaultSort('order', 'desc')
-            ->reorderable('order')
+            ->reorderable('order', direction: 'desc')
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),

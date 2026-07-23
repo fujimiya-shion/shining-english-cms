@@ -20,7 +20,7 @@ class UsersTable
     {
         return $table
             ->defaultSort('order', 'desc')
-            ->reorderable('order')
+            ->reorderable('order', direction: 'desc')
             ->columns([
                 ImageColumn::make('avatar')
                     ->circular()
