@@ -14,7 +14,7 @@ class QuizRepository extends Repository implements IQuizRepository
 
     protected function getDefaultOrderDirection(): string
     {
-        return 'asc';
+        return 'desc';
     }
 
     public function __construct(Quiz $model)

@@ -14,7 +14,7 @@ class CategoryRepository extends Repository implements ICategoryRepository
 
     protected function getDefaultOrderDirection(): string
     {
-        return 'asc';
+        return 'desc';
     }
 
     public function __construct(Category $model)

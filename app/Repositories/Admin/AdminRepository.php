@@ -14,7 +14,7 @@ class AdminRepository extends Repository implements IAdminRepository
 
     protected function getDefaultOrderDirection(): string
     {
-        return 'asc';
+        return 'desc';
     }
 
     public function __construct(Admin $model)

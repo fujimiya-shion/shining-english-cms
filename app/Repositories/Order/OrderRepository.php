@@ -16,7 +16,7 @@ class OrderRepository extends Repository implements IOrderRepository
 
     protected function getDefaultOrderDirection(): string
     {
-        return 'asc';
+        return 'desc';
     }
 
     public function __construct(Order $model)
