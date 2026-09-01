@@ -100,4 +100,15 @@ class OrderController extends ApiController
             return $this->error($e->getMessage(), 422);
         }
     }
+
+    public function getByCode(Request $request): JsonResponse
+    {
+        $code = $request->route('code');
+        $order = $this->service->getBy(['order_code' => $code])->first();
+        if (! $order) {
+            return $this->notfound('Order not found');
+        }
+
+        return $this->success(data: $order);
+    }
 }

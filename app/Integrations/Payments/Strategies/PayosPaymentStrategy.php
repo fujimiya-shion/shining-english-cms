@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Integrations\Payments\Strategies;
 
+use App\Enums\GatewayType;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PayOSReturnCodes;
@@ -11,9 +12,11 @@ use App\Integrations\Payments\Contracts\PaymentStrategy;
 use App\Integrations\Payments\DTO\PaymentInitializationResult;
 use App\Integrations\Payments\Support\PayosSignature;
 use App\Models\Order;
+use App\Models\PaymentGatewaySetting;
 use App\Notifications\PaymentSuccessNotification;
 use App\Repositories\Order\IOrderRepository;
 use App\ValueObjects\CheckoutCustomerData;
+use App\ValueObjects\QueryOption;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Log;
@@ -75,13 +78,13 @@ class PayosPaymentStrategy implements PaymentStrategy
 
         if ($response->failed() || ! is_array($body) || ($body['code'] ?? null) !== '00') {
             $code = (int) $body['code'];
-            
-            if($code === PayOSReturnCodes::ORDER_EXISTED->value && $maxRetries > 0) {
+
+            if ($code === PayOSReturnCodes::ORDER_EXISTED->value && $maxRetries > 0) {
                 return $this->initialize(
                     order: $order,
-                    customerData:$customerData, 
-                    orderCode: $orderCode + 1, 
-                    maxRetries:$maxRetries - 1,
+                    customerData: $customerData,
+                    orderCode: $orderCode + 1,
+                    maxRetries: $maxRetries - 1,
                 ); // Recursive until order code is unique
             } else {
                 Log::error("PayOS response: {$response->body()}, order code: $orderCode, max retries: $maxRetries");
@@ -213,16 +216,37 @@ class PayosPaymentStrategy implements PaymentStrategy
         return $order;
     }
 
+    public function repay(Order $order, CheckoutCustomerData $customerData): PaymentInitializationResult
+    {
+        if (! $order->payment_checkout_url) {
+            return $this->initialize($order, $customerData);
+        }
+
+        Log::debug('Order Metadata Repay: ', [
+            'order_code' => $order->order_code,
+            'metadata' => $order->payment_metadata,
+            'url' => $order->payment_checkout_url,
+        ]);
+
+        return PaymentInitializationResult::redirect(
+            url: $order->payment_checkout_url,
+            metadata: $order->payment_metadata,
+        );
+    }
+
     public function handleWebhook(array $payload): ?Order
     {
+        Log::info('PayOS webhook received.');
         $signature = is_string($payload['signature'] ?? null) ? $payload['signature'] : null;
         $data = is_array($payload['data'] ?? null) ? $payload['data'] : null;
 
         if ($signature === null || $data === null) {
+            Log::error('Invalid payOS webhook payload.', $payload);
             throw new RuntimeException('Invalid payOS webhook payload.');
         }
 
         if (! PayosSignature::verify($data, $signature, $this->checksumKey())) {
+            Log::error('Invalid payOS webhook signature.', $payload);
             throw new RuntimeException('Invalid payOS webhook signature.');
         }
 
@@ -231,8 +255,14 @@ class PayosPaymentStrategy implements PaymentStrategy
             return null;
         }
 
-        $order = $this->orderRepository->getById($orderCode, ['items.course', 'user']);
+        $order = $this->orderRepository->getBy(
+            ['order_code' => $orderCode],
+            new QueryOption(with: ['items.course', 'user'])
+        );
+
         if (! $order instanceof Order) {
+            Log::error('Not instance of Order.', $payload);
+
             return null;
         }
 
@@ -276,25 +306,39 @@ class PayosPaymentStrategy implements PaymentStrategy
      */
     private function headers(): array
     {
+        $settings = $this->getGatewaySettings();
+
         return [
-            'x-client-id' => (string) config('payos.client_id'),
-            'x-api-key' => (string) config('payos.api_key'),
+            'x-client-id' => (string) ($settings['client_id'] ?? config('payos.client_id')),
+            'x-api-key' => (string) ($settings['api_key'] ?? config('payos.api_key')),
         ];
     }
 
     private function baseUrl(): string
     {
-        return rtrim((string) config('payos.base_url'), '/');
+        $settings = $this->getGatewaySettings();
+
+        return rtrim((string) ($settings['base_url'] ?? config('payos.base_url')), '/');
     }
 
     private function checksumKey(): string
     {
-        $checksumKey = (string) config('payos.checksum_key');
+        $settings = $this->getGatewaySettings();
+        $checksumKey = (string) ($settings['checksum_key'] ?? config('payos.checksum_key'));
+
         if ($checksumKey === '') {
             throw new RuntimeException('PAYOS_CHECKSUM_KEY is missing.');
         }
 
         return $checksumKey;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getGatewaySettings(): array
+    {
+        return PaymentGatewaySetting::getActiveSettings(GatewayType::Payos->value) ?? [];
     }
 
     private function buildReturnUrl(int $orderCode): string

@@ -65,7 +65,7 @@ class OrderService extends Service implements IOrderService
             return null;
         }
 
-        return $this->resolveStrategy($order->payment_method)->refresh($order);
+        return $order;
     }
 
     public function createFromCart(
@@ -160,9 +160,6 @@ class OrderService extends Service implements IOrderService
             throw new RuntimeException('Order not found');
         }
 
-        $strategy = $this->resolveStrategy($order->payment_method);
-        $order = $strategy->refresh($order);
-
         if ($order->status === OrderStatus::Paid) {
             throw new RuntimeException('Order has already been paid');
         }
@@ -175,7 +172,9 @@ class OrderService extends Service implements IOrderService
             throw new RuntimeException('Only online payment orders can be retried');
         }
 
-        $paymentResult = $strategy->initialize(
+        $strategy = $this->resolveStrategy($order->payment_method);
+
+        $paymentResult = $strategy->repay(
             $order->load(['items.course']),
             new CheckoutCustomerData,
         );

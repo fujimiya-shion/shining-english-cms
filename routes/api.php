@@ -173,6 +173,7 @@ Route::prefix('/v1')->group(function () {
             ->controller(OrderController::class)
             ->prefix('/orders')
             ->group(function () {
+                Route::get('/code/{code}', 'getByCode');
                 Route::get('/', 'index');
                 Route::post('/', 'store');
                 Route::get('/{id}', 'show');
