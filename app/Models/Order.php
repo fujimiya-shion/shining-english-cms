@@ -28,7 +28,11 @@ class Order extends Model
         'payment_metadata',
         'paid_at',
         'placed_at',
-        'order',
+        'order_code',
+    ];
+
+    protected $appends = [
+        'display_status',
     ];
 
     /**
@@ -68,5 +72,10 @@ class Order extends Model
     public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class);
+    }
+
+    public function getDisplayStatusAttribute(): string
+    {
+        return $this->status->label();
     }
 }

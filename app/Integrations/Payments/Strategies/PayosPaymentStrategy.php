@@ -6,6 +6,7 @@ namespace App\Integrations\Payments\Strategies;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\PayOSReturnCodes;
 use App\Integrations\Payments\Contracts\PaymentStrategy;
 use App\Integrations\Payments\DTO\PaymentInitializationResult;
 use App\Integrations\Payments\Support\PayosSignature;
@@ -15,6 +16,7 @@ use App\Repositories\Order\IOrderRepository;
 use App\ValueObjects\CheckoutCustomerData;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Log;
 use RuntimeException;
 
 class PayosPaymentStrategy implements PaymentStrategy
@@ -28,7 +30,7 @@ class PayosPaymentStrategy implements PaymentStrategy
         return PaymentMethod::Payos;
     }
 
-    public function initialize(Order $order, CheckoutCustomerData $customerData): PaymentInitializationResult
+    public function initialize(Order $order, CheckoutCustomerData $customerData, ?int $orderCode = null, ?int $maxRetries = 3): PaymentInitializationResult
     {
         if ((int) $order->total_amount <= 0) {
             return PaymentInitializationResult::none();
@@ -37,9 +39,10 @@ class PayosPaymentStrategy implements PaymentStrategy
         $returnUrl = $this->buildReturnUrl((int) $order->id);
         $cancelUrl = $this->buildCancelUrl((int) $order->id);
         $description = $this->buildDescription((int) $order->id);
+        $orderCode = $orderCode ?? $this->orderRepository->max('order_code') + 1; // Unique order code
 
         $payload = [
-            'orderCode' => (int) $order->id,
+            'orderCode' => $orderCode,
             'amount' => (int) $order->total_amount,
             'description' => $description,
             'buyerName' => $customerData->fullName,
@@ -58,7 +61,7 @@ class PayosPaymentStrategy implements PaymentStrategy
                 'amount' => (int) $order->total_amount,
                 'cancelUrl' => $cancelUrl,
                 'description' => $description,
-                'orderCode' => (int) $order->id,
+                'orderCode' => $orderCode,
                 'returnUrl' => $returnUrl,
             ], $this->checksumKey()),
         ];
@@ -71,7 +74,19 @@ class PayosPaymentStrategy implements PaymentStrategy
         $body = $response->json();
 
         if ($response->failed() || ! is_array($body) || ($body['code'] ?? null) !== '00') {
-            throw new RuntimeException($this->resolveErrorMessage($body, 'Failed to create payOS payment link.'));
+            $code = (int) $body['code'];
+            
+            if($code === PayOSReturnCodes::ORDER_EXISTED->value && $maxRetries > 0) {
+                return $this->initialize(
+                    order: $order,
+                    customerData:$customerData, 
+                    orderCode: $orderCode + 1, 
+                    maxRetries:$maxRetries - 1,
+                ); // Recursive until order code is unique
+            } else {
+                Log::error("PayOS response: {$response->body()}, order code: $orderCode, max retries: $maxRetries");
+                throw new RuntimeException($this->resolveErrorMessage($body, 'Failed to create payOS payment link.'));
+            }
         }
 
         $data = is_array($body['data'] ?? null) ? $body['data'] : null;
@@ -81,6 +96,7 @@ class PayosPaymentStrategy implements PaymentStrategy
         }
 
         $order->forceFill([
+            'order_code' => $orderCode,
             'payment_reference' => $data['paymentLinkId'] ?? null,
             'payment_checkout_url' => $checkoutUrl,
             'payment_metadata' => array_filter([

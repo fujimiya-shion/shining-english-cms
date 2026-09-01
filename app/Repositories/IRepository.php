@@ -48,4 +48,5 @@ interface IRepository
     public function paginateAll(?QueryOption $options = null): LengthAwarePaginator;
 
     public function paginateBy(array $criteria, ?QueryOption $options = null): LengthAwarePaginator;
+    public function max(string $column): int;
 }
