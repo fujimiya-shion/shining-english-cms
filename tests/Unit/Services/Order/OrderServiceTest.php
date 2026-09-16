@@ -279,7 +279,7 @@ it('throws when repaying an already-paid order', function (): void {
     $enrollments = Mockery::mock(IEnrollmentService::class);
 
     $order = new Order([
-        'status' => OrderStatus::Pending,
+        'status' => OrderStatus::Paid,
         'payment_method' => PaymentMethod::Payos,
     ]);
     $order->id = 1;
@@ -288,17 +288,6 @@ it('throws when repaying an already-paid order', function (): void {
         ->once()
         ->with(10, 1)
         ->andReturn($order);
-
-    $strategy = Mockery::mock(\App\Integrations\Payments\Contracts\PaymentStrategy::class);
-    $strategy->shouldReceive('refresh')
-        ->once()
-        ->with($order)
-        ->andReturnUsing(function (Order $o): Order {
-            $o->status = OrderStatus::Paid;
-
-            return $o;
-        });
-    app()->instance(\App\Integrations\Payments\Strategies\PayosPaymentStrategy::class, $strategy);
 
     $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
 
@@ -314,7 +303,7 @@ it('throws when repaying a cancelled order', function (): void {
     $enrollments = Mockery::mock(IEnrollmentService::class);
 
     $order = new Order([
-        'status' => OrderStatus::Pending,
+        'status' => OrderStatus::Cancelled,
         'payment_method' => PaymentMethod::Payos,
     ]);
     $order->id = 1;
@@ -323,17 +312,6 @@ it('throws when repaying a cancelled order', function (): void {
         ->once()
         ->with(10, 1)
         ->andReturn($order);
-
-    $strategy = Mockery::mock(\App\Integrations\Payments\Contracts\PaymentStrategy::class);
-    $strategy->shouldReceive('refresh')
-        ->once()
-        ->with($order)
-        ->andReturnUsing(function (Order $o): Order {
-            $o->status = OrderStatus::Cancelled;
-
-            return $o;
-        });
-    app()->instance(\App\Integrations\Payments\Strategies\PayosPaymentStrategy::class, $strategy);
 
     $service = new OrderService($orders, $orderItems, $cart, $courses, $enrollments, Mockery::mock(IUserRepository::class));
 
@@ -398,11 +376,7 @@ it('repays a pending PayOS order successfully', function (): void {
         ->andReturn($order);
 
     $strategy = Mockery::mock(\App\Integrations\Payments\Contracts\PaymentStrategy::class);
-    $strategy->shouldReceive('refresh')
-        ->once()
-        ->with($order)
-        ->andReturn($order);
-    $strategy->shouldReceive('initialize')
+    $strategy->shouldReceive('repay')
         ->once()
         ->andReturn(
             \App\Integrations\Payments\DTO\PaymentInitializationResult::redirect(

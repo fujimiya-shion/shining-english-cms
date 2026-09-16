@@ -77,7 +77,7 @@ class PayosPaymentStrategy implements PaymentStrategy
         $body = $response->json();
 
         if ($response->failed() || ! is_array($body) || ($body['code'] ?? null) !== '00') {
-            $code = (int) $body['code'];
+            $code = is_array($body) ? (int) ($body['code'] ?? 0) : 0;
 
             if ($code === PayOSReturnCodes::ORDER_EXISTED->value && $maxRetries > 0) {
                 return $this->initialize(
@@ -255,10 +255,12 @@ class PayosPaymentStrategy implements PaymentStrategy
             return null;
         }
 
-        $order = $this->orderRepository->getBy(
+        $orders = $this->orderRepository->getBy(
             ['order_code' => $orderCode],
             new QueryOption(with: ['items.course', 'user'])
         );
+
+        $order = $orders->first();
 
         if (! $order instanceof Order) {
             Log::error('Not instance of Order.', $payload);

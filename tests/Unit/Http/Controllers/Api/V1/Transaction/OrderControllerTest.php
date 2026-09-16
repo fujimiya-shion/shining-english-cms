@@ -1,6 +1,7 @@
 <?php
 
 use App\DTO\Transaction\Checkout\CheckoutOrderResponse;
+use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Http\Controllers\Api\V1\Transaction\OrderController;
 use App\Http\Requests\Api\V1\Transaction\OrderStoreRequest;
@@ -53,7 +54,7 @@ it('lists orders for the authenticated user', function (): void {
 it('shows an order when it exists for the authenticated user', function (): void {
     $user = new User;
     $user->id = 4;
-    $order = new Order(['total_amount' => 123]);
+    $order = new Order(['total_amount' => 123, 'status' => OrderStatus::Pending]);
     $order->id = 21;
 
     $service = \Mockery::mock(IOrderService::class);
@@ -72,6 +73,8 @@ it('shows an order when it exists for the authenticated user', function (): void
         'data' => [
             'id' => 21,
             'total_amount' => 123,
+            'status' => 'pending',
+            'display_status' => 'Chờ thanh toán',
         ],
     ]);
 });
@@ -100,9 +103,9 @@ it('returns not found when an order does not exist for the authenticated user', 
 it('creates an order from cart or buy now payloads', function (): void {
     $user = new User;
     $user->id = 4;
-    $cartOrder = new Order(['total_amount' => 100]);
+    $cartOrder = new Order(['total_amount' => 100, 'status' => OrderStatus::Pending]);
     $cartOrder->id = 1;
-    $buyNowOrder = new Order(['total_amount' => 200]);
+    $buyNowOrder = new Order(['total_amount' => 200, 'status' => OrderStatus::Pending]);
     $buyNowOrder->id = 2;
 
     $service = \Mockery::mock(IOrderService::class);
@@ -129,6 +132,8 @@ it('creates an order from cart or buy now payloads', function (): void {
             'order' => [
                 'id' => 1,
                 'total_amount' => 100,
+                'status' => 'pending',
+                'display_status' => 'Chờ thanh toán',
             ],
         ],
     ]);
@@ -153,6 +158,8 @@ it('creates an order from cart or buy now payloads', function (): void {
             'order' => [
                 'id' => 2,
                 'total_amount' => 200,
+                'status' => 'pending',
+                'display_status' => 'Chờ thanh toán',
             ],
         ],
     ]);

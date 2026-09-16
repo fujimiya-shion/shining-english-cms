@@ -96,7 +96,9 @@ it('initializes payos payment and persists checkout metadata', function (): void
     ]);
     $order->setRelation('items', collect([$item]));
 
-    $strategy = new PayosPaymentStrategy(Mockery::mock(IOrderRepository::class));
+    $repository = Mockery::mock(IOrderRepository::class);
+    $repository->shouldReceive('max')->once()->with('order_code')->andReturn(0);
+    $strategy = new PayosPaymentStrategy($repository);
     $result = $strategy->initialize($order, new CheckoutCustomerData('Learner', 'learner@example.com', '0909000000'));
 
     expect($result->toCheckoutAction()?->toArray()['url'])->toBe('https://checkout.test/123');
@@ -139,10 +141,10 @@ it('handles payos webhook status mapping', function (): void {
     $order->payment_metadata = [];
 
     $repository = Mockery::mock(IOrderRepository::class);
-    $repository->shouldReceive('getById')
+    $repository->shouldReceive('getBy')
         ->once()
-        ->with(123, ['items.course', 'user'])
-        ->andReturn($order);
+        ->with(['order_code' => 123], \Mockery::type(\App\ValueObjects\QueryOption::class))
+        ->andReturn(new \Illuminate\Database\Eloquent\Collection([$order]));
 
     $data = [
         'orderCode' => 123,
@@ -181,7 +183,10 @@ it('throws error when payos initialize response fails', function (): void {
     $order = new Order(['total_amount' => 250000]);
     $order->id = 456;
 
-    $strategy = new PayosPaymentStrategy(Mockery::mock(IOrderRepository::class));
+    $repository = Mockery::mock(IOrderRepository::class);
+    $repository->shouldReceive('max')->once()->with('order_code')->andReturn(0);
+
+    $strategy = new PayosPaymentStrategy($repository);
 
     expect(fn () => $strategy->initialize($order, new CheckoutCustomerData))
         ->toThrow(RuntimeException::class, 'Failed to create payOS payment link.');
@@ -201,7 +206,10 @@ it('throws error when payos initialize returns no checkout URL', function (): vo
     $order = new Order(['total_amount' => 250000]);
     $order->id = 456;
 
-    $strategy = new PayosPaymentStrategy(Mockery::mock(IOrderRepository::class));
+    $repository = Mockery::mock(IOrderRepository::class);
+    $repository->shouldReceive('max')->once()->with('order_code')->andReturn(0);
+
+    $strategy = new PayosPaymentStrategy($repository);
 
     expect(fn () => $strategy->initialize($order, new CheckoutCustomerData))
         ->toThrow(RuntimeException::class, 'payOS did not return a checkout URL.');
@@ -226,7 +234,10 @@ it('handles payos webhook with missing order', function (): void {
     $signature = PayosSignature::sign($data, 'checksum');
 
     $repository = Mockery::mock(IOrderRepository::class);
-    $repository->shouldReceive('getById')->with(888, ['items.course', 'user'])->andReturnNull();
+    $repository->shouldReceive('getBy')
+        ->once()
+        ->with(['order_code' => 888], \Mockery::type(\App\ValueObjects\QueryOption::class))
+        ->andReturn(new \Illuminate\Database\Eloquent\Collection([]));
 
     $strategy = new PayosPaymentStrategy($repository);
 
@@ -270,7 +281,10 @@ it('handles payos webhook with pending status', function (): void {
     $order->payment_metadata = [];
 
     $repository = Mockery::mock(IOrderRepository::class);
-    $repository->shouldReceive('getById')->with(777, ['items.course', 'user'])->andReturn($order);
+    $repository->shouldReceive('getBy')
+        ->once()
+        ->with(['order_code' => 777], \Mockery::type(\App\ValueObjects\QueryOption::class))
+        ->andReturn(new \Illuminate\Database\Eloquent\Collection([$order]));
 
     $data = ['orderCode' => 777, 'code' => '01'];
     $signature = PayosSignature::sign($data, 'checksum');
@@ -316,10 +330,10 @@ it('dispatches payment success notification on webhook paid transition', functio
     $order->payment_metadata = [];
 
     $repository = Mockery::mock(IOrderRepository::class);
-    $repository->shouldReceive('getById')
+    $repository->shouldReceive('getBy')
         ->once()
-        ->with(333, ['items.course', 'user'])
-        ->andReturn($order);
+        ->with(['order_code' => 333], \Mockery::type(\App\ValueObjects\QueryOption::class))
+        ->andReturn(new \Illuminate\Database\Eloquent\Collection([$order]));
 
     $data = ['orderCode' => 333, 'code' => '00', 'paymentLinkId' => 'plink_333'];
     $signature = PayosSignature::sign($data, 'checksum');
@@ -359,10 +373,10 @@ it('does not dispatch notification when webhook status unchanged', function (): 
     $order->payment_metadata = [];
 
     $repository = Mockery::mock(IOrderRepository::class);
-    $repository->shouldReceive('getById')
+    $repository->shouldReceive('getBy')
         ->once()
-        ->with(444, ['items.course', 'user'])
-        ->andReturn($order);
+        ->with(['order_code' => 444], \Mockery::type(\App\ValueObjects\QueryOption::class))
+        ->andReturn(new \Illuminate\Database\Eloquent\Collection([$order]));
 
     $data = ['orderCode' => 444, 'code' => '00', 'paymentLinkId' => 'plink_444'];
     $signature = PayosSignature::sign($data, 'checksum');
@@ -398,7 +412,10 @@ it('handles payos webhook with cancelled status', function (): void {
     $order->payment_metadata = [];
 
     $repository = Mockery::mock(IOrderRepository::class);
-    $repository->shouldReceive('getById')->with(456, ['items.course', 'user'])->andReturn($order);
+    $repository->shouldReceive('getBy')
+        ->once()
+        ->with(['order_code' => 456], \Mockery::type(\App\ValueObjects\QueryOption::class))
+        ->andReturn(new \Illuminate\Database\Eloquent\Collection([$order]));
 
     $data = ['orderCode' => 456, 'code' => '01', 'desc' => 'CANCEL'];
     $signature = PayosSignature::sign($data, 'checksum');
