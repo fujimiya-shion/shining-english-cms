@@ -19,7 +19,7 @@ it('defines fillable attributes', function (): void {
         'payment_metadata',
         'paid_at',
         'placed_at',
-        'order',
+        'order_code',
     ]);
 });
 

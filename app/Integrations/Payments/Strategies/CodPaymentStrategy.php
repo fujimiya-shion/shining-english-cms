@@ -36,4 +36,9 @@ class CodPaymentStrategy implements PaymentStrategy
     {
         return null;
     }
+
+    public function repay(Order $order, CheckoutCustomerData $customerData): PaymentInitializationResult
+    {
+        return PaymentInitializationResult::none();
+    }
 }

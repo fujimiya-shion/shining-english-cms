@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Integrations\Auth\Strategies\GoogleAuthStrategy;
 use App\Models\Lesson;
+use App\Models\PaymentGatewaySetting;
 use App\Observers\LessonObserver;
+use App\Observers\PaymentGatewaySettingObserver;
 use App\Repositories\Admin\AdminRepository;
 use App\Repositories\Admin\IAdminRepository;
 use App\Repositories\Cart\CartRepository;
@@ -35,6 +37,8 @@ use App\Repositories\Order\IOrderRepository;
 use App\Repositories\Order\OrderRepository;
 use App\Repositories\OrderItem\IOrderItemRepository;
 use App\Repositories\OrderItem\OrderItemRepository;
+use App\Repositories\PaymentGatewaySetting\IPaymentGatewaySettingRepository;
+use App\Repositories\PaymentGatewaySetting\PaymentGatewaySettingRepository;
 use App\Repositories\Quiz\IQuizRepository;
 use App\Repositories\Quiz\QuizRepository;
 use App\Repositories\Star\IStarRepository;
@@ -81,6 +85,8 @@ use App\Services\Order\IOrderService;
 use App\Services\Order\OrderService;
 use App\Services\OrderItem\IOrderItemService;
 use App\Services\OrderItem\OrderItemService;
+use App\Services\PaymentGatewaySetting\IPaymentGatewaySettingService;
+use App\Services\PaymentGatewaySetting\PaymentGatewaySettingService;
 use App\Services\Quiz\IQuizService;
 use App\Services\Quiz\QuizService;
 use App\Services\Security\Recaptcha\IRecaptchaVerifier;
@@ -132,6 +138,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IDashboardRepository::class, DashboardRepository::class);
         $this->app->bind(IUserHomeRepository::class, UserHomeRepository::class);
         $this->app->bind(INotificationRepository::class, NotificationRepository::class);
+        $this->app->bind(IPaymentGatewaySettingRepository::class, PaymentGatewaySettingRepository::class);
 
         $this->app->bind(ICartService::class, CartService::class);
         $this->app->bind(ICategoryService::class, CategoryService::class);
@@ -157,6 +164,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IDashboardService::class, DashboardService::class);
         $this->app->bind(IUserHomeService::class, UserHomeService::class);
         $this->app->bind(INotificationService::class, NotificationService::class);
+        $this->app->bind(IPaymentGatewaySettingService::class, PaymentGatewaySettingService::class);
 
         $this->app->instance(GoogleAuthStrategy::class, new GoogleAuthStrategy);
     }
@@ -167,6 +175,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Lesson::observe(LessonObserver::class);
+        PaymentGatewaySetting::observe(PaymentGatewaySettingObserver::class);
 
         Gate::define('viewApiDocs', function (): bool {
             // @codeCoverageIgnoreStart

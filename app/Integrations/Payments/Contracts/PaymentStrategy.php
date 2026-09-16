@@ -15,6 +15,8 @@ interface PaymentStrategy
 
     public function initialize(Order $order, CheckoutCustomerData $customerData): PaymentInitializationResult;
 
+    public function repay(Order $order, CheckoutCustomerData $customerData): PaymentInitializationResult;
+
     public function refresh(Order $order): Order;
 
     public function cancel(Order $order, string $reason): Order;

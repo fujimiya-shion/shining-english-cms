@@ -316,4 +316,8 @@ abstract class Repository implements IRepository
             ->limit($options->perPage)
             ->get();
     }
+
+    public function max(string $column): int {
+        return $this->model->newQuery()->max($column);
+    }
 }
