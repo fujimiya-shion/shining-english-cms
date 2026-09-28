@@ -1,6 +1,8 @@
 <?php
 
 declare(strict_types=1);
+
+namespace App\Filament\Resources\PaymentGatewaySettings\Pages;
 use App\Filament\Resources\PaymentGatewaySettings\PaymentGatewaySettingResource;
 use Filament\Resources\Pages\CreateRecord;
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\PaymentGatewaySettings;
 
 use App\Filament\Resources\BaseResource;
+use App\Filament\Resources\PaymentGatewaySettings\Pages\CreatePaymentGatewaySetting;
 use App\Filament\Resources\PaymentGatewaySettings\Pages\EditPaymentGatewaySetting;
 use App\Filament\Resources\PaymentGatewaySettings\Pages\ListPaymentGatewaySettings;
 use App\Filament\Resources\PaymentGatewaySettings\Schemas\PaymentGatewaySettingForm;
@@ -13,7 +14,6 @@ use App\Models\PaymentGatewaySetting;
 use App\Services\IService;
 use App\Services\PaymentGatewaySetting\IPaymentGatewaySettingService;
 use BackedEnum;
-use CreatePaymentGatewaySetting;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
