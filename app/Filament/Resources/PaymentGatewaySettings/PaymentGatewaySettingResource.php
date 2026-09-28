@@ -13,6 +13,7 @@ use App\Models\PaymentGatewaySetting;
 use App\Services\IService;
 use App\Services\PaymentGatewaySetting\IPaymentGatewaySettingService;
 use BackedEnum;
+use CreatePaymentGatewaySetting;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
@@ -52,6 +53,7 @@ class PaymentGatewaySettingResource extends BaseResource
     {
         return [
             'index' => ListPaymentGatewaySettings::route('/'),
+            'create' => CreatePaymentGatewaySetting::route('/create'),
             'edit' => EditPaymentGatewaySetting::route('/{record}/edit'),
         ];
     }

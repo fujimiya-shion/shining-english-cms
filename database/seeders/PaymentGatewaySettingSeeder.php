@@ -30,7 +30,7 @@ class PaymentGatewaySettingSeeder extends Seeder
                 'slug' => GatewayType::Cod->value,
                 'is_active' => false,
                 'settings' => [
-                    'instructions' => 'Thanh toán tiền mặt khi nhận hàng.',
+                    'description' => 'Thanh toán tiền mặt khi nhận hàng.',
                 ],
             ],
             [

@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\GatewayType;
+use App\Traits\Slugable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
 class PaymentGatewaySetting extends Model
 {
+    use Slugable;
     protected $fillable = [
         'name',
         'slug',
@@ -26,7 +29,8 @@ class PaymentGatewaySetting extends Model
         ];
     }
 
-    public function scopeActive(Builder $query): Builder
+    #[Scope]
+    public function active(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }
