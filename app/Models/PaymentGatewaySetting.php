@@ -21,6 +21,8 @@ class PaymentGatewaySetting extends Model
         'settings',
     ];
 
+    protected $hidden = ['settings'];
+
     protected function casts(): array
     {
         return [
