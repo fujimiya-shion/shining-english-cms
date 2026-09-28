@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Cache;
 class PaymentGatewaySetting extends Model
 {
     use Slugable;
+
     protected $fillable = [
         'name',
         'slug',
@@ -32,14 +33,14 @@ class PaymentGatewaySetting extends Model
     }
 
     #[Scope]
-    public function active(Builder $query): Builder
+    protected function active(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }
 
     public static function findBySlug(string $slug): ?self
     {
-        return static::where('slug', $slug)->first();
+        return static::query()->where('slug', $slug)->first();
     }
 
     public static function getActiveSettings(string $slug): ?array
@@ -47,7 +48,7 @@ class PaymentGatewaySetting extends Model
         $cacheKey = "payment_gateway_{$slug}";
 
         return Cache::remember($cacheKey, 3600, function () use ($slug): ?array {
-            $record = static::active()->where('slug', $slug)->first();
+            $record = static::query()->active()->where('slug', $slug)->first();
 
             return $record?->settings;
         });
