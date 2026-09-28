@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Contact\ContactController;
 use App\Http\Controllers\Api\V1\Course\CourseController;
 use App\Http\Controllers\Api\V1\Dashboard\DashboardController;
 use App\Http\Controllers\Api\V1\Developer\DeveloperController;
+use App\Http\Controllers\Api\V1\Gateway\GatewayController;
 use App\Http\Controllers\Api\V1\Lesson\LessonController;
 use App\Http\Controllers\Api\V1\Lesson\LessonNoteController;
 use App\Http\Controllers\Api\V1\Notification\NotificationController;
@@ -30,10 +31,17 @@ Route::prefix('/v1')->group(function () {
 
     Route::controller(DeveloperController::class)
         ->group(function () {
-            Route::post('/access-token', 'accessToken');
+            Route::post('/access-token', 'accessToken')->name('developer.accessToken');
         });
 
     Route::middleware(VerifyDeveloperToken::class)->group(function () {
+
+        Route::controller(GatewayController::class)
+            ->prefix('/payments/gateways')
+            ->group(function () {
+                Route::get('/', 'index');
+            });
+
         Route::controller(CourseController::class)
             ->prefix('/courses')
             ->group(function () {

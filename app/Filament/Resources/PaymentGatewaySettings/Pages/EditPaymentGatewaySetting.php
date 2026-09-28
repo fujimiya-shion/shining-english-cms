@@ -17,15 +17,9 @@ class EditPaymentGatewaySetting extends EditRecord
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $settings = $data['settings'] ?? [];
-
-        $gatewayType = GatewayType::tryFrom($data['slug'] ?? '');
-        if ($gatewayType === null) {
-            return $data;
-        }
-
         $items = [];
         foreach ($settings as $key => $value) {
-            $field = GatewayFieldRegistry::getField($gatewayType, $key);
+            $field = GatewayFieldRegistry::getField($key);
             $items[] = [
                 'key' => $key,
                 'value' => (string) $value,

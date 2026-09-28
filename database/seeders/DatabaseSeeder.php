@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
             $courseSeeder,
             BlogSeeder::class,
             DeveloperSeeder::class,
+            PaymentGatewaySettingSeeder::class,
         ];
 
         if (! $isStaging) {

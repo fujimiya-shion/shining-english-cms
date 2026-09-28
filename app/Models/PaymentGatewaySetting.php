@@ -5,18 +5,24 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\GatewayType;
+use App\Traits\Slugable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
 class PaymentGatewaySetting extends Model
 {
+    use Slugable;
+
     protected $fillable = [
         'name',
         'slug',
         'is_active',
         'settings',
     ];
+
+    protected $hidden = ['settings'];
 
     protected function casts(): array
     {
@@ -26,14 +32,15 @@ class PaymentGatewaySetting extends Model
         ];
     }
 
-    public function scopeActive(Builder $query): Builder
+    #[Scope]
+    protected function active(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }
 
     public static function findBySlug(string $slug): ?self
     {
-        return static::where('slug', $slug)->first();
+        return static::query()->where('slug', $slug)->first();
     }
 
     public static function getActiveSettings(string $slug): ?array
@@ -41,7 +48,7 @@ class PaymentGatewaySetting extends Model
         $cacheKey = "payment_gateway_{$slug}";
 
         return Cache::remember($cacheKey, 3600, function () use ($slug): ?array {
-            $record = static::active()->where('slug', $slug)->first();
+            $record = static::query()->active()->where('slug', $slug)->first();
 
             return $record?->settings;
         });

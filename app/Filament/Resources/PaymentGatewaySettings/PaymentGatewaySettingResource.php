@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\PaymentGatewaySettings;
 
 use App\Filament\Resources\BaseResource;
+use App\Filament\Resources\PaymentGatewaySettings\Pages\CreatePaymentGatewaySetting;
 use App\Filament\Resources\PaymentGatewaySettings\Pages\EditPaymentGatewaySetting;
 use App\Filament\Resources\PaymentGatewaySettings\Pages\ListPaymentGatewaySettings;
 use App\Filament\Resources\PaymentGatewaySettings\Schemas\PaymentGatewaySettingForm;
@@ -52,6 +53,7 @@ class PaymentGatewaySettingResource extends BaseResource
     {
         return [
             'index' => ListPaymentGatewaySettings::route('/'),
+            'create' => CreatePaymentGatewaySetting::route('/create'),
             'edit' => EditPaymentGatewaySetting::route('/{record}/edit'),
         ];
     }

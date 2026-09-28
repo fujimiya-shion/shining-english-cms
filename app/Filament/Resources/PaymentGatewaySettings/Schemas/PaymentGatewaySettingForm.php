@@ -5,14 +5,11 @@ declare(strict_types=1);
 namespace App\Filament\Resources\PaymentGatewaySettings\Schemas;
 
 use App\Enums\GatewayFieldRegistry;
-use App\Enums\GatewayType;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get as SchemaGet;
 use Filament\Schemas\Schema;
@@ -30,18 +27,16 @@ class PaymentGatewaySettingForm
                     ->schema([
                         TextInput::make('name')
                             ->label('Tên cổng thanh toán')
-                            ->disabled()
-                            ->dehydrated(false)
                             ->columnSpan(6),
                         TextInput::make('slug')
                             ->label('Mã')
-                            ->disabled()
                             ->dehydrated(false)
+                            ->disabled(true)
                             ->columnSpan(6),
                         Toggle::make('is_active')
                             ->label('Kích hoạt')
                             ->inline(false)
-                            ->default(false)
+                            ->default(true)
                             ->columnSpanFull(),
                     ]),
                 static::makeSettingsSection(),
@@ -67,25 +62,13 @@ class PaymentGatewaySettingForm
                             ->searchable()
                             ->preload()
                             ->live()
-                            ->afterStateUpdated(function (Get $get, Set $set, ?string $state): void {
-                                $gatewayType = GatewayType::tryFrom($get('../../slug'));
-                                if ($gatewayType === null || $state === null) {
-                                    return;
-                                }
-                                $field = GatewayFieldRegistry::getField($gatewayType, $state);
-                                if ($field === null) {
-                                    return;
-                                }
+                            ->afterStateUpdated(function (SchemaGet $get, $set, ?string $state): void {
+                                $field = GatewayFieldRegistry::getField($state);
                                 $set('type', $field['type']);
                                 $set('value', '');
                             })
                             ->options(function (SchemaGet $get): array {
-                                $gatewayType = GatewayType::tryFrom($get('../../slug'));
-                                if ($gatewayType === null) {
-                                    return [];
-                                }
-
-                                return GatewayFieldRegistry::getSelectableOptions($gatewayType);
+                                return GatewayFieldRegistry::getSelectableOptions();
                             })
                             ->disableOptionsWhenSelectedInSiblingRepeaterItems()
                             ->required(),
@@ -103,10 +86,10 @@ class PaymentGatewaySettingForm
                     ])
                     ->defaultItems(0)
                     ->addActionLabel('Thêm tham số')
-                    ->reorderableWithButtons()
                     ->collapsible()
+                    ->reorderable(false)
+                    ->visible(fn (SchemaGet $get): bool => !empty($get('slug')))
                     ->columns(1),
-            ])
-            ->visible(fn (SchemaGet $get): bool => in_array($get('slug'), array_column(GatewayType::cases(), 'value')));
+            ]);
     }
 }
