@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
-use App\Enums\GatewayType;
+use App\Enums\PaymentMethod;
 use App\Integrations\Payments\Contracts\PaymentGatewaySettingHandler;
 use App\Integrations\Payments\Handlers\PayosPaymentGatewaySettingHandler;
 use App\Models\PaymentGatewaySetting;
@@ -40,7 +40,7 @@ class PaymentGatewaySettingObserver
     protected function resolveHandler(string $slug): ?PaymentGatewaySettingHandler
     {
         return match ($slug) {
-            GatewayType::Payos->value => app(PayosPaymentGatewaySettingHandler::class),
+            PaymentMethod::Payos->value => app(PayosPaymentGatewaySettingHandler::class),
             default => null,
         };
     }

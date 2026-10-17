@@ -25,8 +25,8 @@ class PaymentGatewaySettingForm
                     ->compact()
                     ->columns(12)
                     ->schema([
-                        TextInput::make('name')
-                            ->label('Tên cổng thanh toán')
+                        TextInput::make('factory_name')
+                            ->label('Mã cổng')
                             ->columnSpan(6),
                         TextInput::make('slug')
                             ->label('Mã')

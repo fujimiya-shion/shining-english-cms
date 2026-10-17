@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Integrations\Payments\Strategies;
 
-use App\Enums\GatewayType;
-use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\OrderStatus;
 use App\Enums\PayOSReturnCodes;
 use App\Integrations\Payments\Contracts\PaymentStrategy;
 use App\Integrations\Payments\DTO\PaymentInitializationResult;
@@ -340,7 +339,7 @@ class PayosPaymentStrategy implements PaymentStrategy
      */
     private function getGatewaySettings(): array
     {
-        return PaymentGatewaySetting::getActiveSettings(GatewayType::Payos->value) ?? [];
+        return PaymentGatewaySetting::getActiveSettings(PaymentMethod::Payos->value) ?? [];
     }
 
     private function buildReturnUrl(int $orderCode): string
