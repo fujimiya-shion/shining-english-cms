@@ -17,13 +17,25 @@ class PaymentGatewaySettingRepository extends Repository implements IPaymentGate
     }
 
     public function paginateAll(QueryOption|null $options = null): LengthAwarePaginator {
-        $query = $this->model->newQuery()->scopes('active');
+        $query = $this
+            ->model
+            ->newQuery()
+            ->scopes('active');
+
         $query = $this->applyQueryOption($query, $options);
         $query = $this->applyDefaultOrderIfMissing($query, $options);
-        return $query->paginate(
+        $paginator = $query->paginate(
             perPage: $options->getPerPage(), 
             page: $options->getPage(),
         );
+
+        $paginator->getCollection()->transform(function (PaymentGatewaySetting $model) {
+            $secure = $model->getAttribute('secure_settings');
+            $model->setAttribute('settings', $secure);
+            return $model;
+        });
+
+        return $paginator;
     }
 
     public function findBySlug(string $slug): ?PaymentGatewaySetting

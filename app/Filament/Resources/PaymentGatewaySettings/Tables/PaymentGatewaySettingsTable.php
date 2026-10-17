@@ -20,7 +20,7 @@ class PaymentGatewaySettingsTable
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('settings.name')
                     ->label('Tên')
                     ->searchable()
                     ->sortable(),

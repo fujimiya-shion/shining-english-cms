@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Enums\GatewayFieldRegistry;
-use App\Enums\GatewayType;
+use App\Enums\PaymentMethod;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdatePaymentGatewaySettingRequest extends FormRequest
@@ -45,18 +45,18 @@ class UpdatePaymentGatewaySettingRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $gatewaySlug = $this->route('record')?->slug ?? '';
-        $gatewayType = GatewayType::tryFrom($gatewaySlug);
+        $PaymentMethod = PaymentMethod::tryFrom($gatewaySlug);
 
-        if ($gatewayType === null) {
+        if ($PaymentMethod === null) {
             return;
         }
 
-        $requiredKeys = GatewayFieldRegistry::getRequiredKeys($gatewayType);
+        $requiredKeys = GatewayFieldRegistry::getRequiredKeys($PaymentMethod);
         $submittedKeys = array_column($this->settings_fields ?? [], 'key');
 
         $missing = array_diff($requiredKeys, $submittedKeys);
         if ($missing !== []) {
-            $fieldLabels = GatewayFieldRegistry::getSelectableOptions($gatewayType);
+            $fieldLabels = GatewayFieldRegistry::getSelectableOptions($PaymentMethod);
             $missingNames = implode(', ', array_map(static fn (string $key): string => $fieldLabels[$key] ?? $key, $missing));
 
             $this->merge([

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\PaymentGatewaySettings\Pages;
 
 use App\Enums\GatewayFieldRegistry;
-use App\Enums\GatewayType;
+use App\Enums\PaymentMethod;
 use App\Filament\Resources\PaymentGatewaySettings\PaymentGatewaySettingResource;
 use App\Models\PaymentGatewaySetting;
 use Filament\Resources\Pages\EditRecord;
