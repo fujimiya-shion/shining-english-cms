@@ -18,7 +18,7 @@ class PaymentGatewaySetting extends Model
     use Slugable;
 
     protected $fillable = [
-        'name',
+        'factory_name',
         'slug',
         'is_active',
         'settings',
